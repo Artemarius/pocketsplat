@@ -168,7 +168,8 @@ JNIEXPORT void JNICALL Java_com_pocketsplat_app_SplatEngine_nativeFlushTrace(JNI
 
 JNIEXPORT jboolean JNICALL Java_com_pocketsplat_app_SplatEngine_nativeStartBench(
     JNIEnv* env, jobject, jlong handle, jstring csv_path, jstring meta, jstring scene_name, jint key_bits,
-    jfloat min_contribution, jfloat target_fps, jint draw_mode, jboolean controller, jboolean vote_fps) {
+    jfloat min_contribution, jfloat target_fps, jint draw_mode, jboolean controller, jboolean vote_fps,
+    jboolean home_swing) {
     pocketsplat::AndroidHost::BenchConfig config;
     config.csv_path = to_string(env, csv_path);
     config.meta = to_string(env, meta);
@@ -179,6 +180,7 @@ JNIEXPORT jboolean JNICALL Java_com_pocketsplat_app_SplatEngine_nativeStartBench
     config.draw_mode = draw_mode;
     config.controller = controller == JNI_TRUE;
     config.vote_fps = vote_fps == JNI_TRUE;
+    config.home_swing = home_swing == JNI_TRUE;
     const splatcore::Status status = host_of(handle)->start_bench(config);
     if (!status.ok()) log_failure("start bench", status);
     return status.ok() ? JNI_TRUE : JNI_FALSE;

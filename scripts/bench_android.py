@@ -15,7 +15,7 @@ samples `dumpsys thermalservice` alongside from the host, then pulls the CSV via
 
 where <variant> is empty for the protocol defaults, else e.g. "-16bit", "-c0.1" (contribution
 cull threshold) or "-ctl" (the ADR-0009 quality controller moves the threshold), "-540x975"
-(resolution override), "-cap53" (frame cap; "-cap53-vote" with --vote-fps), in that order, and <hash> is the git hash the
+(resolution override), "-cap53" (frame cap; "-cap53-vote" with --vote-fps), "-home" (--pose home), in that order, and <hash> is the git hash the
 installed APK was built from (its versionName), "-dirty" when the build had uncommitted changes.
 
 and prints the cold (first 30 s) vs sustained (minute 8-10) summary the protocol asks for.
@@ -229,6 +229,8 @@ def bench_scene(scene: str, args, build: str) -> bool:
         suffix += f"-probe-{args.draw_probe}"
     if args.coverage_strength > 0.0:  # coverage fade (ADR-0013); needs <stem>.pscov in files/scenes
         suffix += f"-cov{args.coverage_strength:g}"
+    if args.pose == "home":
+        suffix += "-home"
     tag = f"{args.device}-{build}-{stem}{suffix}"
     device_csv = f"files/bench/bench-{stem}-{args.key_bits}bit.csv"
 
@@ -254,7 +256,8 @@ def bench_scene(scene: str, args, build: str) -> bool:
               str(DRAW_MODES.index(args.draw_mode) + len(DRAW_MODES) * DRAW_PROBES.index(args.draw_probe)),
               "--ez", "bench_controller", "true" if args.controller else "false",
               "--ez", "bench_vote_fps", "true" if args.vote_fps else "false",
-              "--ef", "coverage_strength", str(args.coverage_strength)]
+              "--ef", "coverage_strength", str(args.coverage_strength),
+              "--es", "bench_pose", args.pose]
     if args.width and args.height:  # e.g. a web viewer's canvas size, for like-for-like pixels
         extras += ["--ei", "bench_width", str(args.width), "--ei", "bench_height", str(args.height)]
     adb("shell", "am", "start", "-n", ACTIVITY, *extras, serial=serial)
@@ -344,6 +347,10 @@ def main() -> int:
     parser.add_argument("--coverage-strength", type=float, default=0.0,
                         help="coverage fade strength 0..1 (ADR-0013); the scene needs its "
                              "<stem>.pscov sidecar in files/scenes (--push it)")
+    parser.add_argument("--pose", default="orbit", choices=["orbit", "home"],
+                        help="orbit: full turn about +y around the framing box every 600 frames (every run "
+                             "before S26); home: +-30 deg swing about the scene's start view, phase 2pi/600 "
+                             "per frame (bench_web.py --pose home gives SuperSplat the same path)")
     parser.add_argument("--vote-fps", action="store_true",
                         help="ask the compositor for --target-fps, so the panel runs at that rate as in "
                              "interactive use (without it the panel stays at 120 Hz at every cap)")

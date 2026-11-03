@@ -61,6 +61,7 @@ object SplatEngine {
     external fun nativeStartBench(
         handle: Long, csvPath: String, meta: String, sceneName: String, keyBits: Int,
         minContribution: Float, targetFps: Float, drawMode: Int, controller: Boolean, voteFps: Boolean,
+        homeSwing: Boolean,
     ): Boolean
 
     /** Writes the CSV and returns a one-line summary ("" = nothing was recorded). */

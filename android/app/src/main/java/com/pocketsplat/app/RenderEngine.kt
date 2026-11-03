@@ -262,17 +262,18 @@ class RenderEngine {
      * [controller] runs the thermal-adaptive quality controller (ADR-0009) instead of the fixed
      * [minContribution]. [voteFps] asks the compositor for [targetFps] (the panel rate follows, as
      * it does for interactive frames); without it the panel stays at the compositor's choice, as
-     * in every bench run before S21. Touch camera input is ignored for the duration.
+     * in every bench run before S21. [homeSwing] swings the camera about the scene's start view
+     * instead of the framing orbit (AndroidHost::BenchConfig::home_swing). Touch camera input is ignored for the duration.
      */
     fun startBench(
         csvPath: String, meta: String, sceneName: String, keyBits: Int, minContribution: Float,
-        targetFps: Float, drawMode: Int, controller: Boolean, voteFps: Boolean, seconds: Int,
+        targetFps: Float, drawMode: Int, controller: Boolean, voteFps: Boolean, homeSwing: Boolean, seconds: Int,
         onDone: (String?) -> Unit,
     ) = handler.post {
         val ok = !benchActive && handle != 0L &&
             SplatEngine.nativeStartBench(
                 handle, csvPath, meta, sceneName, keyBits, minContribution, targetFps, drawMode, controller,
-                voteFps,
+                voteFps, homeSwing,
             )
         if (!ok) {
             mainHandler.post { onDone(null) }

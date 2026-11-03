@@ -129,7 +129,14 @@ public:
         // that rate). Off, the panel stays at the compositor's choice: 120 Hz at every cap on
         // both phones, as in every run before S21.
         bool vote_fps = false;
+        // Camera path. false: the framing orbit (full turn about +y every 600 frames, every run
+        // before S26). true: a swing about the open scene's start view (splatcore::HomeView), the
+        // eye turned about home.up through home.focus by kHomeSwingDeg * sin(2 pi k / 600) at
+        // rendered frame k - near the capture trajectory for scenes whose up is not +y, the pose
+        // bench_web.py --pose home gives the SuperSplat viewer.
+        bool home_swing = false;
     };
+    static constexpr float kHomeSwingDeg = 30.0f;
     splatcore::Status start_bench(const BenchConfig& config);
     std::string stop_bench();  // writes the CSV; returns a one-line summary ("" = nothing ran)
     bool bench_active() const { return m_bench_active; }
@@ -193,6 +200,7 @@ private:
     // Orbit camera state (RUB world, matching the desktop host).
     // Bench orbit (deterministic, the desktop --bench path).
     float m_yaw = 0.6f, m_pitch = 0.3f, m_distance = 5.0f;
+    std::uint64_t m_bench_frame = 0;  // rendered bench frames (the home swing's phase)
     float m_target[3] = {0.0f, 0.0f, 0.0f};
     float m_fov = 1.0471976f;  // 60 deg across the long side (= vertical in portrait)
     // Interactive pose (set_camera_pose), the home view until the Kotlin side sends one.

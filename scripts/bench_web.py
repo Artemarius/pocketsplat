@@ -134,6 +134,19 @@ window.__viewer.then(v => {
   const pitch = cam.angles.x, yaw0 = cam.angles.y, roll = cam.angles.z;
   const stepDeg = 360 / 600;
   const place = (k) => {
+    if (pose && pose.home) {  // swing about the start view: arm turned about home.up (Rodrigues)
+      const h = pose.home, a = pose.amp * Math.PI / 180 * Math.sin(2 * Math.PI * (k % 600) / 600);
+      const ax = h.up, c = Math.cos(a), s = Math.sin(a);
+      const v = [h.eye[0] - h.focus[0], h.eye[1] - h.focus[1], h.eye[2] - h.focus[2]];
+      const d = ax[0] * v[0] + ax[1] * v[1] + ax[2] * v[2];
+      const x = [ax[1] * v[2] - ax[2] * v[1], ax[2] * v[0] - ax[0] * v[2], ax[0] * v[1] - ax[1] * v[0]];
+      eye.set(focus.x + v[0] * c + x[0] * s + ax[0] * d * (1 - c),
+              focus.y + v[1] * c + x[1] * s + ax[1] * d * (1 - c),
+              focus.z + v[2] * c + x[2] * s + ax[2] * d * (1 - c));
+      cam.look(eye, focus);
+      cam.fov = pose.fov;
+      return;
+    }
     if (pose) {
       const yaw = pose.yaw0 + k * 2 * Math.PI / 600, cp = Math.cos(pose.pitch);
       eye.set(focus.x - pose.distance * cp * Math.sin(yaw), focus.y + pose.distance * Math.sin(pose.pitch),
@@ -169,6 +182,25 @@ window.__viewer.then(v => {
   return window.__orbit.info;
 })
 """
+
+
+def pose_home(bench_csv: Path) -> dict:
+    """The start-view swing (bench_android.py --pose home) in SuperSplat's world, from the app's CSV.
+
+    The app records the HomeView it computed (splatcore::estimate_home_view, RUB world) in its bench
+    CSV header; RUB (x, y, z) is (-x, y, -z) in the viewer's world (pose_ours). Same swing as the
+    app: the eye turned about home.up through home.focus by 30 deg * sin(2pi k / 600) at rendered
+    frame k, 60 deg vertical FOV. cam.look() keeps the viewer's +y up, the app looks with home.up:
+    the two images agree in roll only where home.up is close to +y."""
+    header = " ".join(line for line in bench_csv.read_text(encoding="utf-8").splitlines() if line.startswith("#"))
+    home = {}
+    for key in ("focus", "eye", "up"):
+        m = re.search(rf"home_{key}=([-0-9.e]+);([-0-9.e]+);([-0-9.e]+)", header)
+        if not m:
+            sys.exit(f"{bench_csv}: no home_{key} in the header (a bench_android.py --pose home CSV?)")
+        x, y, z = (float(g) for g in m.groups())
+        home[key] = [-x, y, -z]
+    return {"home": home, "focus": home["focus"], "amp": 30.0, "fov": 60.0}
 
 
 def pose_ours(facts: dict) -> dict:
@@ -632,7 +664,11 @@ def run(args) -> int:
     # opt-in for Spark (its earlier rows ran untouched).
     touch = args.touch or (orbit and not args.no_touch)
     ours = orbit and args.pose == "ours"
-    label = args.viewer + ("-orbit" if orbit else "") + ("-ourpose" if ours else "") + ("-touch" if touch else "")
+    home = orbit and args.pose == "home"
+    if home and not args.home_from:
+        sys.exit("--pose home needs --home-from <bench_android.py --pose home CSV>")
+    label = (args.viewer + ("-orbit" if orbit else "") + ("-ourpose" if ours else "") + ("-home" if home else "")
+             + ("-touch" if touch else ""))
     out = out_dir / f"web-{args.device}-{label}-{scene.stem}.csv"
     meta = [f"# pocketsplat bench_web.py, viewer={args.viewer} ({package} {PACKAGES[package][2]}), "
             f"browser={chrome.get('Browser', '?')}, model={model}",
@@ -658,17 +694,23 @@ def run(args) -> int:
     meta.append(f"# load_s={load_s:.1f}, backend={backend}, canvas={canvas[0]}x{canvas[1]}, "
                 f"page={page_w}x{page_h}, splats_reported={splats_drawn}")
     if orbit:
-        orbit_info = cdp.eval(ORBIT_JS.replace("__POSE__", json.dumps(pose_ours(facts)) if ours else "null"))
+        pose = pose_ours(facts) if ours else pose_home(Path(args.home_from)) if home else None
+        orbit_info = cdp.eval(ORBIT_JS.replace("__POSE__", json.dumps(pose) if pose else "null"))
         if not isinstance(orbit_info, dict):
             print(f"orbit driver not installed: {orbit_info}")
             server.shutdown()
             return 1
-        meta.append(f"# camera=orbit 2pi/600 per rendered frame about focus "
-                    f"{[round(c, 4) for c in orbit_info['focus']]}, distance {orbit_info['distance']:.4g}, "
-                    f"pitch {orbit_info['pitch']:.1f} deg, fov {orbit_info['fov']:.0f} deg "
-                    + ("(PocketSplat bench pose: 1.2 x robust diagonal, start yaw 0.6 rad)" if ours
-                       else "(viewer default framing)")
-                    + (", touch drags for pacing only (the camera ignores input)" if touch else ""))
+        if home:
+            meta.append(f"# camera=home-swing-30deg/600f (bench_android.py --pose home) from {Path(args.home_from).name}: "
+                        f"viewer-world home {json.dumps(pose['home'])}, fov 60 deg"
+                        + (", touch drags for pacing only (the camera ignores input)" if touch else ""))
+        else:
+            meta.append(f"# camera=orbit 2pi/600 per rendered frame about focus "
+                        f"{[round(c, 4) for c in orbit_info['focus']]}, distance {orbit_info['distance']:.4g}, "
+                        f"pitch {orbit_info['pitch']:.1f} deg, fov {orbit_info['fov']:.0f} deg "
+                        + ("(PocketSplat bench pose: 1.2 x robust diagonal, start yaw 0.6 rad)" if ours
+                           else "(viewer default framing)")
+                        + (", touch drags for pacing only (the camera ignores input)" if touch else ""))
     elif package != "spark":
         meta.append("# camera=drag (synthetic one-finger drags, input-paced)")
     print("\n".join(meta))
@@ -776,8 +818,11 @@ def main() -> int:
                         " pages at 60 Hz even at a forced 120 Hz); Spark's fixture and the SuperSplat orbit"
                         " driver ignore them for the camera; default on for the SuperSplat orbit")
     r.add_argument("--no-touch", action="store_true", help="SuperSplat orbit without pacing drags (60 Hz cap)")
-    r.add_argument("--pose", choices=["viewer", "ours"], default="viewer",
-                   help="SuperSplat orbit: the viewer's default framing (default) or PocketSplat's bench pose")
+    r.add_argument("--pose", choices=["viewer", "ours", "home"], default="viewer",
+                   help="SuperSplat orbit: the viewer's default framing (default), PocketSplat's bench pose, "
+                        "or PocketSplat's start-view swing (bench_android.py --pose home; needs --home-from)")
+    r.add_argument("--home-from", default=None,
+                   help="--pose home: the app's bench CSV, whose header carries the start view it computed")
     r.add_argument("--hold-shot", default=None,
                    help="SuperSplat orbit: hold the start pose, save a page screenshot (PNG) and exit")
     r.add_argument("--viewport", default=None, help="--desktop only: emulated page size WxH at pixel ratio 1")

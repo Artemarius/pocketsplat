@@ -73,6 +73,7 @@ data class BenchRequest(
     val drawMode: Int,
     val controller: Boolean, // thermal-adaptive quality controller (ADR-0009) instead of minContribution
     val voteFps: Boolean, // ask the compositor for targetFps (the panel follows, as in interactive use)
+    val homeSwing: Boolean, // camera swings about the start view instead of the framing orbit
 )
 
 /** A probed .ply/.spz source waiting for import confirmation ([src] is always a local file). */
@@ -150,6 +151,7 @@ class MainActivity : ComponentActivity() {
             drawMode = intent.getIntExtra("bench_draw_mode", 3), // default = SplatRenderer::kDefaultDrawMode (triangle)
             controller = intent.getBooleanExtra("bench_controller", false),
             voteFps = intent.getBooleanExtra("bench_vote_fps", false),
+            homeSwing = intent.getStringExtra("bench_pose") == "home",
         )
     }
 
@@ -408,6 +410,7 @@ private fun ViewerScreen(
     fun runBench(
         file: File, seconds: Int, keyBits: Int, minContribution: Float, targetFps: Float,
         resolution: Pair<Int, Int>?, drawMode: Int = 3, controller: Boolean = false, voteFps: Boolean = false,
+        homeSwing: Boolean = false,
     ) {
         benchMessage = null
         engine.openScene(file.absolutePath) { info ->
@@ -429,7 +432,7 @@ private fun ViewerScreen(
                 benchStartMs = SystemClock.elapsedRealtime()
                 engine.startBench(
                     csv.absolutePath, meta, file.name, keyBits, minContribution, targetFps, drawMode, controller,
-                    voteFps, seconds,
+                    voteFps, homeSwing, seconds,
                 ) { summary ->
                     benchRunning = false
                     benchMessage = summary ?: "bench failed - see logcat"
@@ -449,7 +452,7 @@ private fun ViewerScreen(
             } else {
                 runBench(file, benchRequest.seconds, benchRequest.keyBits, benchRequest.minContribution,
                     benchRequest.targetFps, benchRequest.resolution ?: protocolRes, benchRequest.drawMode,
-                    benchRequest.controller, benchRequest.voteFps)
+                    benchRequest.controller, benchRequest.voteFps, benchRequest.homeSwing)
             }
         } else if (openSceneName != null) {
             sceneList.find { it.name == openSceneName }?.let { openPack(it) }

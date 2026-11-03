@@ -26,6 +26,13 @@
 namespace pocketsplat {
 namespace {
 
+// "x;y;z" for the bench CSV header (';' keeps the header's ", "-separated fields parseable).
+std::string vec3_text(const float v[3]) {
+    char text[96];
+    std::snprintf(text, sizeof(text), "%.5f;%.5f;%.5f", v[0], v[1], v[2]);
+    return text;
+}
+
 // Adreno GPU clock from kgsl sysfs, or -1 when the app's SELinux domain cannot read it. At a capped
 // frame rate the governor holds busy % near a target and moves this clock with the work instead
 // (docs/benchmarks/public-baseline.md, S17), so the clock is the work signal the controller watches.
@@ -538,7 +545,10 @@ void AndroidHost::render() {
     if (m_bench_active && m_bench_config.target_fps > 0.0f) bench_pace();
     // Deterministic full orbit every 600 frames - the desktop --bench rate, so per-frame GPU
     // work is comparable across devices regardless of achieved fps.
-    if (m_bench_active) m_yaw += 6.2831853f / 600.0f;
+    if (m_bench_active) {
+        m_yaw += 6.2831853f / 600.0f;
+        ++m_bench_frame;
+    }
     if (m_needs_recreate) {
         const auto width = static_cast<std::uint32_t>(ANativeWindow_getWidth(m_window));
         const auto height = static_cast<std::uint32_t>(ANativeWindow_getHeight(m_window));
@@ -569,7 +579,15 @@ void AndroidHost::render() {
         // orbit, else the interactive pose (world -> view = the inverse of the camera's rigid pose).
         glm::vec3 eye;
         glm::mat4 view;
-        if (m_bench_active) {
+        if (m_bench_active && m_bench_config.home_swing) {
+            const glm::vec3 focus(m_home.focus[0], m_home.focus[1], m_home.focus[2]);
+            const glm::vec3 up(m_home.up[0], m_home.up[1], m_home.up[2]);
+            const float phase = 6.2831853f * static_cast<float>(m_bench_frame % 600) / 600.0f;
+            const float angle = glm::radians(kHomeSwingDeg) * std::sin(phase);
+            const glm::vec3 arm = glm::vec3(m_home.eye[0], m_home.eye[1], m_home.eye[2]) - focus;
+            eye = focus + glm::angleAxis(angle, up) * arm;
+            view = glm::lookAt(eye, focus, up);
+        } else if (m_bench_active) {
             const float cp = std::cos(m_pitch), sp = std::sin(m_pitch);
             const float cy = std::cos(m_yaw), sy = std::sin(m_yaw);
             const glm::vec3 target(m_target[0], m_target[1], m_target[2]);
@@ -694,6 +712,7 @@ splatcore::Status AndroidHost::start_bench(const BenchConfig& config) {
     m_distance = 1.2f * m_framing.diagonal;
     std::memcpy(m_target, m_framing.target, sizeof(m_target));
     m_fov = 1.0471976f;  // across the long side: the protocol's portrait 864x1872 -> vertical 60 deg
+    m_bench_frame = 0;
 
     m_bench_rows.clear();
     m_bench_rows.reserve(1 << 16);
@@ -874,7 +893,12 @@ std::string AndroidHost::stop_bench() {
         << ", draw_probe=" << static_cast<std::uint32_t>(m_bench_draw_probe)
         << ", frame_rate_vote=" << (m_bench_config.vote_fps ? m_bench_config.target_fps : 0.0f)
         << ", coverage_strength=" << (m_splats.has_coverage() ? m_splats.coverage_strength() : 0.0f)
-        << ", orbit=2pi/600f\n";
+        << (m_bench_config.home_swing ? ", orbit=home-swing-30deg/600f" : ", orbit=2pi/600f");
+    if (m_bench_config.home_swing) {
+        csv << ", home_focus=" << vec3_text(m_home.focus) << ", home_eye=" << vec3_text(m_home.eye)
+            << ", home_up=" << vec3_text(m_home.up);
+    }
+    csv << "\n";
     // Controller settings, written for fixed runs too so that `splatconv replay` can evaluate
     // the policy on them.
     const splatcore::QualityControllerConfig defaults;
