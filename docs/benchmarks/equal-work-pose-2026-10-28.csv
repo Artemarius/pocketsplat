@@ -1,0 +1,20 @@
+# Equal work at PocketSplat's bench pose, 10 min on battery, 540x975 (S18): SuperSplat WebGPU
+# (bench_web.py --pose ours) vs ours capped at the rate it delivered from 60 s on, 16-bit keys, 0.1 px
+# cull; renderer suffix -triangle = one triangle per splat (ADR-0010), none = 6-vertex quads. APKs:
+# S24U stump 4bcadb9 (files f0f242c), S24U truck + triangle reruns 9a7c38f, S25U Part A 4bcadb9,
+# S25U triangle reruns 9a7c38f. Power = dumpsys battery current x voltage from 60 s (gauge refresh
+# ~10 s); mcycles = kgsl busy x clock / fps (the precise column). S24U stump 6-vertex and triangle ran
+# 4 h apart: their charge drawn is equal (133 mAh), so only the cycle difference is claimed there.
+device,scene,renderer,cap_fps,fps_cold,fps_late,busy,mhz,mcycles,visible,skin_max,status_max,power_w,charge_mah,fps_steady,mj_per_frame,gpu_ms_late
+s24u,stump-full.sh0,supersplat-orbit-ourpose-touch,nan,53.845,35.335,85.437,439.373,10.161,nan,38.600,0.000,3.669,138.236,36.943,99.30,nan
+s24u,stump-full.sh0,PocketSplat 16bit-c0.1-540x975-cap37,37,37.001,37.000,78.564,469.077,9.960,1182455.242,38.400,0.000,3.595,133.299,37.000,97.16,21.657
+s24u,stump-full.sh0,PocketSplat 16bit-c0.1-540x975-cap37-triangle,37,37.000,37.000,81.945,414.973,9.191,1182455.242,37.000,0.000,2.840,133.299,37.000,76.76,22.302
+s24u,truck-full.sh0,supersplat-orbit-ourpose-touch,nan,55.930,58.290,74.193,464.307,5.998,nan,37.200,0.000,2.914,34.559,57.270,50.88,nan
+s24u,truck-full.sh0,PocketSplat 16bit-c0.1-540x975-cap57,57,57.005,57.000,75.420,310.000,4.102,423281.157,35.900,0.000,2.344,98.740,57.000,41.13,13.000
+s24u,truck-full.sh0,PocketSplat 16bit-c0.1-540x975-cap57-triangle,57,57.001,57.000,71.591,310.000,3.894,423281.157,35.900,0.000,2.211,88.866,57.000,38.80,12.363
+s25u,stump-full.sh0,supersplat-orbit-ourpose-touch,nan,69.080,50.650,80.729,665.842,8.558,nan,38.800,0.000,4.142,172.375,62.500,66.28,nan
+s25u,stump-full.sh0,PocketSplat 16bit-c0.1-540x975-cap63,63,63.000,58.376,92.119,716.264,10.680,1182859.801,44.600,2.000,5.286,206.850,61.779,85.57,16.913
+s25u,stump-full.sh0,PocketSplat 16bit-c0.1-540x975-cap63-triangle,63,63.000,63.000,83.720,716.576,9.523,1182735.853,42.800,2.000,4.544,206.850,63.000,72.13,13.314
+s25u,truck-full.sh0,supersplat-orbit-ourpose-touch,nan,68.230,68.855,77.148,440.563,5.021,nan,39.400,0.000,3.107,118.200,67.565,45.99,nan
+s25u,truck-full.sh0,PocketSplat 16bit-c0.1-540x975-cap68,68,68.001,68.001,81.339,386.898,4.628,423330.458,37.300,0.000,2.541,108.350,68.000,37.37,11.888
+s25u,truck-full.sh0,PocketSplat 16bit-c0.1-540x975-cap68-triangle,68,68.001,68.000,83.415,357.335,4.383,423330.458,36.800,0.000,2.112,93.575,68.000,31.06,12.403

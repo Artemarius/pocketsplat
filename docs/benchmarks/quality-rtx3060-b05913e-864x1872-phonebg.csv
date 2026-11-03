@@ -1,0 +1,13 @@
+scene,variant,flags,compared_to,resolution,psnr_min_db,psnr_mean_db,moved_px_max_pct
+museum1,refbg,"--key-bits 32 --bg 0.55,0.58,0.62",refbg,864x1872,inf,inf,0.0000
+museum1,k16c0.1bg,"--key-bits 16 --min-contribution 0.1 --bg 0.55,0.58,0.62",refbg,864x1872,61.3132,64.3665,0.1734
+counter-full,refbg,"--key-bits 32 --bg 0.55,0.58,0.62",refbg,864x1872,inf,inf,0.0000
+counter-full,k16c0.1bg,"--key-bits 16 --min-contribution 0.1 --bg 0.55,0.58,0.62",refbg,864x1872,54.1568,61.7307,1.1253
+truck-full,refbg,"--key-bits 32 --bg 0.55,0.58,0.62",refbg,864x1872,inf,inf,0.0000
+truck-full,k16c0.1bg,"--key-bits 16 --min-contribution 0.1 --bg 0.55,0.58,0.62",refbg,864x1872,51.8747,54.0028,1.3919
+drjohnson-full,refbg,"--key-bits 32 --bg 0.55,0.58,0.62",refbg,864x1872,inf,inf,0.0000
+drjohnson-full,k16c0.1bg,"--key-bits 16 --min-contribution 0.1 --bg 0.55,0.58,0.62",refbg,864x1872,62.1104,66.6722,0.1406
+bicycle-4m,refbg,"--key-bits 32 --bg 0.55,0.58,0.62",refbg,864x1872,inf,inf,0.0000
+bicycle-4m,k16c0.1bg,"--key-bits 16 --min-contribution 0.1 --bg 0.55,0.58,0.62",refbg,864x1872,44.9310,50.6939,2.3831
+stump-full,refbg,"--key-bits 32 --bg 0.55,0.58,0.62",refbg,864x1872,inf,inf,0.0000
+stump-full,k16c0.1bg,"--key-bits 16 --min-contribution 0.1 --bg 0.55,0.58,0.62",refbg,864x1872,45.3902,47.5081,6.3379

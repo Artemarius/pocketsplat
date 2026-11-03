@@ -1,0 +1,3 @@
+session,apk,rules,navigation,minutes,interacting_share,fps_interacting,late_share,gpu_ms,gpu_mhz,min_at_c0.1,min_at_c0.2,min_at_c0.5,steps_down,steps_up,status_max,forecast_max,skin_max_host,replay_reproduces,replay_adr0011_decisions
+handheld1,8395179,ADR-0009,whole-scene start; clamped orbit,20.0,0.59,53.9,0.208,12.95,414,4.3,13.6,2.1,7,5,0,0.792,37.2,True,0
+handheld2,0592da9,ADR-0011,home view; trackball; double-tap pivot,20.0,0.57,53.7,0.219,13.10,422,20.0,0.0,0.0,0,0,0,0.729,36.4,True,0

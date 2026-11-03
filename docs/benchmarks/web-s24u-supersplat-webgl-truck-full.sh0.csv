@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat-webgl (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=truck-full.sh0.ply, splats=1653927, sh=0, url_extras=&webgl
+# load_s=4.0, backend=webgl2, canvas=540x975, page=384x693, splats_reported=None
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,1.3,72.24,15.90,17.25,1,38.5,42.4
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,2.7,71.50,16.00,18.58,1,38.5,42.4
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,3.9,72.14,15.90,19.40,1,38.5,42.4
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,5.2,72.24,15.75,18.22,1,38.5,42.4
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,6.5,72.39,15.90,18.65,1,38.8,44.6
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,7.9,71.51,15.90,19.42,1,38.8,44.6
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,9.1,72.41,15.90,18.40,1,38.8,44.6
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,10.4,72.36,15.90,18.60,1,38.8,44.6
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,11.7,72.40,16.00,17.70,1,38.8,44.6
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,13.1,71.62,16.00,17.50,1,38.8,44.6
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,14.3,72.39,16.00,17.50,1,38.8,44.6
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,15.6,72.25,16.00,17.49,1,38.8,44.6
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,16.9,72.24,16.00,17.49,1,39.5,46.7
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,18.3,71.35,16.00,17.40,1,39.5,46.7
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,19.6,72.38,16.00,17.40,1,39.5,46.7
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,20.8,72.38,16.10,17.30,1,39.5,46.7
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,22.1,72.37,15.90,17.65,1,39.9,47.5
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,23.5,71.32,16.00,17.70,1,39.9,47.5
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,24.8,72.42,16.00,17.60,1,39.9,47.5
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,26.1,72.36,16.00,17.60,1,39.9,47.5
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,27.3,72.41,15.90,17.65,1,39.9,47.5
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,28.7,71.64,16.10,17.30,1,39.9,47.5
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,30.0,72.41,16.00,17.70,1,39.9,47.5
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,31.2,72.41,16.00,17.50,1,39.9,47.5
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,32.5,72.21,16.00,17.74,1,40.2,47.3
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,33.9,71.43,16.20,17.50,1,40.2,47.3
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,35.2,72.49,16.20,17.15,1,40.2,47.3
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,36.4,72.37,16.00,17.60,1,40.2,47.3
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,37.7,72.40,16.00,17.50,1,40.2,47.3
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,39.1,71.63,16.00,17.50,1,40.2,47.3
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,40.3,72.35,15.90,17.60,1,40.2,47.3
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,41.6,72.42,16.00,17.60,1,40.2,47.3
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,42.9,72.22,16.10,17.44,1,40.3,47.3
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,44.3,71.49,16.20,17.50,1,40.3,47.3
+s24u,supersplat-webgl,1.41.0,webgl2,truck-full.sh0.ply,1653927,0,540,975,45.5,72.39,15.90,17.65,1,40.3,47.3

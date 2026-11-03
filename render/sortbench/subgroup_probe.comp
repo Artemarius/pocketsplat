@@ -1,0 +1,29 @@
+#version 460
+// Pass: sortbench --subgroup-probe. One row per invocation of a 256-wide workgroup with what the
+// driver reports about its subgroup: the builtins and what ballots actually see.
+// Outputs: rows[global invocation * 8 + 0..7] = {local index, SubgroupID, SubgroupInvocationID,
+//          SubgroupSize, NumSubgroups, active lanes (ballot count), lane rank among the active
+//          lanes (ballot exclusive count), lowest local index in the subgroup}.
+// Sync:    standalone dispatch; the caller copies the buffer back after the queue idles.
+
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_ballot : require
+#extension GL_KHR_shader_subgroup_arithmetic : require
+
+layout(local_size_x_id = 0, local_size_x = 256) in;
+
+layout(std430, set = 0, binding = 0) writeonly buffer Rows { uint rows[]; };
+
+void main() {
+    uint lid = gl_LocalInvocationIndex;
+    uint base = (gl_WorkGroupID.x * gl_WorkGroupSize.x + lid) * 8u;
+    uvec4 lanes_on = subgroupBallot(true);
+    rows[base + 0u] = lid;
+    rows[base + 1u] = gl_SubgroupID;
+    rows[base + 2u] = gl_SubgroupInvocationID;
+    rows[base + 3u] = gl_SubgroupSize;
+    rows[base + 4u] = gl_NumSubgroups;
+    rows[base + 5u] = subgroupBallotBitCount(lanes_on);
+    rows[base + 6u] = subgroupBallotExclusiveBitCount(lanes_on);
+    rows[base + 7u] = subgroupMin(lid);
+}

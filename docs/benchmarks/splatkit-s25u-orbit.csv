@@ -1,0 +1,16 @@
+# splatkit dev app (MIT, Xget7/splatkit @3e800ff) + local orbit patch: pose-matched to PocketSplat's bench camera
+# (robust-framing target, radius 1.2 diag, yaw 0.6, pitch 0.3, 60 deg vertical FOV, far 1000), 2pi/5 rad/s, 45 s,
+# vsync-paced at 120 Hz (compare gpu_ms, not fps); per-second stats averaged for sort/cull/drawn; same splats as SPZ
+device,renderer,scene,render_scale,render_target,frames,fps_mean,frame_ms_mean,frame_ms_p50,frame_ms_p95,gpu_ms_mean,gpu_ms_p50,gpu_ms_p95,sort_ms_mean,cull_ms_mean,drawn_mean,splats,samples
+s25u,splatkit 3e800ff+orbit patch,museum1.sh3-full,0.8,864x1872,5401,120.0,8.3,8.3,8.3,6.9,6.8,8.2,0.63,0.41,313276,314457,44
+s25u,splatkit 3e800ff+orbit patch,museum1.sh3-full,0.5,540x1170,5404,120.1,8.3,8.3,8.3,6.6,6.6,6.7,0.80,0.50,308364,314457,44
+s25u,splatkit 3e800ff+orbit patch,counter-full,0.8,864x1872,4263,94.7,10.6,8.3,16.6,10.5,10.1,12.2,0.83,0.90,673517,973948,44
+s25u,splatkit 3e800ff+orbit patch,counter-full,0.5,540x1170,5250,116.6,8.6,8.3,8.3,7.8,7.3,8.9,0.73,0.82,543078,973948,44
+s25u,splatkit 3e800ff+orbit patch,truck-full,0.8,864x1872,4041,89.8,11.1,8.3,16.6,11.1,11.1,12.4,0.93,1.22,695967,1653927,44
+s25u,splatkit 3e800ff+orbit patch,truck-full,0.5,540x1170,5374,119.4,8.4,8.3,8.3,7.0,6.9,7.8,0.71,1.19,452110,1653927,44
+s25u,splatkit 3e800ff+orbit patch,drjohnson-full,0.8,864x1872,1735,38.5,26.0,25.0,33.3,25.8,25.2,34.7,2.16,2.36,1803210,2668497,43
+s25u,splatkit 3e800ff+orbit patch,drjohnson-full,0.5,540x1170,2393,53.2,18.8,16.6,25.0,18.7,18.4,25.4,1.79,2.17,1493502,2668497,44
+s25u,splatkit 3e800ff+orbit patch,stump-full,0.8,864x1872,2707,60.1,16.6,16.6,25.0,16.5,16.3,19.6,1.52,2.71,1117546,4049567,44
+s25u,splatkit 3e800ff+orbit patch,stump-full,0.5,540x1170,5097,113.3,8.8,8.3,16.6,8.4,8.2,10.1,0.94,2.55,633052,4049567,44
+s25u,splatkit 3e800ff+orbit patch,bicycle-4m,0.8,864x1872,1942,43.1,23.2,25.0,25.0,23.0,23.2,26.7,1.95,2.90,1630245,4000000,43
+s25u,splatkit 3e800ff+orbit patch,bicycle-4m,0.5,540x1170,3543,78.7,12.7,16.6,16.6,12.6,12.1,16.6,1.35,2.72,979821,4000000,44

@@ -1,0 +1,5 @@
+device,run,controller,cap_fps,fps_cold,fps_late,p5_fps,p99_ms,on_target_late,on_target_all,mcycles_late,status_max,skin_max,mj_per_frame,time_at,psnr_min_w,psnr_mean_w
+s25u,8395179-stump-full.sh0-16bit-c0.5-864x1872-cap30-vote-triangle,off,30,30.00,30.00,30.0,35.32,0.9982,0.9987,4.549,0,32.8,52.98,c 0.5: 1200 s,31.10,34.41
+s25u,8395179-stump-full.sh0-16bit-c0.5-864x1872-cap48-vote-triangle,off,48,48.00,48.00,48.0,22.71,0.9932,0.9935,5.205,0,32.3,40.73,c 0.5: 1200 s,31.10,34.41
+s25u,8395179-stump-full.sh0-16bit-c0.5-864x1872-cap60-triangle,off,60,60.00,60.00,60.0,17.65,0.9989,0.9988,4.940,0,33.5,41.14,c 0.5: 1200 s,31.10,34.41
+s25u,8395179-stump-full.sh0-16bit-c0.5-864x1872-cap60-vote-triangle,off,60,60.00,60.00,60.0,18.47,0.9864,0.9874,4.930,0,34.9,39.91,c 0.5: 1200 s,31.10,34.41

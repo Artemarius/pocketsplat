@@ -1,0 +1,39 @@
+# pocketsplat bench_web.py, viewer=supersplat-nogate (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=bicycle-4m.sh0.ply, splats=4000000, sh=0, url_extras=&nogate
+# load_s=9.1, backend=webgpu, canvas=540x975, page=384x693, splats_reported=4000000
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,1.4,60.65,15.60,31.03,0,38.2,43.0
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,2.9,65.01,15.60,28.87,0,38.2,43.0
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,4.3,64.10,15.80,32.05,0,38.2,43.0
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,5.6,65.86,15.80,32.92,0,38.2,43.0
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,6.9,65.88,14.45,26.55,0,38.3,43.1
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,8.3,68.65,15.55,24.00,0,38.3,43.1
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,9.6,72.21,14.50,21.39,0,38.3,43.1
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,10.9,72.08,14.45,21.51,0,38.3,43.1
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,12.2,72.29,15.50,21.37,0,38.3,43.1
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,13.5,71.17,15.60,21.52,0,38.3,43.1
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,14.8,70.50,15.60,23.79,0,38.3,43.1
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,16.1,72.25,14.80,20.84,0,38.3,43.1
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,17.4,72.22,14.00,22.50,0,38.4,43.0
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,18.8,71.30,15.35,20.98,0,38.4,43.0
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,20.1,72.35,15.20,21.14,0,38.4,43.0
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,21.4,72.17,15.35,22.16,0,38.4,43.0
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,22.7,70.26,14.75,22.36,0,38.4,43.0
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,24.0,71.05,15.70,21.94,0,38.4,43.0
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,25.3,71.21,15.55,22.04,0,38.4,43.0
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,26.6,71.71,14.50,23.05,0,38.4,43.0
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,27.9,71.39,15.35,22.35,0,38.4,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,29.3,70.45,15.55,21.73,0,38.4,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,30.6,72.32,15.05,22.08,0,38.4,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,31.9,72.42,14.20,21.50,0,38.4,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,33.2,71.33,14.85,21.84,0,38.4,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,34.6,70.19,15.30,22.78,0,38.4,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,35.9,72.30,15.30,22.14,0,38.4,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,37.2,72.20,14.65,21.62,0,38.4,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,38.5,72.24,15.15,21.35,0,38.5,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,39.9,70.70,15.00,22.80,0,38.5,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,41.1,71.56,14.55,22.66,0,38.5,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,42.4,71.65,14.80,21.50,0,38.5,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,43.7,72.24,14.50,20.60,0,38.5,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,975,45.1,69.58,15.90,23.38,0,38.5,43.2

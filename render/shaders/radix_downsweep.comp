@@ -1,0 +1,117 @@
+#version 460
+// Pass: radix sort downsweep/scatter (one of 3 passes per 8-bit digit; docs/sorting.md §4)
+// Inputs:  keys_in/values_in (current ping-pong side), scanned histograms from the spine (the
+//          block's offset within each digit) and digit_totals (scanned here into each digit's
+//          global start - 256 values, once per block).
+// Outputs: values_out (and keys_out unless push.write_keys == 0) scattered in stable digit order.
+// Sync:    caller barriers between passes; no inter-workgroup communication (mobile-safe).
+//
+// Stable ranking: the block's tile is processed in workgroup-sized batches in tile order.
+// Within a batch, same-digit peers inside a subgroup are found with an 8-round ballot match
+// (subgroup-size agnostic); ranks across subgroups come from a shared per-subgroup digit count
+// matrix with one row per possible subgroup (constant_id 1 = workgroup size / the device's
+// minimum subgroup size: 4 rows on Adreno, 8 on NVIDIA). Shared memory bounds how many
+// workgroups an Adreno core keeps resident, so the matrix is sized from the device, not for the
+// smallest subgroup any GPU has. Assumes a 256-wide workgroup.
+
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_ballot : require
+
+layout(local_size_x_id = 0, local_size_x = 256) in;
+layout(constant_id = 1) const uint kMaxSubgroups = 16u;
+
+layout(std430, set = 0, binding = 0) readonly buffer KeysIn { uint keys_in[]; };
+layout(std430, set = 0, binding = 1) readonly buffer ValuesIn { uint values_in[]; };
+layout(std430, set = 0, binding = 2) writeonly buffer KeysOut { uint keys_out[]; };
+layout(std430, set = 0, binding = 3) writeonly buffer ValuesOut { uint values_out[]; };
+layout(std430, set = 0, binding = 4) readonly buffer Histograms { uint histograms[]; };
+layout(std430, set = 0, binding = 5) readonly buffer SortArgs { uint sort_count; uint num_blocks; };
+layout(std430, set = 0, binding = 6) readonly buffer DigitTotals { uint digit_totals[]; };
+
+layout(push_constant) uniform Push {
+    uint shift;
+    uint elements_per_block;
+    uint write_keys;  // 0 = last digit pass of a sort whose caller reads only the values
+} push;
+
+shared uint s_spine[256];                     // this block's scatter base per digit
+shared uint s_running[256];                   // elements of each digit already scattered (tile)
+shared uint s_count[kMaxSubgroups * 256u];    // per-subgroup digit counts for the current batch
+
+void main() {
+    uint lid = gl_LocalInvocationID.x;
+    uint block = gl_WorkGroupID.x;
+
+    // Digit start = exclusive scan of the digit totals (Hillis-Steele, one digit per invocation).
+    uint digit_total = digit_totals[lid];
+    s_spine[lid] = digit_total;
+    s_running[lid] = 0u;
+    for (uint i = lid; i < kMaxSubgroups * 256u; i += gl_WorkGroupSize.x) s_count[i] = 0u;
+    barrier();
+    for (uint offset = 1u; offset < 256u; offset <<= 1u) {
+        uint addend = lid >= offset ? s_spine[lid - offset] : 0u;
+        barrier();
+        s_spine[lid] += addend;
+        barrier();
+    }
+    s_spine[lid] += histograms[lid * num_blocks + block] - digit_total;
+    barrier();
+
+    uint begin = block * push.elements_per_block;
+    uint end = min(begin + push.elements_per_block, sort_count);
+    // Software pipelining: the next batch's key/value loads are issued before this batch's
+    // ballots and barriers, so their latency overlaps the ranking instead of stalling it.
+    uint next_key = begin + lid < end ? keys_in[begin + lid] : 0u;
+    uint next_value = begin + lid < end ? values_in[begin + lid] : 0u;
+    for (uint batch = begin; batch < end; batch += gl_WorkGroupSize.x) {
+        uint index = batch + lid;
+        bool in_range = index < end;
+        uint key = next_key;
+        uint value = next_value;
+        uint ahead = index + gl_WorkGroupSize.x;
+        if (ahead < end) {
+            next_key = keys_in[ahead];
+            next_value = values_in[ahead];
+        }
+        uint digit = (key >> push.shift) & 0xFFu;
+
+        // Subgroup peer mask for this digit: 8 ballot rounds over the digit bits.
+        uvec4 mask = subgroupBallot(true);
+        for (uint bit = 0u; bit < 8u; ++bit) {
+            uvec4 vote = subgroupBallot(((digit >> bit) & 1u) == 1u);
+            bool mine = ((digit >> bit) & 1u) == 1u;
+            mask &= mine ? vote : ~vote;
+        }
+        uvec4 inactive_fix = subgroupBallot(in_range);
+        mask &= inactive_fix;  // inactive lanes must not count as peers
+        uint rank_in_subgroup = subgroupBallotExclusiveBitCount(mask);
+        uint peers_in_subgroup = subgroupBallotBitCount(mask);
+
+        // Lowest peer publishes the subgroup's count for this digit.
+        if (in_range && rank_in_subgroup == 0u) {
+            s_count[gl_SubgroupID * 256u + digit] = peers_in_subgroup;
+        }
+        barrier();
+
+        if (in_range) {
+            uint before_subgroups = 0u;
+            for (uint sg = 0u; sg < gl_SubgroupID; ++sg) {
+                before_subgroups += s_count[sg * 256u + digit];
+            }
+            uint dst = s_spine[digit] + s_running[digit] + before_subgroups + rank_in_subgroup;
+            if (push.write_keys != 0u) keys_out[dst] = key;
+            values_out[dst] = value;
+        }
+        barrier();
+
+        // Fold this batch's counts into the running totals and clear them for the next batch:
+        // invocation `lid` owns digit column `lid`, which nobody else touches until the barrier.
+        uint total = 0u;
+        for (uint sg = 0u; sg < gl_NumSubgroups; ++sg) {
+            total += s_count[sg * 256u + lid];
+            s_count[sg * 256u + lid] = 0u;
+        }
+        s_running[lid] += total;
+        barrier();
+    }
+}

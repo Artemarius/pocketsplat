@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat-webgl (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=counter-full.sh0.ply, splats=973948, sh=0, url_extras=&webgl
+# load_s=3.6, backend=webgl2, canvas=540x975, page=384x693, splats_reported=None
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,1.3,72.07,16.20,17.54,0,38.4,42.5
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,2.7,71.65,16.20,17.30,0,38.4,42.5
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,3.9,72.26,16.25,17.05,0,38.4,42.5
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,5.2,72.26,16.35,17.20,0,38.4,42.5
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,6.5,72.24,16.20,17.20,0,38.7,43.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,7.9,71.23,16.20,17.40,0,38.7,43.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,9.2,72.23,16.00,17.30,0,38.7,43.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,10.5,72.21,16.00,17.55,0,38.7,43.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,11.8,72.08,16.10,17.29,0,38.7,43.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,13.2,71.34,16.00,17.61,0,38.7,43.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,14.5,72.43,16.00,17.40,0,38.7,43.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,15.7,72.35,16.10,17.50,0,38.7,43.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,17.0,72.41,15.90,17.45,0,38.9,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,18.4,71.51,16.00,17.40,0,38.9,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,19.7,72.40,16.00,17.60,0,38.9,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,20.9,72.38,15.80,17.50,0,38.9,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,22.2,72.42,15.90,17.45,0,38.9,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,23.6,71.49,16.10,17.42,0,38.9,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,24.9,72.43,15.90,17.70,0,38.9,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,26.1,72.27,16.05,17.34,0,38.9,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,27.4,72.28,15.75,17.89,0,39.0,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,28.8,71.40,16.05,17.80,0,39.0,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,30.1,72.50,15.80,18.20,0,39.0,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,31.4,72.42,16.00,17.55,0,39.0,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,32.6,72.40,15.90,18.55,0,39.0,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,34.0,71.63,15.95,17.50,0,39.0,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,35.3,72.23,15.95,17.80,0,39.0,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,36.6,72.39,15.90,17.90,0,39.0,44.3
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,37.8,72.46,15.90,17.40,0,39.2,44.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,39.2,71.63,15.90,17.65,0,39.2,44.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,40.5,72.42,15.90,17.60,0,39.2,44.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,41.7,72.45,16.00,17.05,0,39.2,44.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,43.0,72.40,15.70,17.65,0,39.2,44.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,44.4,71.50,16.00,17.48,0,39.2,44.9
+s24u,supersplat-webgl,1.41.0,webgl2,counter-full.sh0.ply,973948,0,540,975,45.7,72.43,16.00,17.25,0,39.2,44.9

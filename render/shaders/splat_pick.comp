@@ -1,0 +1,64 @@
+#version 460
+// Pass: depth pick (recorded only on the frame after SplatRenderer::request_pick)
+// Inputs:  records (the preprocess's draw records), keys/values from this frame's sort with the
+//          sorted keys kept (values[j] = record of draw position j, keys[j] its depth key),
+//          counter (visible_count), push constants: the pixel and the key encoding.
+// Outputs: pick_count (atomic) and one (depth, alpha) pair per visible splat whose kernel covers
+//          the pixel with alpha >= 1/255 - the fragment shader's alpha from the same record - for
+//          the first push.capacity of them; the host composites the pairs front to back.
+// Sync:    after the sort's writes; the caller zeroes pick_count before and copies the buffer to a
+//          host-visible one after.
+
+layout(local_size_x_id = 0, local_size_x = 256) in;
+
+layout(std430, set = 0, binding = 0) readonly buffer Records { uint records[]; };
+layout(std430, set = 0, binding = 1) readonly buffer Keys { uint keys[]; };
+layout(std430, set = 0, binding = 2) readonly buffer Values { uint values[]; };
+layout(std430, set = 0, binding = 3) readonly buffer Counter { uint visible_count; uint visible_chunks; };
+layout(std430, set = 0, binding = 4) buffer Pick {
+    uint pick_count;
+    uint pick_pad;
+    float pairs[];  // depth, alpha
+};
+
+layout(push_constant) uniform Push {
+    vec2 pixel;                 // framebuffer pixels, y down (the draw's coordinates)
+    uint key_bits;              // 16 or 32, as the frame's preprocess wrote them
+    float log_depth_min;        // 16-bit keys: the frame's log depth range
+    float log_depth_inv_range;
+    uint capacity;              // pairs the buffer holds
+} push;
+
+void main() {
+    uint j = gl_GlobalInvocationID.x;
+    if (j >= visible_count) return;
+    uint base = values[j] * 8u;
+    float s_cut = uintBitsToFloat(records[base + 7u]);
+    if (s_cut <= 0.0) return;
+    vec2 center = vec2(uintBitsToFloat(records[base + 0u]), uintBitsToFloat(records[base + 1u]));
+    vec2 axis1 = vec2(uintBitsToFloat(records[base + 2u]), uintBitsToFloat(records[base + 3u]));
+    vec2 axis2 = vec2(uintBitsToFloat(records[base + 4u]), uintBitsToFloat(records[base + 5u]));
+    float l1 = dot(axis1, axis1), l2 = dot(axis2, axis2);
+    if (l1 <= 0.0 || l2 <= 0.0) return;
+    // The quad's axes are orthogonal: project onto them for the quad-local corner coordinates, then
+    // the fragment shader's v_uv (sigma units) and kernel.
+    vec2 d = push.pixel - center;
+    vec2 uv = vec2(dot(d, axis1) / l1, dot(d, axis2) / l2) * s_cut;
+    float r2 = dot(uv, uv);
+    if (r2 > 8.0) return;
+    const float kExp4 = 0.0183156393;  // e^-4
+    float alpha = min(0.99, unpackUnorm4x8(records[base + 6u]).a * (exp(-0.5 * r2) - kExp4) * (1.0 / (1.0 - kExp4)));
+    if (alpha < 1.0 / 255.0) return;
+
+    // Inverse of the preprocess's keys (inverted so ascending = back to front): 16-bit log depth,
+    // or 32-bit sortable float bits (sign bit set on the positive depths past the near clip).
+    uint key = keys[j];
+    float depth = push.key_bits == 16u
+                      ? exp(push.log_depth_min + (float(65535u - (key & 0xFFFFu)) / 65535.0) / push.log_depth_inv_range)
+                      : uintBitsToFloat(~key & 0x7FFFFFFFu);
+    uint slot = atomicAdd(pick_count, 1u);
+    if (slot < push.capacity) {
+        pairs[2u * slot] = depth;
+        pairs[2u * slot + 1u] = alpha;
+    }
+}

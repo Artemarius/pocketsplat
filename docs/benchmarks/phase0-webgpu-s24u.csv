@@ -1,0 +1,2 @@
+device,viewer,backend,scene,phase,t_min,fps,thermal_status,skin_c,ap_c,timestamp
+S24U,playcanvas-model-viewer,webgl2,museum_300k,cold,0.0,59.5,0,36.9,41.5,2026-09-01T15:24:29

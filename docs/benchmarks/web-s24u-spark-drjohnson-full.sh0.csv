@@ -1,0 +1,49 @@
+# pocketsplat bench_web.py, viewer=spark (spark 2.4.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=drjohnson-full.sh0.ply, splats=2668497, sh=0, url_extras=-
+# load_s=6.1, backend=webgl2, canvas=540x974, page=384x693, splats_reported=2668497
+# frames counted from requestAnimationFrame
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,1.0,60.08,16.60,16.70,1,38.2,42.1
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,2.1,60.08,16.60,16.70,1,38.2,42.1
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,3.1,60.08,16.60,16.70,1,38.2,42.1
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,4.1,59.58,16.60,16.70,1,38.2,42.1
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,5.1,60.08,16.60,16.70,1,38.2,42.1
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,6.1,60.09,16.60,16.70,1,38.2,42.1
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,7.2,60.08,16.60,16.70,1,38.2,42.1
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,8.2,60.09,16.60,16.70,1,38.2,42.1
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,9.2,59.06,16.60,16.80,1,38.2,42.1
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,10.2,58.59,16.70,17.61,1,38.2,42.1
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,11.2,59.06,16.60,16.80,1,41.3,48.3
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,12.3,59.62,16.60,16.70,1,41.3,48.3
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,13.3,60.09,16.60,16.70,1,41.3,48.3
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,14.3,59.58,16.60,16.71,1,41.3,48.3
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,15.4,60.08,16.60,16.71,1,41.3,48.3
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,16.4,60.08,16.60,16.70,1,41.3,48.3
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,17.5,60.08,16.60,16.70,1,41.3,48.3
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,18.5,59.58,16.60,16.70,1,41.3,48.3
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,19.5,33.76,16.70,69.41,1,41.3,48.3
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,20.5,28.71,41.50,66.44,1,41.3,48.3
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,21.5,30.30,33.30,63.24,2,42.8,51.6
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,22.6,32.69,16.70,58.20,2,42.8,51.6
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,23.6,33.60,24.90,53.22,2,42.8,51.6
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,24.6,32.96,24.90,58.25,2,42.8,51.6
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,25.7,30.04,25.00,62.81,2,42.8,51.6
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,26.7,27.89,25.00,72.85,2,42.8,51.6
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,27.8,27.31,28.95,74.55,2,42.8,51.6
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,28.8,25.30,33.45,74.87,2,42.8,51.6
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,29.8,26.04,33.40,66.50,2,42.8,51.6
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,30.8,30.31,25.00,58.30,2,42.8,51.6
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,31.8,31.07,16.70,62.81,2,41.8,49.8
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,32.9,32.68,25.05,58.20,2,41.8,49.8
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,33.9,34.79,16.70,53.28,2,41.8,49.8
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,34.9,31.57,33.20,58.30,2,41.8,49.8
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,35.9,28.52,29.10,66.67,2,41.8,49.8
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,36.9,24.66,41.95,74.67,2,41.8,49.8
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,38.0,26.37,25.00,74.90,2,41.8,49.8
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,39.0,23.20,41.35,83.27,2,41.8,49.8
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,40.1,25.67,32.80,74.80,2,41.8,49.8
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,41.1,27.96,25.10,72.14,2,41.8,49.8
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,42.1,27.50,33.00,66.30,2,41.8,49.5
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,43.2,29.81,25.00,62.04,2,41.8,49.5
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,44.2,30.57,33.20,58.26,2,41.8,49.5
+s24u,spark,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,45.2,31.12,17.00,63.16,2,41.8,49.5

@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat-webgl (supersplat-viewer 1.41.0), browser=Chrome/149.0.7827.102, model=SM-S938B
+# scene=stump-full.sh0.ply, splats=4049567, sh=0, url_extras=&webgl
+# load_s=10.2, backend=webgl2, canvas=540x976, page=384x693, splats_reported=4049567
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,1.3,71.30,16.00,21.99,0,37.3,43.2
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,2.6,71.81,16.15,20.33,0,37.3,43.2
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,3.9,72.26,15.50,20.45,0,37.3,43.2
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,5.2,72.41,13.60,17.05,0,37.3,43.2
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,6.4,72.45,13.40,17.25,0,38.4,48.3
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,7.8,71.81,16.45,19.97,0,38.4,48.3
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,9.1,72.15,16.40,19.95,0,38.4,48.3
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,10.3,72.26,16.35,20.00,0,38.4,48.3
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,11.6,72.25,14.25,20.44,0,38.4,48.3
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,13.0,71.93,16.40,20.23,0,38.4,48.3
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,14.2,72.29,16.10,20.10,0,38.4,48.3
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,15.5,72.40,15.60,20.85,0,38.4,48.3
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,16.8,72.43,16.10,21.35,1,40.2,55.0
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,18.1,71.55,15.80,20.30,1,40.2,55.0
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,19.4,72.24,16.10,21.54,1,40.2,55.0
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,20.7,72.43,16.10,21.10,1,40.2,55.0
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,22.0,72.38,16.10,19.70,1,40.2,55.0
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,23.3,71.77,16.20,21.43,1,40.2,55.0
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,24.6,72.20,15.75,20.87,1,40.2,55.0
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,25.8,72.29,16.20,20.70,1,40.2,55.0
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,27.1,72.19,16.00,20.65,1,40.5,52.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,28.4,71.93,15.80,20.00,1,40.5,52.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,29.7,72.48,16.10,20.05,1,40.5,52.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,31.0,72.29,15.80,20.40,1,40.5,52.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,32.3,72.13,16.00,20.25,1,40.5,52.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,33.6,71.77,16.30,20.04,1,40.5,52.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,34.9,72.42,16.10,20.40,1,40.5,52.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,36.1,72.30,16.20,20.45,1,40.5,52.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,37.4,72.45,15.90,20.40,1,40.6,51.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,38.7,71.93,16.00,20.04,1,40.6,51.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,40.0,72.40,16.40,19.20,1,40.6,51.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,41.3,72.44,16.20,20.55,1,40.6,51.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,42.6,72.42,15.70,20.10,1,40.6,51.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,43.9,71.74,15.95,21.40,1,40.6,51.4
+s25u,supersplat-webgl,1.41.0,webgl2,stump-full.sh0.ply,4049567,0,540,976,45.2,72.29,16.25,21.02,1,40.6,51.4

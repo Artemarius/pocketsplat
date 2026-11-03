@@ -1,0 +1,11 @@
+# Sorted-copy draw probe, S25U (Adreno 830), 2026-10-31 (S24): DrawProbe::kSortedCopy (render 2023540) - records copied into draw
+# order after the sort, read sequentially by the draw (same image) - against the normal draw (order[] gather). stump-full 864x1872,
+# 16-bit keys, 0.1 px cull, uncapped bench orbit, 45 s cold runs from skin <= 38.5 C, interleaved, three rounds, USB (charging;
+# round 3 ran warm, status 2). The copy pass is timed inside sort_ms. draw_mcycles = draw ms x the app's kgsl clock, 0-30 s.
+device,gpu,set,draw_probe,scene,round,frames,fps,gpu_ms,preprocess_ms,sort_ms,draw_ms,draw_mcycles,visible,gpu_mhz,thermal_status_max,headroom_end
+s25u,Adreno 830,s25u-2023540-copy,none,stump-full,1,3310,110.318,9.058,2.524,2.202,4.124,4.819,1194456,1177.708,0,0.637
+s25u,Adreno 830,s25u-2023540-copy,copy,stump-full,1,2791,93.028,10.740,2.535,4.162,3.834,4.456,1196280,1177.223,0,0.790
+s25u,Adreno 830,s25u-2023540-copy,none,stump-full,2,3305,110.163,9.073,2.530,2.209,4.124,4.800,1194402,1176.031,1,0.850
+s25u,Adreno 830,s25u-2023540-copy,copy,stump-full,2,2761,92.015,10.861,2.565,4.186,3.896,4.484,1195640,1168.569,1,0.877
+s25u,Adreno 830,s25u-2023540-copy,none,stump-full,3,3158,105.251,9.497,2.621,2.274,4.379,4.746,1195586,1100.112,2,0.900
+s25u,Adreno 830,s25u-2023540-copy,copy,stump-full,3,2612,87.065,11.480,2.693,4.282,4.271,4.460,1195731,1067.191,2,0.907

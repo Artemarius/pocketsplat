@@ -1,0 +1,11 @@
+device,scene,renderer,cap_fps,fps_cold,fps_late,busy,mhz,mcycles,visible,skin_max,status_max,power_w,charge_mah,fps_steady,mj_per_frame,gpu_ms_late
+s24u,stump-full.sh0,PocketSplat 16bit-c0.1-540x975-cap37,37,37.001,37.000,78.564,469.077,9.960,1182455.242,38.400,0.000,3.595,133.299,37.000,97.16,21.657
+s24u,stump-full.sh0,PocketSplat 16bit-c0.1-605x1310-cap60,60,59.897,nan,84.851,659.176,9.322,1193419.199,41.800,1.000,5.284,83.929,60.000,88.07,nan
+s24u,stump-full.sh0,PocketSplat 16bit-c0.1-734x1591-cap60,60,59.849,nan,85.108,665.919,9.446,1193401.143,41.300,1.000,5.427,83.929,60.000,90.45,nan
+s24u,stump-full.sh0,PocketSplat 16bit-c0.1-864x1872-cap60,60,59.851,nan,85.608,664.000,9.474,1193427.861,41.700,1.000,5.249,88.866,60.000,87.48,nan
+s24u,stump-full.sh0,PocketSplat 16bit-c0.2-864x1872-cap60,60,59.936,nan,80.014,569.824,7.600,886325.987,40.500,1.000,4.193,69.118,59.994,69.89,nan
+s24u,stump-full.sh0,PocketSplat 16bit-c0.5-734x1591-cap60,60,59.999,nan,81.178,369.068,4.993,528878.647,38.000,0.000,3.102,44.433,60.000,51.71,nan
+s24u,stump-full.sh0,PocketSplat 16bit-c0.5-864x1872-cap60,60,60.001,nan,81.288,384.712,5.212,528851.859,38.200,0.000,3.099,44.433,60.000,51.65,nan
+s24u,stump-full.sh0,PocketSplat 16bit-c1-605x1310-cap60,60,59.999,nan,74.986,273.905,3.423,323484.854,36.500,0.000,2.079,39.496,60.000,34.65,nan
+s24u,stump-full.sh0,PocketSplat 16bit-c1-864x1872-cap60,60,60.001,nan,72.918,285.110,3.465,323524.425,36.800,0.000,2.985,39.496,59.999,49.76,nan
+s24u,stump-full.sh0,supersplat-orbit-ourpose-touch,nan,53.845,35.335,85.437,439.373,10.161,nan,38.600,0.000,3.669,138.236,36.943,99.30,nan

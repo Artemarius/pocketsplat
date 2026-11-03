@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat (supersplat-viewer 1.41.0), browser=Chrome/149.0.7827.102, model=SM-S938B
+# scene=drjohnson-full.sh0.ply, splats=2668497, sh=0, url_extras=-
+# load_s=6.0, backend=webgpu, canvas=540x976, page=384x693, splats_reported=2668497
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,1.3,68.68,15.90,20.35,0,37.5,43.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,2.7,72.01,15.75,18.50,0,37.5,43.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,4.0,72.23,15.60,21.41,0,37.5,43.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,5.2,72.35,16.00,19.95,0,37.5,43.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,6.5,72.34,15.90,19.65,0,37.5,43.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,7.8,71.77,15.80,19.53,0,37.5,43.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,9.1,72.40,15.80,18.75,0,37.5,43.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,10.4,72.31,16.10,18.20,0,37.5,43.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,11.7,72.37,15.90,19.20,0,37.9,46.3
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,13.0,71.73,15.70,19.80,0,37.9,46.3
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,14.3,72.23,15.85,18.96,0,37.9,46.3
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,15.6,72.37,15.80,18.00,0,37.9,46.3
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,16.8,72.41,15.90,18.05,0,37.9,46.3
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,18.2,71.71,15.95,18.42,0,37.9,46.3
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,19.5,72.19,15.70,19.07,0,37.9,46.3
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,20.8,72.21,16.05,18.96,0,37.9,46.3
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,22.1,72.22,15.95,20.34,0,38.2,47.4
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,23.4,71.75,15.90,18.00,0,38.2,47.4
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,24.7,72.17,15.95,17.84,0,38.2,47.4
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,26.0,72.25,16.10,18.00,0,38.2,47.4
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,27.3,72.23,15.80,17.68,0,38.2,47.4
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,28.6,70.12,16.45,24.31,0,38.2,47.4
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,29.9,71.79,16.05,18.53,0,38.2,47.4
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,31.2,69.65,15.80,24.77,0,38.2,47.4
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,32.4,71.04,16.20,24.61,0,38.7,48.1
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,33.8,71.76,15.90,18.70,0,38.7,48.1
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,35.1,72.21,16.00,17.90,0,38.7,48.1
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,36.3,71.09,16.20,24.72,0,38.7,48.1
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,37.6,70.45,16.35,24.99,0,38.9,48.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,38.9,67.22,16.20,26.47,0,38.9,48.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,40.1,66.58,16.30,29.16,0,38.9,48.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,41.3,69.25,16.30,28.55,0,38.9,48.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,42.5,68.26,16.40,26.29,0,38.9,48.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,43.8,66.72,16.15,29.02,0,38.9,48.2
+s25u,supersplat,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,976,45.0,65.90,16.50,29.19,0,38.9,48.2

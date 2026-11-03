@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat-webgl (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=drjohnson-full.sh0.ply, splats=2668497, sh=0, url_extras=&webgl
+# load_s=8.3, backend=webgl2, canvas=540x975, page=384x693, splats_reported=None
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,1.3,70.41,15.45,18.67,0,38.1,41.4
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,2.7,71.54,15.90,18.00,0,38.1,41.4
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,4.0,72.25,15.60,18.44,0,38.1,41.4
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,5.3,72.13,15.65,18.25,0,38.1,41.4
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,6.6,72.26,15.70,18.44,0,39.5,44.8
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,7.9,71.73,15.60,18.49,0,39.5,44.8
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,9.2,72.35,15.80,18.45,0,39.5,44.8
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,10.5,72.20,15.75,18.80,0,39.5,44.8
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,11.8,72.24,15.85,18.04,0,39.5,44.8
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,13.1,71.37,15.90,18.80,0,39.5,44.8
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,14.4,72.32,15.70,18.78,0,39.5,44.8
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,15.7,70.85,14.90,19.70,0,39.5,44.8
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,17.0,71.81,14.85,18.92,1,41.1,49.0
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,18.4,71.38,15.90,18.93,1,41.1,49.0
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,19.7,70.60,15.80,21.10,1,41.1,49.0
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,21.0,72.22,15.60,18.59,1,41.1,49.0
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,22.3,70.25,14.80,19.38,1,41.1,49.0
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,23.6,71.50,15.10,18.93,1,41.1,49.0
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,24.9,71.54,15.80,18.91,1,41.1,49.0
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,26.2,72.27,15.10,18.35,1,41.1,49.0
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,27.5,70.50,15.10,18.54,1,40.7,48.7
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,28.9,71.48,16.00,19.30,1,40.7,48.7
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,30.2,71.73,15.10,18.64,1,40.7,48.7
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,31.5,71.54,15.50,20.12,1,40.7,48.7
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,32.8,71.54,15.10,19.00,1,40.7,48.7
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,34.2,71.76,15.50,18.66,1,40.7,48.7
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,35.5,71.63,15.90,18.90,1,40.7,48.7
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,36.7,72.39,15.10,18.60,1,40.7,48.7
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,38.1,71.65,15.10,19.14,1,41.1,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,39.4,71.54,16.10,18.85,1,41.1,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,40.8,70.45,16.00,23.20,1,41.1,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,42.1,70.72,15.50,19.14,1,41.1,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,43.4,71.89,15.70,18.75,1,41.1,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,44.8,71.11,15.20,19.22,1,41.1,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,975,46.0,72.31,14.60,18.50,1,41.1,49.3

@@ -1,0 +1,29 @@
+# In-app draw-mode A/B, S25U (Adreno 830), 2026-10-28, ADR-0010: same APK (9a7c38f) and protocol as
+# draw-ab-s24u-9a7c38f.csv, run over Wi-Fi adb on battery right after the S18 battery session, so the phone
+# was warm (thermal status 2 by the end of most runs); the interleaving keeps the modes comparable.
+# Columns are means over the cold window (0-30 s); gpu_mhz is the app's own kgsl reading.
+device,gpu,draw_mode,scene,round,frames,fps,gpu_ms,cull_ms,preprocess_ms,sort_ms,draw_ms,visible,gpu_mhz,thermal_status_max,headroom_end
+s25u,Adreno 830,vertex6,bicycle-4m,1,2318,77.27,12.92,0.23,2.90,2.52,7.27,1321939,1073.30,2,0.94
+s25u,Adreno 830,triangle,bicycle-4m,1,2558,85.24,11.72,0.23,2.90,2.50,6.09,1325411,1078.92,2,0.93
+s25u,Adreno 830,indexed,bicycle-4m,1,2380,79.31,12.59,0.23,2.89,2.49,6.98,1323800,1069.94,2,0.93
+s25u,Adreno 830,instanced,bicycle-4m,1,1607,53.55,18.64,0.23,2.84,2.48,13.11,1323168,1092.38,2,0.92
+s25u,Adreno 830,vertex6,bicycle-4m,2,2322,77.37,12.91,0.23,2.90,2.51,7.27,1321976,1073.34,2,0.94
+s25u,Adreno 830,triangle,bicycle-4m,2,2551,85.02,11.75,0.23,2.90,2.51,6.11,1325443,1073.68,2,0.93
+s25u,Adreno 830,indexed,bicycle-4m,2,2327,77.56,12.87,0.24,2.95,2.55,7.13,1322036,1052.45,2,0.93
+s25u,Adreno 830,instanced,bicycle-4m,2,1614,53.80,18.56,0.23,2.83,2.46,13.04,1322857,1104.51,2,0.92
+s25u,Adreno 830,vertex6,stump-full,1,2913,97.10,10.29,0.21,2.56,2.22,5.30,1195616,1157.01,2,0.92
+s25u,Adreno 830,triangle,stump-full,1,3084,102.78,9.72,0.23,2.69,2.31,4.49,1194746,1091.22,2,0.93
+s25u,Adreno 830,indexed,stump-full,1,2877,95.88,10.41,0.23,2.67,2.31,5.20,1196741,1095.90,2,0.93
+s25u,Adreno 830,instanced,stump-full,1,1827,60.89,16.39,0.22,2.61,2.24,11.32,1193470,1118.95,2,0.91
+s25u,Adreno 830,vertex6,stump-full,2,2634,87.78,11.38,0.24,2.80,2.40,5.93,1195915,1034.93,2,0.94
+s25u,Adreno 830,triangle,stump-full,2,3042,101.39,9.85,0.23,2.72,2.33,4.56,1193634,1070.89,2,0.94
+s25u,Adreno 830,indexed,stump-full,2,2782,92.74,10.77,0.24,2.76,2.37,5.40,1196581,1061.10,2,0.93
+s25u,Adreno 830,instanced,stump-full,2,1780,59.31,16.83,0.23,2.67,2.31,11.62,1193820,1091.65,2,0.92
+s25u,Adreno 830,vertex6,truck-full,1,6064,202.13,4.77,0.10,1.03,0.95,2.69,432417,1047.74,2,0.93
+s25u,Adreno 830,triangle,truck-full,1,4960,165.33,5.35,0.13,1.24,1.16,2.82,432732,831.87,1,0.88
+s25u,Adreno 830,indexed,truck-full,1,5165,172.20,4.89,0.10,1.07,1.00,2.71,432749,1009.57,2,0.90
+s25u,Adreno 830,instanced,truck-full,1,4536,151.18,6.52,0.10,1.01,0.94,4.47,432865,1066.69,2,0.92
+s25u,Adreno 830,vertex6,truck-full,2,6107,203.55,4.68,0.10,1.02,0.94,2.62,432552,1073.65,2,0.93
+s25u,Adreno 830,triangle,truck-full,2,6968,232.28,4.30,0.10,1.03,0.95,2.22,432576,1055.74,2,0.93
+s25u,Adreno 830,indexed,truck-full,2,6316,210.56,4.70,0.10,1.04,0.97,2.59,432648,1047.90,2,0.93
+s25u,Adreno 830,instanced,truck-full,2,4114,137.13,7.03,0.11,1.11,1.03,4.79,432362,1040.95,2,0.90

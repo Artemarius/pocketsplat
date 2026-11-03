@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Spark bench fixture</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
+  canvas { display: block; }
+</style>
+<!-- Served by scripts/bench_web.py, which places the pinned three/spark builds under ./vendor/. -->
+<script type="importmap">
+  { "imports": { "three": "./vendor/three/three.module.js",
+                 "three/addons/": "./vendor/three-addons/",
+                 "@sparkjsdev/spark": "./vendor/spark/spark.module.js" } }
+</script>
+</head>
+<body>
+<script type="module">
+// Benchmark fixture for scripts/bench_web.py: Spark (MIT, World Labs) renders ?scene=<url> with
+// PocketSplat's bench camera — target and diagonal of the 5th-95th percentile box (?cx,cy,cz,diag,
+// PLY frame), distance 1.2 x diag, pitch 0.3 rad, 60 deg vertical FOV — orbiting 2pi/600 rad per
+// frame once loaded. ?pr= pins the pixel ratio (default devicePixelRatio).
+import * as THREE from "three";
+import { SparkRenderer, SplatMesh } from "@sparkjsdev/spark";
+
+const params = new URLSearchParams(location.search);
+const num = (key, fallback) => (params.has(key) ? parseFloat(params.get(key)) : fallback);
+window.__bench = { loaded: false, splats: 0, error: null };
+
+const renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setPixelRatio(num("pr", window.devicePixelRatio));
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.05, 1000);
+scene.add(new SparkRenderer({ renderer }));
+
+// 3DGS PLYs are right-down-forward; a 180 degree turn about x gives three.js's right-up-back.
+const mesh = new SplatMesh({ url: params.get("scene") });
+mesh.quaternion.set(1, 0, 0, 0);
+scene.add(mesh);
+
+const target = new THREE.Vector3(num("cx", 0), -num("cy", 0), -num("cz", 0));
+const distance = 1.2 * num("diag", 1);
+const pitch = 0.3;
+let yaw = 0;
+
+mesh.initialized
+  .then(() => {
+    window.__bench.splats = mesh.packedSplats ? mesh.packedSplats.numSplats : 0;
+    window.__bench.loaded = true;
+  })
+  .catch((err) => { window.__bench.error = String(err); });
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+renderer.setAnimationLoop(() => {
+  if (window.__bench.loaded) yaw += (2 * Math.PI) / 600;
+  camera.position.set(
+    target.x + distance * Math.cos(pitch) * Math.sin(yaw),
+    target.y + distance * Math.sin(pitch),
+    target.z + distance * Math.cos(pitch) * Math.cos(yaw));
+  camera.lookAt(target);
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

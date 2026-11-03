@@ -1,0 +1,34 @@
+#version 460
+// Pass: sorted copy of the draw records (DrawProbe::kSortedCopy only; recorded after the sort)
+// Inputs:  records (the preprocess's 32 B draw records, compacted order), values from this
+//          frame's sort (values[j] = record of draw position j), sort_args (visible count; the
+//          dispatch is the sort's indirect block dispatch, push.elements_per_block records per
+//          workgroup).
+// Outputs: sorted_records[j] = records[values[j]] for every draw position j < visible count, so
+//          the draw reads its records sequentially in the same blend order (same image). One
+//          32-bit word per invocation and iteration: 8 neighbouring invocations copy one record,
+//          so both the reads of a record and the writes stay contiguous.
+// Sync:    after the sort's writes (compute -> compute barrier); the caller barriers this ->
+//          vertex before the draw. The previous frame's vertex reads of sorted_records are
+//          covered by record_compute's leading barrier.
+
+layout(local_size_x_id = 0, local_size_x = 256) in;
+
+layout(std430, set = 0, binding = 0) readonly buffer Records { uint records[]; };
+layout(std430, set = 0, binding = 1) readonly buffer Values { uint values[]; };
+layout(std430, set = 0, binding = 2) readonly buffer SortArgs { uint visible_count; };
+layout(std430, set = 0, binding = 3) writeonly buffer SortedRecords { uint sorted_records[]; };
+
+layout(push_constant) uniform Push {
+    uint elements_per_block;  // records per workgroup (the sort's block size)
+} push;
+
+void main() {
+    uint first = gl_WorkGroupID.x * push.elements_per_block;
+    uint end = min(first + push.elements_per_block, visible_count);
+    if (first >= end) return;
+    uint word_end = end * 8u;
+    for (uint w = first * 8u + gl_LocalInvocationID.x; w < word_end; w += gl_WorkGroupSize.x) {
+        sorted_records[w] = records[values[w >> 3u] * 8u + (w & 7u)];
+    }
+}

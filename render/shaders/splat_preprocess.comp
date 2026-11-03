@@ -1,0 +1,239 @@
+#version 460
+// Pass: splat cull + preprocess (compacting)
+// Inputs:  pack SSBOs (pos, scale_rot, color, sh1), camera UBO, push constants; with
+//          push.use_chunk_cull != 0 also chunk_list from the chunk-cull pass, and the dispatch
+//          is indirect with one 256-thread workgroup per visible chunk (workgroup size ==
+//          kPackChunkSize, asserted host-side).
+// Outputs: for each VISIBLE splat, a compacted slot s = atomicAdd(visible_count):
+//          records[s] (32-byte oriented-quad draw record: center px, two half-axis vectors px,
+//          packed color, sigma-units support cutoff), keys[s] (depth sort key, 32- or 16-bit
+//          per push.key_bits), values[s] = s's record index for the sort to permute. With
+//          push.min_contribution > 0, splats whose integrated screen contribution is below it
+//          are culled before they take a sort slot. With push.coverage_strength > 0 each
+//          splat's opacity is first scaled by the coverage fade (coverage[], ADR-0013).
+// Sync:    caller clears the counter, then barriers chunk cull -> preprocess ->
+//          prepare_indirect -> sort -> draw. Slot order within equal depths is
+//          non-deterministic (atomic compaction); the sort re-establishes draw order.
+//
+// Projection math implemented from Zwicker et al., "EWA Splatting" and Kerbl et al., "3D
+// Gaussian Splatting" (paper equations, no reference code). The 0.3 dilation carries the
+// Mip-Splatting-style opacity compensation so dilated splats don't gain energy (halo fix).
+
+layout(local_size_x_id = 0, local_size_x = 256) in;
+
+layout(std430, set = 0, binding = 0) readonly buffer Positions { float positions[]; };
+layout(std430, set = 0, binding = 1) readonly buffer ScaleRot { uint scale_rot[]; };
+layout(std430, set = 0, binding = 2) readonly buffer Colors { uint colors[]; };
+layout(std430, set = 0, binding = 3) readonly buffer Sh1 { uint sh1[]; };
+layout(std430, set = 0, binding = 4) writeonly buffer Records { uint records[]; };
+layout(std430, set = 0, binding = 5) writeonly buffer Keys { uint keys[]; };
+layout(std430, set = 0, binding = 6) writeonly buffer Values { uint values[]; };
+layout(std430, set = 0, binding = 7) buffer Counter { uint visible_count; uint visible_chunks; };
+
+layout(std140, set = 0, binding = 8) uniform Camera {
+    mat4 view;            // world -> view, RUB (camera looks along -z)
+    mat4 proj_view;       // Vulkan NDC: y down, depth [0,1]
+    vec4 cam_pos;         // xyz = camera position, world
+    vec4 focal_viewport;  // fx, fy (pixels), viewport width, height
+};
+
+layout(std430, set = 0, binding = 10) readonly buffer ChunkList { uint chunk_list[]; };
+// Per-splat observed-direction masks (splatcore/coverage.h): bit c = octahedral cell c of the
+// direction splat -> capture camera. A 4-byte dummy when the scene has none (strength is 0 then).
+layout(std430, set = 0, binding = 12) readonly buffer Coverage { uint coverage[]; };
+
+layout(push_constant) uniform Push {
+    uint count;
+    uint sh_degree;    // 0 or 1
+    float sh1_scale;   // max-abs SH1 coefficient (pack header)
+    float near_clip;
+    uint key_bits;     // 16 or 32
+    float log_depth_min;        // 16-bit keys: ln of the frame's nearest possible splat depth
+    float log_depth_inv_range;  // 16-bit keys: 1 / (ln far - ln near), far = farthest AABB corner
+    uint use_chunk_cull;  // 1 = indirect dispatch over chunk_list, 0 = direct over all splats
+    float min_contribution;  // cull below this many pixels of full coverage; 0 = off
+    float coverage_strength;  // opacity an unmatched splat loses (host: 1 - (1 - s)^2); 0 = off
+    float coverage_cos_full;  // cos of the angle within which an observed cell matches fully
+    float coverage_cos_zero;  // cos of the angle beyond which it does not match at all
+} push;
+
+const float kShC1 = 0.4886025119029199;  // sqrt(3 / (4*pi))
+const uint kCoverageGrid = 5u;           // splatcore::kCoverageGrid
+
+// Unit direction at the centre of octahedral cell `cell` - computed, not tabled: per-invocation
+// indexed constant tables are a trap on the Adreno 750 (CLAUDE.md). Mirrors
+// splatcore::coverage_cell_center.
+vec3 coverage_cell_center(uint cell) {
+    float g = float(kCoverageGrid);
+    float x = (float(cell % kCoverageGrid) + 0.5) / g * 2.0 - 1.0;
+    float y = (float(cell / kCoverageGrid) + 0.5) / g * 2.0 - 1.0;
+    float z = 1.0 - abs(x) - abs(y);
+    if (z < 0.0) {
+        float fx = (1.0 - abs(y)) * (x >= 0.0 ? 1.0 : -1.0);
+        float fy = (1.0 - abs(x)) * (y >= 0.0 ? 1.0 : -1.0);
+        x = fx;
+        y = fy;
+    }
+    return normalize(vec3(x, y, z));
+}
+
+// Best smoothstep match of a view direction (unit, splat -> eye) over the observed cells; 0 for
+// an empty mask. Mirrors splatcore::coverage_match. One iteration per set bit (median 1-2).
+float coverage_match(uint mask, vec3 dir) {
+    float best = 0.0;
+    while (mask != 0u) {
+        uint cell = uint(findLSB(mask));
+        mask &= mask - 1u;
+        best = max(best, smoothstep(push.coverage_cos_zero, push.coverage_cos_full,
+                                    dot(dir, coverage_cell_center(cell))));
+    }
+    return best;
+}
+
+void main() {
+    // With chunk cull, workgroup w handles the 256 splats of chunk chunk_list[w]; the tail chunk
+    // may be partial, caught by the count check below.
+    uint idx = push.use_chunk_cull != 0u
+                   ? chunk_list[gl_WorkGroupID.x] * 256u + gl_LocalInvocationID.x
+                   : gl_GlobalInvocationID.x;
+    if (idx >= push.count) return;
+
+    vec3 p = vec3(positions[3u * idx], positions[3u * idx + 1u], positions[3u * idx + 2u]);
+    vec4 t4 = view * vec4(p, 1.0);
+    float depth = -t4.z;  // positive in front of the camera
+    if (depth < push.near_clip) return;
+    vec4 clip = proj_view * vec4(p, 1.0);
+    vec3 ndc = clip.xyz / clip.w;
+    if (abs(ndc.x) > 1.3 || abs(ndc.y) > 1.3) return;
+
+    vec4 col = unpackUnorm4x8(colors[idx]);
+    if (col.a < 1.0 / 255.0) return;
+    // Coverage fade (ADR-0013): seen from away from every observed direction, the splat keeps
+    // only (1 - strength) of its opacity; strength 0 skips this (uniform branch, no mask read).
+    if (push.coverage_strength > 0.0) {
+        float match = coverage_match(coverage[idx], normalize(cam_pos.xyz - p));
+        col.a *= 1.0 - push.coverage_strength * (1.0 - match);
+        if (col.a < 1.0 / 255.0) return;
+    }
+
+    // Unpack log-scales (3 x fp16) and the quaternion (4 x snorm8, order w,x,y,z).
+    uint w0 = scale_rot[3u * idx];
+    uint w1 = scale_rot[3u * idx + 1u];
+    uint w2 = scale_rot[3u * idx + 2u];
+    vec2 sxy = unpackHalf2x16(w0);
+    float sz = unpackHalf2x16(w1).x;
+    vec3 s = exp(vec3(sxy, sz));
+    vec4 q = unpackSnorm4x8((w1 >> 16u) | ((w2 & 0xFFFFu) << 16u));  // (w, x, y, z)
+    q /= max(length(q), 1e-6);
+    float qw = q.x, qx = q.y, qy = q.z, qz = q.w;
+    mat3 rot = mat3(  // column-major: columns are the rotated basis vectors
+        1.0 - 2.0 * (qy * qy + qz * qz), 2.0 * (qx * qy + qw * qz), 2.0 * (qx * qz - qw * qy),
+        2.0 * (qx * qy - qw * qz), 1.0 - 2.0 * (qx * qx + qz * qz), 2.0 * (qy * qz + qw * qx),
+        2.0 * (qx * qz + qw * qy), 2.0 * (qy * qz - qw * qx), 1.0 - 2.0 * (qx * qx + qy * qy));
+    mat3 rs = mat3(rot[0] * s.x, rot[1] * s.y, rot[2] * s.z);
+    mat3 sigma = rs * transpose(rs);
+
+    // Perspective Jacobian at the splat center (EWA): d = depth, columns of J.
+    float fx = focal_viewport.x, fy = focal_viewport.y;
+    float d2 = depth * depth;
+    // The projection matrix maps view y (up) to NDC y (down) — its y row is negated — so the
+    // pixel-space Jacobian's y row must carry that sign too. With +fy the computed covariance is
+    // the y-mirror of the true one (b flips sign): eigenvalues are unchanged but every
+    // anisotropic splat draws with its major-axis slope negated.
+    mat3 jacobian = mat3(
+        fx / depth, 0.0, 0.0,
+        0.0, -fy / depth, 0.0,
+        fx * t4.x / d2, -fy * t4.y / d2, 0.0);
+    mat3 world_to_view = mat3(view);
+    mat3 jw = jacobian * world_to_view;
+    mat3 cov = jw * sigma * transpose(jw);
+    float a0 = cov[0][0];
+    float b = cov[0][1];
+    float c0 = cov[1][1];
+    float det_before = max(a0 * c0 - b * b, 0.0);
+    float a = a0 + 0.3;
+    float c = c0 + 0.3;
+    float det = a * c - b * b;
+    if (det <= 0.0) return;
+    col.a *= sqrt(det_before / det);  // dilation opacity compensation (halo fix)
+    if (col.a < 1.0 / 255.0) return;
+    // Integrated screen contribution: the Gaussian's area, 2*pi*sqrt(det Sigma2D) px^2, times its
+    // opacity = pixels of full coverage the splat adds to the image. With the compensation above
+    // it is the same before and after dilation. Culling on it removes the far-field mass of
+    // sub-pixel splats before they cost a sort key (ADR-0008).
+    if (col.a * 6.2831853 * sqrt(det) < push.min_contribution) return;
+
+    // Eigenbasis of the dilated covariance. The discriminant must be ((a-c)/2)^2 + b^2 — the
+    // algebraically equal mid^2 - det cancels catastrophically for needle splats (lambda_max up
+    // to ~1e7 px^2 at silhouettes) and was one source of the silhouette-ray artifact
+    // (docs/silhouette-rays-research.md).
+    float mid = 0.5 * (a + c);
+    float half_diff = 0.5 * (a - c);
+    float disc = sqrt(half_diff * half_diff + b * b);
+    float lambda1 = mid + disc;
+    float lambda2 = mid - disc;
+    // Sigma2D is PSD mathematically, so lambda2 <= 0 is pure fp32 cancellation on an extreme
+    // needle: a degenerate projection whose ridge line would otherwise be drawn across the whole
+    // quad. Reject the splat; which side of zero it lands on flips with small view changes.
+    if (lambda2 <= 0.0) return;
+    vec2 e1 = abs(b) > 1e-3 ? normalize(vec2(b, lambda1 - a))
+                            : (a >= c ? vec2(1.0, 0.0) : vec2(0.0, 1.0));
+    vec2 e2 = vec2(-e1.y, e1.x);
+
+    // Opacity-adaptive support cutoff s_cut <= sqrt(8) sigma: the largest r where the
+    // renormalized kernel alpha (splat.frag) still reaches 1/255 — beyond it the splat cannot
+    // contribute one LSB, so the quad stops there (faint splats get much shorter quads).
+    const float kExp4 = 0.0183156393;  // e^-4
+    float s_cut = sqrt(max(-2.0 * log(kExp4 + (1.0 - kExp4) / (255.0 * col.a)), 0.0));
+    // Half-axis extents in pixels, each capped: the fragment UV span stays +-s_cut regardless,
+    // so a capped axis renders a *compressed* Gaussian (soft end) rather than a truncated one.
+    float ext1 = min(s_cut * sqrt(lambda1), 2048.0);
+    float ext2 = min(s_cut * sqrt(lambda2), 2048.0);
+    if (max(ext1, ext2) < 0.5) return;  // sub-half-pixel support: under one LSB everywhere
+
+    vec3 rgb = col.rgb;
+    if (push.sh_degree >= 1u) {
+        vec3 dir = normalize(p - cam_pos.xyz);
+        uint s0 = sh1[3u * idx];
+        uint s1 = sh1[3u * idx + 1u];
+        vec4 b0 = unpackSnorm4x8(s0);                     // c0.r c0.g c0.b c1.r
+        vec4 b1 = unpackSnorm4x8(s1);                     // c1.g c1.b c2.r c2.g
+        float b2 = unpackSnorm4x8(sh1[3u * idx + 2u]).x;  // c2.b
+        vec3 c0v = b0.xyz * push.sh1_scale;               // y-basis coefficient
+        vec3 c1v = vec3(b0.w, b1.xy) * push.sh1_scale;    // z-basis
+        vec3 c2v = vec3(b1.zw, b2) * push.sh1_scale;      // x-basis
+        rgb += kShC1 * (-c0v * dir.y + c1v * dir.z - c2v * dir.x);
+        rgb = clamp(rgb, 0.0, 1.0);
+    }
+
+    // Depth key, inverted so ascending sort = back-to-front.
+    uint key;
+    if (push.key_bits == 16u) {
+        // Log depth over the frame's possible depth range (host-computed from the pack AABB): a
+        // constant relative step, ln(far/near) / 65535, wherever the content sits (ADR-0008).
+        float t = (log(depth) - push.log_depth_min) * push.log_depth_inv_range;
+        key = 65535u - uint(clamp(t, 0.0, 1.0) * 65535.0 + 0.5);
+    } else {
+        uint bits = floatBitsToUint(depth);
+        bits = (bits & 0x80000000u) != 0u ? ~bits : (bits | 0x80000000u);
+        key = ~bits;
+    }
+
+    uint slot = atomicAdd(visible_count, 1u);
+    vec2 center_px = (ndc.xy * 0.5 + 0.5) * focal_viewport.zw;
+    // Oriented-quad record: no conic — the fragment kernel runs on interpolated sigma-units
+    // quad coordinates, which stays exact for any Sigma2D conditioning (the per-fragment conic
+    // inverse went indefinite-to-noise on fp32-degenerate needles and painted their ridge as a
+    // bright ray; see docs/silhouette-rays-research.md, root-cause addendum).
+    uint base = slot * 8u;
+    records[base + 0u] = floatBitsToUint(center_px.x);
+    records[base + 1u] = floatBitsToUint(center_px.y);
+    records[base + 2u] = floatBitsToUint(e1.x * ext1);
+    records[base + 3u] = floatBitsToUint(e1.y * ext1);
+    records[base + 4u] = floatBitsToUint(e2.x * ext2);
+    records[base + 5u] = floatBitsToUint(e2.y * ext2);
+    records[base + 6u] = packUnorm4x8(vec4(rgb, col.a));
+    records[base + 7u] = floatBitsToUint(s_cut);
+    keys[slot] = key;
+    values[slot] = slot;
+}

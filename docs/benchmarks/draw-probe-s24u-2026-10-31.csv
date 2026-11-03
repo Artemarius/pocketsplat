@@ -1,0 +1,15 @@
+# Draw probes, S24U (Adreno 750), 2026-10-31 (S23): same protocol as draw-probe-s25u-2026-10-31.csv, one set (APK ee64fe0)
+# with all six probes interleaved, two rounds, USB, status <= 1. Means over 0-30 s; draw_mcycles = draw ms x the app's kgsl clock.
+device,gpu,set,draw_probe,scene,round,frames,fps,gpu_ms,preprocess_ms,sort_ms,draw_ms,draw_mcycles,visible,gpu_mhz,thermal_status_max,headroom_end
+s24u,Adreno 750,s24u-ee64fe0-probe,none,stump-full,1,2843,94.743,10.547,3.861,2.610,3.814,3.313,1196653,875.940,1,0.847
+s24u,Adreno 750,s24u-ee64fe0-probe,seq,stump-full,1,2252,75.053,13.315,3.765,2.612,6.683,5.973,1197478,900.612,0,0.813
+s24u,Adreno 750,s24u-ee64fe0-probe,tiny,stump-full,1,3554,118.461,8.433,3.763,2.600,1.816,1.628,1193687,902.823,1,0.853
+s24u,Adreno 750,s24u-ee64fe0-probe,clip,stump-full,1,3546,118.202,8.447,3.808,2.589,1.791,1.572,1193871,884.262,1,0.853
+s24u,Adreno 750,s24u-ee64fe0-probe,noblend,stump-full,1,2996,99.840,10.008,3.945,2.735,3.059,2.568,1193024,847.606,1,0.873
+s24u,Adreno 750,s24u-ee64fe0-probe,nofrag,stump-full,1,3330,110.993,8.998,3.816,2.727,2.195,1.914,1194727,878.801,1,0.857
+s24u,Adreno 750,s24u-ee64fe0-probe,none,stump-full,2,2799,93.307,10.700,3.850,2.798,3.790,3.283,1196405,874.151,1,0.863
+s24u,Adreno 750,s24u-ee64fe0-probe,seq,stump-full,2,2244,74.777,13.360,3.769,2.600,6.734,5.968,1197513,894.407,0,0.827
+s24u,Adreno 750,s24u-ee64fe0-probe,tiny,stump-full,2,3526,117.512,8.497,3.813,2.598,1.827,1.592,1194459,876.947,1,0.860
+s24u,Adreno 750,s24u-ee64fe0-probe,clip,stump-full,2,3518,117.245,8.524,3.823,2.607,1.832,1.589,1194716,873.227,1,0.860
+s24u,Adreno 750,s24u-ee64fe0-probe,noblend,stump-full,2,2969,98.940,10.095,3.983,2.813,3.026,2.518,1193403,841.055,1,0.890
+s24u,Adreno 750,s24u-ee64fe0-probe,nofrag,stump-full,2,3360,112.000,8.918,3.833,2.612,2.211,1.910,1195227,870.674,1,0.860

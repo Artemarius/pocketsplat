@@ -1,0 +1,58 @@
+#version 460
+// Pass: prepare indirect arguments (single invocation)
+// Inputs:  visible_count from the compacting preprocess.
+// Outputs: sort_args {count, num_blocks} (read by all radix passes, and by the draw's vertex shader
+//          in indexed-batch mode), sort_dispatch (indirect dispatch for upsweep/downsweep),
+//          draw_cmd for the renderer's draw mode (SplatRenderer::DrawMode):
+//            0 = VkDrawIndirectCommand {6 x count vertices, 1 instance};
+//            1 = VkDrawIndirectCommand {4 vertices, count instances};
+//            2 = VkDrawIndexedIndirectCommand {6 x quads_per_batch indices, ceil(count / batch)
+//                instances};
+//            3 = VkDrawIndirectCommand {3 x count vertices, 1 instance} (one triangle per splat).
+//          The CPU never reads the count back.
+// Sync:    caller barriers preprocess -> this -> (sort dispatches + indirect reads).
+
+layout(local_size_x = 1) in;
+
+layout(std430, set = 0, binding = 0) readonly buffer Counter { uint visible_count; };
+layout(std430, set = 0, binding = 1) writeonly buffer SortArgs { uint sort_count; uint num_blocks; };
+layout(std430, set = 0, binding = 2) writeonly buffer SortDispatch { uint gx; uint gy; uint gz; };
+layout(std430, set = 0, binding = 3) writeonly buffer DrawCmd { uint draw_args[5]; };
+
+layout(push_constant) uniform Push {
+    uint elements_per_block;
+    uint draw_mode;
+    uint quads_per_batch;
+} push;
+
+void main() {
+    uint count = visible_count;
+    uint blocks = (count + push.elements_per_block - 1u) / push.elements_per_block;
+    sort_count = count;
+    num_blocks = blocks;
+    gx = blocks;
+    gy = 1u;
+    gz = 1u;
+    if (push.draw_mode == 1u) {
+        draw_args[0] = 4u;     // vertexCount
+        draw_args[1] = count;  // instanceCount
+        draw_args[2] = 0u;     // firstVertex
+        draw_args[3] = 0u;     // firstInstance
+    } else if (push.draw_mode == 2u) {
+        draw_args[0] = 6u * push.quads_per_batch;                                // indexCount
+        draw_args[1] = (count + push.quads_per_batch - 1u) / push.quads_per_batch;  // instanceCount
+        draw_args[2] = 0u;  // firstIndex
+        draw_args[3] = 0u;  // vertexOffset
+        draw_args[4] = 0u;  // firstInstance
+    } else if (push.draw_mode == 3u) {
+        draw_args[0] = 3u * count;  // vertexCount
+        draw_args[1] = 1u;          // instanceCount
+        draw_args[2] = 0u;          // firstVertex
+        draw_args[3] = 0u;          // firstInstance
+    } else {
+        draw_args[0] = 6u * count;  // vertexCount
+        draw_args[1] = 1u;          // instanceCount
+        draw_args[2] = 0u;          // firstVertex
+        draw_args[3] = 0u;          // firstInstance
+    }
+}

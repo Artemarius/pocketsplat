@@ -1,0 +1,33 @@
+# In-app draw-mode A/B, S24U (Adreno 750), 2026-10-28, ADR-0010: one APK (9a7c38f), modes chosen by the
+# bench_draw_mode intent extra: vertex6 (two triangles, the old default), triangle (one per splat), indexed
+# (shared 1024-quad index buffer), instanced (one 4-vertex strip per splat). 864x1872 protocol, 16-bit keys,
+# 0.1 px cull, uncapped, 45 s runs over USB from skin <= 38.5 C, modes interleaved, two rounds per scene.
+# Columns are means over the cold window (0-30 s); gpu_mhz is the app's own kgsl reading. Two runs were
+# replaced by reruns: bicycle-4m round 2 vertex6 (a notification popup cost ~25 % GPU time for ~10 s) and
+# truck-full round 1 vertex6 (paced at 62 % GPU busy, 612 MHz). Truck at 140-230 fps is pacing-noisy:
+# compare its draw_ms x gpu_mhz (cycles), not fps.
+device,gpu,draw_mode,scene,round,frames,fps,gpu_ms,cull_ms,preprocess_ms,sort_ms,draw_ms,visible,gpu_mhz,thermal_status_max,headroom_end
+s24u,Adreno 750,vertex6,bicycle-4m,1,2187,72.89,13.70,0.27,4.34,2.88,6.21,1324317,868.26,1,0.89
+s24u,Adreno 750,triangle,bicycle-4m,1,2323,77.44,12.92,0.26,4.29,2.86,5.51,1321987,860.56,1,0.88
+s24u,Adreno 750,indexed,bicycle-4m,1,2249,74.96,13.32,0.26,4.25,2.83,5.98,1322534,892.93,1,0.87
+s24u,Adreno 750,instanced,bicycle-4m,1,2208,73.60,13.57,0.26,4.24,2.82,6.25,1323565,893.08,1,0.87
+s24u,Adreno 750,vertex6,bicycle-4m,2,2196,73.17,13.65,0.27,4.34,2.86,6.17,1323978,867.65,1,0.87
+s24u,Adreno 750,triangle,bicycle-4m,2,2354,78.45,12.73,0.26,4.23,2.83,5.42,1322695,894.38,1,0.87
+s24u,Adreno 750,indexed,bicycle-4m,2,2238,74.57,13.39,0.26,4.27,2.84,6.02,1322754,886.43,1,0.87
+s24u,Adreno 750,instanced,bicycle-4m,2,2160,72.01,13.87,0.27,4.34,2.86,6.40,1325459,880.01,1,0.88
+s24u,Adreno 750,vertex6,stump-full,1,2679,89.28,11.20,0.26,3.92,2.62,4.40,1195151,864.78,1,0.87
+s24u,Adreno 750,triangle,stump-full,1,2818,93.93,10.64,0.26,3.94,2.62,3.82,1197059,866.56,1,0.87
+s24u,Adreno 750,indexed,stump-full,1,2638,87.92,11.37,0.27,3.96,2.73,4.42,1195848,864.59,1,0.88
+s24u,Adreno 750,instanced,stump-full,1,2378,79.25,12.61,0.28,4.09,2.87,5.39,1193760,836.40,1,0.89
+s24u,Adreno 750,vertex6,stump-full,2,2589,86.28,11.59,0.27,4.05,2.69,4.58,1196486,852.91,1,0.88
+s24u,Adreno 750,triangle,stump-full,2,2772,92.41,10.82,0.27,3.98,2.69,3.88,1196373,856.25,1,0.88
+s24u,Adreno 750,indexed,stump-full,2,2639,87.97,11.36,0.27,3.96,2.71,4.43,1195830,861.07,1,0.89
+s24u,Adreno 750,instanced,stump-full,2,2498,83.27,12.00,0.26,3.94,2.66,5.14,1195544,868.99,1,0.88
+s24u,Adreno 750,vertex6,truck-full,1,4256,141.84,6.53,0.15,1.86,1.43,3.10,432495,759.57,1,0.83
+s24u,Adreno 750,triangle,truck-full,1,5563,185.42,5.12,0.12,1.53,1.15,2.33,432666,826.76,1,0.86
+s24u,Adreno 750,indexed,truck-full,1,6008,200.25,4.96,0.11,1.43,1.03,2.39,432109,882.85,1,0.86
+s24u,Adreno 750,instanced,truck-full,1,5471,182.36,5.07,0.11,1.42,1.04,2.50,432490,882.09,1,0.85
+s24u,Adreno 750,vertex6,truck-full,2,5610,187.00,5.00,0.11,1.43,1.04,2.42,432752,874.98,1,0.86
+s24u,Adreno 750,triangle,truck-full,2,5258,175.26,4.98,0.12,1.49,1.08,2.29,432560,828.10,1,0.84
+s24u,Adreno 750,indexed,truck-full,2,5431,181.01,5.32,0.12,1.52,1.12,2.56,432236,831.21,1,0.86
+s24u,Adreno 750,instanced,truck-full,2,4981,166.03,5.41,0.12,1.51,1.12,2.66,432771,842.68,1,0.84

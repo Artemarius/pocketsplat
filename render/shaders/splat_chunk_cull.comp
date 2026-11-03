@@ -1,0 +1,116 @@
+#version 460
+// Pass: chunk frustum + contribution cull (single workgroup)
+// Inputs:  chunks[] = 7 floats per 256-splat chunk (conservative cull AABB min/max +
+//          importance_max, pack v2), camera UBO (view, proj_view, focal_viewport), push
+//          constants (the preprocess's scaled contribution threshold and near clip).
+// Contribution bound: with push.min_contribution > 0, a chunk is also dropped when no splat in it
+//          can reach the preprocess's contribution test (alpha * 2*pi*sqrt(det Sigma2D) >= min).
+//          For the 2x3 EWA Jacobian J, sqrt(det(J W Sigma W^T J^T)) <= s1*s2*sqrt(det(J J^T)) with
+//          s1, s2 the two largest scales (singular values of a product), and sqrt(det(J J^T)) =
+//          fx*fy/d^2 * sqrt(1 + u^2 + v^2), u, v = view x/d, y/d - bounded by the preprocess's
+//          |ndc| <= 1.3 test. importance_max >= max alpha*s1*s2 (it sums all three scale pairs);
+//          margins cover the renderer's unorm8 alpha (+0.5/255, times s_max^2 <= (min AABB
+//          extent / 6)^2 because the AABB is centers +- 3*s_max) and fp16 log-scales (x1.04). So
+//          the cull is conservative: it removes only splats the preprocess would cull itself.
+// Outputs: chunk_list[0..m) = indices of the chunks intersecting the view frustum in ASCENDING
+//          order (a shared-memory prefix scan compacts each 256-chunk block in order — keeping
+//          the Morton-coherent memory access pattern of the preprocess costs ~0.3 ms/frame at
+//          1 M all-visible on the RTX 3060 if the order is scrambled), counter.visible_chunks =
+//          m (trailing HUD read), cull_dispatch = {m, 1, 1} — the preprocess runs one
+//          256-thread workgroup per visible chunk.
+// Sync:    caller clears the counter before this pass and barriers these writes before the
+//          preprocess's chunk_list read and indirect-dispatch read. Dispatched as a single
+//          workgroup looping over all chunks (~120 iterations at the 8 M-splat import cap):
+//          shared memory and barrier() only — no cross-workgroup coordination (CLAUDE.md §2).
+
+layout(local_size_x = 256) in;
+
+layout(std430, set = 0, binding = 7) buffer Counter { uint visible_count; uint visible_chunks; };
+
+layout(std140, set = 0, binding = 8) uniform Camera {
+    mat4 view;            // world -> view, RUB (camera looks along -z)
+    mat4 proj_view;       // Vulkan NDC: y down, depth [0,1]
+    vec4 cam_pos;         // xyz = camera position, world
+    vec4 focal_viewport;  // fx, fy (pixels), viewport width, height
+};
+
+layout(std430, set = 0, binding = 9) readonly buffer Chunks { float chunks[]; };
+layout(std430, set = 0, binding = 10) writeonly buffer ChunkList { uint chunk_list[]; };
+layout(std430, set = 0, binding = 11) writeonly buffer CullDispatch { uint gx; uint gy; uint gz; };
+
+layout(push_constant) uniform Push {
+    uint chunk_count;
+    float min_contribution;  // the preprocess's threshold (already viewport-scaled); 0 = off
+    float near_clip;
+} push;
+
+shared uint s_scan[256];
+shared uint s_written;
+
+void main() {
+    uint lid = gl_LocalInvocationID.x;
+    if (lid == 0u) s_written = 0u;
+
+    // Gribb-Hartmann frustum planes from the rows of proj_view (column-major mat4, so row i is
+    // (M[0][i], M[1][i], M[2][i], M[3][i])). Vulkan depth range [0,1]: near plane is row 2 alone.
+    vec4 r0 = vec4(proj_view[0][0], proj_view[1][0], proj_view[2][0], proj_view[3][0]);
+    vec4 r1 = vec4(proj_view[0][1], proj_view[1][1], proj_view[2][1], proj_view[3][1]);
+    vec4 r2 = vec4(proj_view[0][2], proj_view[1][2], proj_view[2][2], proj_view[3][2]);
+    vec4 r3 = vec4(proj_view[0][3], proj_view[1][3], proj_view[2][3], proj_view[3][3]);
+    vec4 planes[6] = vec4[6](r3 + r0, r3 - r0, r3 + r1, r3 - r1, r2, r3 - r2);
+
+    for (uint start = 0u; start < push.chunk_count; start += 256u) {
+        uint c = start + lid;
+        bool visible = false;
+        if (c < push.chunk_count) {
+            uint base = 7u * c;
+            vec3 mn = vec3(chunks[base + 0u], chunks[base + 1u], chunks[base + 2u]);
+            vec3 mx = vec3(chunks[base + 3u], chunks[base + 4u], chunks[base + 5u]);
+            visible = true;
+            for (int p = 0; p < 6; ++p) {
+                // p-vertex test: the AABB is outside the frustum only if its most-inward corner
+                // is behind a plane. Straddling chunks stay visible - the cull is conservative.
+                vec3 v = mix(mn, mx, greaterThan(planes[p].xyz, vec3(0.0)));
+                if (dot(planes[p].xyz, v) + planes[p].w < 0.0) {
+                    visible = false;
+                    break;
+                }
+            }
+            if (visible && push.min_contribution > 0.0) {
+                // Nearest view depth of the AABB (depth = -(view row 2 . p)): maximize row 2 . p.
+                vec3 r = vec3(view[0][2], view[1][2], view[2][2]);
+                float d_min = -(dot(r, mix(mn, mx, greaterThan(r, vec3(0.0)))) + view[3][2]);
+                if (d_min > push.near_clip) {
+                    vec3 ext = mx - mn;
+                    float s_max = min(ext.x, min(ext.y, ext.z)) / 6.0;
+                    float fx = focal_viewport.x, fy = focal_viewport.y;
+                    float u = 0.65 * focal_viewport.z / fx, v = 0.65 * focal_viewport.w / fy;
+                    float bound = 1.04 * (chunks[base + 6u] + s_max * s_max / 510.0) * 6.2831853 * fx * fy *
+                                  sqrt(1.0 + u * u + v * v) / (d_min * d_min);
+                    if (bound < push.min_contribution) visible = false;
+                }
+            }
+        }
+        // Inclusive prefix sum over the block's visibility flags (Hillis-Steele in shared
+        // memory) so surviving chunks are appended in ascending order.
+        s_scan[lid] = visible ? 1u : 0u;
+        barrier();
+        for (uint offset = 1u; offset < 256u; offset <<= 1u) {
+            uint v = lid >= offset ? s_scan[lid - offset] : 0u;
+            barrier();
+            s_scan[lid] += v;
+            barrier();
+        }
+        if (visible) chunk_list[s_written + s_scan[lid] - 1u] = c;
+        barrier();
+        if (lid == 0u) s_written += s_scan[255u];
+        barrier();
+    }
+
+    if (lid == 0u) {
+        visible_chunks = s_written;
+        gx = s_written;
+        gy = 1u;
+        gz = 1u;
+    }
+}

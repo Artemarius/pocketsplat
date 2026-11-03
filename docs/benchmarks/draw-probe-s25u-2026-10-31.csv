@@ -1,0 +1,19 @@
+# Draw probes, S25U (Adreno 830), 2026-10-31 (S23): timing-only variants of the triangle draw (SplatRenderer::DrawProbe,
+# wrong image by design) on stump-full 864x1872, 16-bit keys, 0.1 px cull, uncapped bench orbit, 45 s cold runs from skin <= 38.5 C,
+# probes interleaved, two rounds, USB (charging; the second set ran warm, status <= 2). Set 37412e2 = none/seq/tiny/clip,
+# set ee64fe0 = none/noblend/nofrag (same draw code for the shared probes). Means over 0-30 s; draw_mcycles = draw ms x the app's kgsl clock.
+device,gpu,set,draw_probe,scene,round,frames,fps,gpu_ms,preprocess_ms,sort_ms,draw_ms,draw_mcycles,visible,gpu_mhz,thermal_status_max,headroom_end
+s25u,Adreno 830,s25u-37412e2-probe,none,stump-full,1,3298,109.915,9.095,2.539,2.219,4.128,4.807,1194355,1174.201,0,0.650
+s25u,Adreno 830,s25u-37412e2-probe,seq,stump-full,1,2826,94.192,10.611,2.526,2.199,5.679,6.623,1196624,1175.083,0,0.773
+s25u,Adreno 830,s25u-37412e2-probe,tiny,stump-full,1,4690,156.336,6.031,2.497,2.178,1.151,1.344,1194982,1174.388,0,0.780
+s25u,Adreno 830,s25u-37412e2-probe,clip,stump-full,1,4677,155.893,6.052,2.498,2.197,1.153,1.341,1195185,1170.516,0,0.800
+s25u,Adreno 830,s25u-37412e2-probe,none,stump-full,2,3181,106.018,9.427,2.608,2.276,4.322,4.793,1195557,1125.000,1,0.893
+s25u,Adreno 830,s25u-37412e2-probe,seq,stump-full,2,2679,89.296,11.193,2.626,2.306,6.037,6.610,1194652,1107.368,1,0.887
+s25u,Adreno 830,s25u-37412e2-probe,tiny,stump-full,2,4599,153.282,6.228,2.606,2.237,1.166,1.263,1195243,1091.005,2,0.903
+s25u,Adreno 830,s25u-37412e2-probe,clip,stump-full,2,4551,151.687,6.339,2.654,2.281,1.178,1.232,1194629,1052.657,2,0.913
+s25u,Adreno 830,s25u-ee64fe0-probe,none,stump-full,1,3076,102.521,9.743,2.690,2.312,4.511,4.723,1194088,1064.119,2,0.920
+s25u,Adreno 830,s25u-ee64fe0-probe,noblend,stump-full,1,3517,117.231,8.520,2.727,2.360,3.198,3.318,1194746,1055.073,2,0.937
+s25u,Adreno 830,s25u-ee64fe0-probe,nofrag,stump-full,1,3587,119.553,8.355,2.675,2.301,3.149,3.292,1193176,1060.232,2,0.923
+s25u,Adreno 830,s25u-ee64fe0-probe,none,stump-full,2,3068,102.267,9.771,2.694,2.334,4.511,4.726,1193867,1066.409,2,0.920
+s25u,Adreno 830,s25u-ee64fe0-probe,noblend,stump-full,2,3448,114.915,8.691,2.790,2.389,3.271,3.318,1196085,1039.761,2,0.937
+s25u,Adreno 830,s25u-ee64fe0-probe,nofrag,stump-full,2,3497,116.561,8.571,2.738,2.371,3.225,3.331,1195329,1055.040,2,0.930

@@ -1,0 +1,41 @@
+# pocketsplat bench_web.py, viewer=supersplat (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.49, model=SM-S938B
+# scene=bicycle-4m.sh0.ply, splats=4000000, sh=0, url_extras=-
+# load_s=8.5, backend=webgpu, canvas=540x976, page=384x693, splats_reported=4000000
+# camera=orbit 2pi/600 per rendered frame about focus [5.7486, 33.063, 12.808], distance 172.7, pitch -19.5 deg (viewer default framing), touch drags for pacing only (the camera ignores input)
+# frames counted from engine postrender events
+# orbit steps=3235, focus drift=8.23e-17 x distance
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c,raf_fps,gpu_busy_pct
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,1.4,64.61,15.90,17.75,0,35.8,42.0,64.64,23
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,2.8,70.57,15.50,20.70,0,35.8,42.0,71.37,72
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,4.2,70.24,15.70,21.06,0,35.8,42.0,71.80,77
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,5.5,70.82,15.30,20.63,0,35.8,42.0,71.65,78
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,6.9,69.37,15.90,21.90,0,35.8,42.0,71.65,74
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,8.3,64.70,16.50,24.81,0,35.8,42.0,71.24,75
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,9.7,65.60,15.90,24.68,0,35.8,42.0,70.78,77
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,11.0,69.50,15.90,20.80,0,35.8,42.0,71.80,75
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,12.3,70.26,16.10,20.02,0,35.6,41.2,71.79,77
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,13.7,70.52,15.75,19.98,0,35.6,41.2,71.23,78
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,15.1,70.86,15.80,19.51,0,35.6,41.2,71.64,76
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,16.4,66.89,15.95,24.93,0,35.6,41.2,71.48,73
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,17.8,71.95,15.30,19.94,0,35.6,41.2,71.94,75
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,19.2,70.51,16.05,19.27,0,35.6,41.2,71.24,75
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,20.5,71.03,15.75,18.49,0,35.6,41.2,71.80,76
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,21.8,71.11,15.80,17.88,0,35.6,41.2,71.94,74
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,23.2,71.01,16.00,17.70,0,35.5,40.9,71.80,69
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,24.6,67.59,16.25,24.17,0,35.5,40.9,71.23,76
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,25.9,71.18,15.50,21.18,0,35.5,40.9,71.95,79
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,27.2,70.93,15.85,19.54,0,35.5,40.9,71.80,75
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,28.6,70.85,15.60,20.19,0,35.5,40.9,71.65,76
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,30.0,70.56,16.00,20.24,0,35.5,40.9,71.37,79
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,31.3,70.82,15.90,19.55,0,35.5,40.9,71.65,76
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,32.7,71.03,15.90,20.40,0,35.5,40.9,71.80,76
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,34.0,70.24,15.90,21.64,0,35.5,40.8,71.80,81
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,35.4,70.62,15.70,20.44,0,35.5,40.8,71.37,75
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,36.7,71.05,15.60,20.34,0,35.5,40.8,71.80,76
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,38.1,70.97,15.60,20.53,0,35.5,40.8,71.79,78
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,39.4,70.93,16.05,18.71,0,35.5,40.8,71.78,77
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,40.8,69.73,15.80,19.88,0,35.5,40.8,71.24,76
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,42.2,70.88,15.60,20.14,0,35.5,40.8,71.64,75
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,43.5,71.14,15.40,19.32,0,35.5,40.8,71.94,75
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,44.9,70.25,15.60,20.04,0,35.4,40.8,71.79,76
+s25u,supersplat-orbit-touch,1.41.0,webgpu,bicycle-4m.sh0.ply,4000000,0,540,976,46.3,70.87,16.15,18.41,0,35.4,40.8,70.94,77

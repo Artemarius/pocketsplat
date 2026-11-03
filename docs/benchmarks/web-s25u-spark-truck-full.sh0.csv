@@ -1,0 +1,50 @@
+# pocketsplat bench_web.py, viewer=spark (spark 2.4.0), browser=Chrome/149.0.7827.102, model=SM-S938B
+# scene=truck-full.sh0.ply, splats=1653927, sh=0, url_extras=-
+# load_s=4.0, backend=webgl2, canvas=540x974, page=384x693, splats_reported=1653927
+# frames counted from requestAnimationFrame
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,1.0,60.08,16.60,16.70,0,37.2,42.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,2.1,60.09,16.60,16.70,0,37.2,42.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,3.1,60.08,16.60,16.70,0,37.2,42.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,4.1,60.09,16.60,16.70,0,37.2,42.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,5.1,60.08,16.60,16.70,0,37.2,42.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,6.1,60.08,16.60,16.70,0,37.4,44.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,7.1,60.07,16.60,16.70,0,37.4,44.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,8.1,60.08,16.60,16.70,0,37.4,44.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,9.1,60.09,16.60,16.70,0,37.4,44.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,10.1,60.08,16.60,16.70,0,37.4,44.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,11.1,60.09,16.60,16.70,0,37.4,44.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,12.2,59.61,16.60,16.70,0,37.4,44.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,13.2,53.98,16.70,25.00,0,37.4,44.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,14.2,54.91,16.70,25.00,0,37.4,44.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,15.2,53.52,16.70,25.00,0,37.4,44.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,16.2,54.52,16.70,25.00,0,38.6,48.5
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,17.3,54.79,16.70,25.00,0,38.6,48.5
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,18.3,54.98,16.70,25.00,0,38.6,48.5
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,19.3,54.52,16.70,25.00,0,38.6,48.5
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,20.3,53.98,16.70,25.00,0,38.6,48.5
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,21.3,53.42,16.70,25.00,0,38.6,48.5
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,22.4,48.64,16.70,25.00,0,38.6,48.5
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,23.4,45.18,24.90,32.07,0,38.6,48.5
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,24.4,45.43,24.90,31.64,0,38.6,48.5
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,25.4,46.21,24.90,25.00,0,38.6,48.5
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,26.4,45.98,24.90,31.98,0,38.9,48.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,27.4,45.18,24.90,33.30,0,38.9,48.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,28.5,45.83,24.90,25.08,0,38.9,48.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,29.5,47.02,24.90,25.00,0,38.9,48.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,30.5,46.45,24.90,25.07,0,38.9,48.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,31.5,45.83,24.90,33.28,0,38.9,48.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,32.5,41.01,25.00,33.29,0,38.9,48.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,33.5,38.69,25.00,33.32,0,38.9,48.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,34.6,38.33,25.00,33.30,0,38.9,48.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,35.6,39.02,25.00,34.65,0,38.9,48.2
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,36.6,39.04,16.70,41.60,0,39.2,47.6
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,37.6,38.45,24.95,41.60,0,39.2,47.6
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,38.6,38.70,25.00,41.60,0,39.2,47.6
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,39.6,39.36,24.95,34.63,0,39.2,47.6
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,40.7,39.03,20.85,41.61,0,39.2,47.6
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,41.7,39.05,16.70,41.60,0,39.2,47.6
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,42.7,38.76,25.00,41.60,0,39.2,47.6
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,43.7,39.38,33.20,33.40,0,39.2,47.6
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,44.7,39.38,33.20,33.30,0,39.2,47.6
+s25u,spark,2.4.0,webgl2,truck-full.sh0.ply,1653927,0,540,974,45.7,39.37,33.20,33.40,0,39.2,47.6

@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat-stochastic (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=stump-full.sh0.ply, splats=4049567, sh=0, url_extras=&stochastic=mobile
+# load_s=9.2, backend=webgpu, canvas=1080x1950, page=384x693, splats_reported=None
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,1.7,71.03,15.70,22.06,0,37.9,41.2
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,3.0,69.71,16.10,23.04,0,37.9,41.2
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,4.3,69.09,15.75,26.60,0,37.9,41.2
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,5.6,70.25,15.25,22.96,0,37.9,41.2
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,6.8,70.93,12.70,23.35,0,38.4,42.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,8.2,67.13,15.80,25.20,0,38.4,42.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,9.5,71.56,13.00,21.87,0,38.4,42.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,10.8,68.42,15.40,25.20,0,38.4,42.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,12.1,71.79,14.05,21.05,0,38.4,42.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,13.4,70.46,16.10,23.59,0,38.4,42.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,14.6,68.23,14.60,26.10,0,38.4,42.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,15.9,67.08,15.90,26.10,0,38.4,42.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,17.1,70.68,15.35,23.38,0,38.9,43.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,18.5,70.83,15.80,22.94,0,38.9,43.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,19.7,66.25,16.10,28.57,0,38.9,43.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,21.0,68.53,15.70,26.07,0,38.9,43.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,22.3,69.52,15.70,26.54,0,38.9,43.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,23.6,68.87,15.75,24.61,0,38.9,43.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,24.9,65.93,15.70,28.89,0,38.9,43.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,26.1,67.40,15.30,28.42,0,38.9,43.9
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,27.3,64.41,14.80,28.37,0,39.1,44.4
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,28.6,66.67,15.90,27.40,0,39.1,44.4
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,29.8,65.64,15.30,27.70,0,39.1,44.4
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,31.0,65.75,15.50,28.30,0,39.1,44.4
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,32.2,67.29,14.85,28.90,0,39.1,44.4
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,33.4,63.32,14.65,28.53,0,39.2,44.6
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,34.8,57.60,15.90,37.40,0,39.2,44.6
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,36.1,65.39,16.90,37.32,0,39.2,44.6
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,37.5,65.44,16.60,34.28,0,39.2,44.6
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,38.9,59.62,15.65,37.71,0,39.2,44.6
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,40.3,56.29,15.30,37.40,0,39.2,44.6
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,41.7,67.05,16.60,30.75,0,39.2,44.6
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,43.1,61.88,16.40,38.22,0,39.2,44.6
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,44.4,64.73,16.20,36.04,0,39.2,44.3
+s24u,supersplat-stochastic,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,1080,1950,45.9,61.77,16.25,38.15,0,39.2,44.3

@@ -1,0 +1,37 @@
+# pocketsplat bench_web.py, viewer=supersplat-nogate (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=drjohnson-full.sh0.ply, splats=2668497, sh=0, url_extras=&nogate
+# load_s=6.4, backend=webgpu, canvas=540x975, page=384x693, splats_reported=2668497
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,1.4,60.40,14.80,34.22,1,38.2,43.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,2.9,64.33,15.70,28.70,1,38.2,43.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,4.2,64.54,14.65,34.05,1,38.2,43.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,5.6,62.92,16.00,35.54,1,38.2,43.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,6.9,64.74,15.35,33.74,1,38.2,43.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,8.3,65.51,15.95,28.99,1,38.2,43.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,9.8,58.70,15.30,37.26,1,38.2,43.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,11.1,60.99,14.80,36.20,1,38.2,43.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,12.5,56.47,15.50,39.42,1,39.4,45.6
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,14.0,55.01,15.00,44.30,1,39.4,45.6
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,15.5,53.77,14.20,43.55,1,39.4,45.6
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,17.0,55.28,14.60,46.64,1,39.4,45.6
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,18.4,56.42,15.75,40.95,1,39.4,45.6
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,19.9,55.33,15.10,41.94,1,39.4,45.6
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,21.3,54.36,15.10,45.03,1,39.4,45.6
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,22.7,58.81,16.00,42.40,1,39.4,45.6
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,24.1,55.08,14.70,42.16,1,39.7,46.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,25.6,54.09,14.90,44.52,1,39.7,46.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,27.1,55.95,15.10,41.06,1,39.7,46.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,28.4,56.93,14.45,42.71,1,39.7,46.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,29.8,54.46,15.80,42.60,1,39.7,46.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,31.4,53.58,15.60,45.45,1,39.7,46.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,32.8,56.08,15.65,43.28,1,39.7,46.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,34.3,51.74,15.30,48.10,1,39.7,46.4
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,35.8,50.50,15.80,45.91,1,40.0,47.1
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,37.3,53.95,14.35,43.45,1,40.0,47.1
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,38.8,51.21,15.40,48.97,1,40.0,47.1
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,40.3,52.81,15.20,41.06,1,40.0,47.1
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,41.7,48.97,15.20,46.46,1,40.2,47.5
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,43.2,50.85,15.50,49.14,1,40.2,47.5
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,44.7,49.70,14.90,49.22,1,40.2,47.5
+s24u,supersplat-nogate,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,46.1,50.13,14.90,48.08,1,40.2,47.5

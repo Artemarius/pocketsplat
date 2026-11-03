@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat-webgl (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=bicycle-4m.sh0.ply, splats=4000000, sh=0, url_extras=&webgl
+# load_s=10.4, backend=webgl2, canvas=540x975, page=384x693, splats_reported=4000000
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,1.3,70.96,15.20,19.45,0,38.0,42.6
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,2.7,71.38,15.70,19.43,0,38.0,42.6
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,4.0,72.29,14.40,19.39,0,38.0,42.6
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,5.3,72.26,15.80,19.70,0,38.0,42.6
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,6.5,72.27,14.90,19.65,0,38.0,42.6
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,7.9,71.49,14.70,19.10,0,38.0,42.6
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,9.2,72.08,14.60,19.44,0,38.0,42.6
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,10.5,72.28,16.35,19.79,0,38.0,42.6
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,11.8,72.37,15.80,19.45,1,40.5,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,13.1,71.50,15.70,19.90,1,40.5,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,14.4,71.93,15.60,19.90,1,40.5,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,15.7,72.25,15.55,19.99,1,40.5,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,17.0,72.41,15.90,19.75,1,40.5,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,18.3,71.68,15.85,19.80,1,40.5,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,19.6,72.31,15.30,19.40,1,40.5,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,20.9,72.13,14.95,19.65,1,40.5,49.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,22.2,71.94,15.50,19.30,1,40.1,48.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,23.5,71.67,15.40,19.10,1,40.1,48.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,24.8,72.26,15.90,19.64,1,40.1,48.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,26.1,71.96,15.50,19.50,1,40.1,48.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,27.4,71.92,15.90,19.54,1,40.1,48.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,28.8,71.34,15.50,19.43,1,40.1,48.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,30.1,72.26,15.60,19.39,1,40.1,48.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,31.3,72.28,16.10,19.35,1,40.1,48.3
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,32.6,72.23,15.80,19.35,1,40.7,49.2
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,34.0,71.53,14.70,19.50,1,40.7,49.2
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,35.3,72.26,16.00,19.65,1,40.7,49.2
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,36.5,72.47,16.00,19.80,1,40.7,49.2
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,37.8,71.61,15.70,20.15,1,40.7,49.2
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,39.2,71.32,16.05,19.33,1,40.7,49.2
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,40.5,72.37,16.10,19.45,1,40.7,49.2
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,41.8,72.23,16.10,19.40,1,40.7,49.2
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,43.0,72.42,15.80,19.20,1,40.7,48.9
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,44.4,71.55,16.00,19.52,1,40.7,48.9
+s24u,supersplat-webgl,1.41.0,webgl2,bicycle-4m.sh0.ply,4000000,0,540,975,45.7,72.15,16.10,19.40,1,40.7,48.9

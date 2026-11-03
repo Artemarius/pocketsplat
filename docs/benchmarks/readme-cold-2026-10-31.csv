@@ -1,0 +1,39 @@
+# README cold table, both phones, 2026-10-31 (S23): APK 0.1-ee64fe0 (one triangle per splat, ADR-0010; S16 sort), phone defaults
+# (16-bit keys, 0.1 px cull), uncapped bench orbit, 45 s per run from skin <= 38.5 C and status 0, on battery over Wi-Fi adb,
+# Do Not Disturb and heads-up off, two rounds. fps = frames / time over t <= 30 s (summarize_baseline.py); gpu/draw ms, visible and
+# clock are medians over the same window. power: 'check' = the fuel gauge's first readings were still the charging current
+# (S24U refreshes it ~every 10 s; the script had confirmed battery power before the run). Truck runs at 160-240 fps with GPU
+# utilisation 0.84-0.91 in some runs: pacing-limited, so its round spread is large.
+device,apk,scene,splats,resolution,round,draw_mode,fps,gpu_ms_median,draw_ms_median,visible_median,gpu_mhz_median,thermal_status_max,skin_start_c,power
+s24u,0.1-ee64fe0,counter-full,973948,864x1872,1,triangle,137.1,7.25,3.98,631541,903,0,33.00,check
+s24u,0.1-ee64fe0,counter-full,973948,864x1872,2,triangle,132.9,7.46,4.17,631140,903,1,37.60,battery
+s24u,0.1-ee64fe0,truck-full,1653927,864x1872,1,triangle,173.6,5.05,2.33,431203,834,0,38.30,battery
+s24u,0.1-ee64fe0,truck-full,1653927,864x1872,2,triangle,162.9,4.93,2.34,430844,834,1,37.80,battery
+s24u,0.1-ee64fe0,drjohnson-full,2668497,864x1872,1,triangle,60.5,16.34,6.87,1719580,903,0,37.30,battery
+s24u,0.1-ee64fe0,drjohnson-full,2668497,864x1872,2,triangle,59.7,16.49,7.02,1723797,903,1,37.70,battery
+s24u,0.1-ee64fe0,bicycle-4m,4000000,864x1872,1,triangle,79.3,12.54,5.39,1323564,834,0,37.00,battery
+s24u,0.1-ee64fe0,bicycle-4m,4000000,864x1872,2,triangle,79.0,12.54,5.37,1322377,834,1,37.30,battery
+s24u,0.1-ee64fe0,stump-full,4049567,864x1872,1,triangle,92.7,10.62,3.82,1200226,834,0,37.00,battery
+s24u,0.1-ee64fe0,stump-full,4049567,864x1872,2,triangle,92.0,10.72,3.87,1199723,834,1,37.70,battery
+s24u,0.1-ee64fe0,drjohnson-full,2668497,540x975,1,triangle,70.9,14.04,5.0,1757941,903,0,37.20,battery
+s24u,0.1-ee64fe0,drjohnson-full,2668497,540x975,2,triangle,69.0,14.42,5.03,1764463,903,0,37.20,battery
+s24u,0.1-ee64fe0,bicycle-4m,4000000,540x975,1,triangle,83.7,11.51,4.62,1316615,950,0,37.40,battery
+s24u,0.1-ee64fe0,bicycle-4m,4000000,540x975,2,triangle,82.4,12.07,4.93,1317142,834,1,37.80,battery
+s24u,0.1-ee64fe0,stump-full,4049567,540x975,1,triangle,94.4,10.36,3.6,1191952,834,1,37.50,battery
+s24u,0.1-ee64fe0,stump-full,4049567,540x975,2,triangle,96.4,10.25,3.6,1191306,834,0,37.10,battery
+s25u,0.1-ee64fe0,counter-full,973948,864x1872,1,triangle,157.4,6.01,3.7,631533,1200,0,27.70,battery
+s25u,0.1-ee64fe0,counter-full,973948,864x1872,2,triangle,146.8,6.15,3.84,631734,1200,1,36.30,battery
+s25u,0.1-ee64fe0,truck-full,1653927,864x1872,1,triangle,176.1,4.7,2.48,430845,967,0,35.30,battery
+s25u,0.1-ee64fe0,truck-full,1653927,864x1872,2,triangle,240.7,3.99,2.06,430464,1200,1,36.50,battery
+s25u,0.1-ee64fe0,drjohnson-full,2668497,864x1872,1,triangle,76.0,13.13,6.8,1713837,1200,1,34.80,battery
+s25u,0.1-ee64fe0,drjohnson-full,2668497,864x1872,2,triangle,69.4,14.11,7.39,1721367,1200,2,36.60,battery
+s25u,0.1-ee64fe0,bicycle-4m,4000000,864x1872,1,triangle,92.0,10.79,5.52,1329482,1200,1,35.90,battery
+s25u,0.1-ee64fe0,bicycle-4m,4000000,864x1872,2,triangle,87.5,10.95,5.65,1327033,1200,1,36.70,battery
+s25u,0.1-ee64fe0,stump-full,4049567,864x1872,1,triangle,106.1,9.34,4.37,1200436,1200,1,36.60,battery
+s25u,0.1-ee64fe0,stump-full,4049567,864x1872,2,triangle,103.6,9.47,4.46,1199709,1200,1,36.80,battery
+s25u,0.1-ee64fe0,drjohnson-full,2668497,540x975,1,triangle,76.7,12.91,6.15,1760263,1200,1,37.40,battery
+s25u,0.1-ee64fe0,drjohnson-full,2668497,540x975,2,triangle,76.8,12.87,6.13,1760315,1200,2,36.90,battery
+s25u,0.1-ee64fe0,bicycle-4m,4000000,540x975,1,triangle,89.2,10.99,5.47,1317160,1100,1,37.70,battery
+s25u,0.1-ee64fe0,bicycle-4m,4000000,540x975,2,triangle,90.4,10.66,5.2,1317249,1200,1,37.00,battery
+s25u,0.1-ee64fe0,stump-full,4049567,540x975,1,triangle,106.2,9.26,4.26,1191336,1200,1,36.00,battery
+s25u,0.1-ee64fe0,stump-full,4049567,540x975,2,triangle,105.6,9.29,4.27,1191338,1200,2,36.90,battery

@@ -1,0 +1,165 @@
+#version 460
+// Pass: radix sort downsweep/scatter, block-staged (RadixScatter::staged; same inputs, outputs and
+//       sync as radix_downsweep.comp, whose ballot ranking it reuses).
+// Inputs:  keys_in/values_in (current ping-pong side), scanned histograms from the spine (the
+//          block's offset within each digit) and digit_totals (scanned here into digit starts).
+// Outputs: values_out (and keys_out unless push.write_keys == 0) scattered in stable digit order.
+// Sync:    caller barriers between passes; no inter-workgroup communication (mobile-safe).
+//
+// radix_downsweep.comp writes every 256-key batch straight to its global slots: one key per digit
+// on average, so each invocation's store lands on a different cache line. Here the whole tile
+// (256 x 16 keys) is ranked first, staged in shared memory in digit order, and written back with
+// consecutive invocations on consecutive addresses (runs of ~16 keys per digit for uniform digits,
+// longer for the skewed high digits of depth keys). The tile's digit histogram is the difference
+// of adjacent spine offsets, so the tile-local digit starts come out of the same scan as the global
+// ones. The per-subgroup count rows of the ranking and the staging tile share one array: shared
+// memory stays at 18 KB, the downsweep's measured optimum on Adreno (docs/sorting.md section 7).
+// Measured: about 2x faster than the direct scatter on an RTX 3060, neutral on the Adreno 750
+// (slower on presorted input), so it is opt-in (docs/sorting.md section 8).
+// Assumes a 256-wide workgroup and elements_per_block == kTile.
+
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_ballot : require
+
+layout(local_size_x_id = 0, local_size_x = 256) in;
+layout(constant_id = 1) const uint kMaxSubgroups = 16u;  // <= kItems: the rows live in s_mem
+
+const uint kItems = 16u;            // keys per invocation
+const uint kTile = 256u * kItems;   // keys per workgroup (kSortElementsPerBlock)
+
+layout(std430, set = 0, binding = 0) readonly buffer KeysIn { uint keys_in[]; };
+layout(std430, set = 0, binding = 1) readonly buffer ValuesIn { uint values_in[]; };
+layout(std430, set = 0, binding = 2) writeonly buffer KeysOut { uint keys_out[]; };
+layout(std430, set = 0, binding = 3) writeonly buffer ValuesOut { uint values_out[]; };
+layout(std430, set = 0, binding = 4) readonly buffer Histograms { uint histograms[]; };
+layout(std430, set = 0, binding = 5) readonly buffer SortArgs { uint sort_count; uint num_blocks; };
+layout(std430, set = 0, binding = 6) readonly buffer DigitTotals { uint digit_totals[]; };
+
+layout(push_constant) uniform Push {
+    uint shift;
+    uint elements_per_block;
+    uint write_keys;  // 0 = last digit pass of a sort whose caller reads only the values
+} push;
+
+shared uint s_base[256];     // per digit: global scatter base of this block minus the tile-local start
+shared uint s_running[256];  // per digit: next tile-local position (starts at the digit's local start)
+shared uint s_mem[kTile];    // ranking: per-subgroup digit counts (rows of 256); then the staged tile
+
+// Per-invocation state is 16 scalars per phase (FOR_ITEMS expands the item index), never an array:
+// with 16-entry arrays carried across the barriers the Adreno 750 driver produced wrong results
+// (docs/sorting.md section 8).
+#define FOR_ITEMS(M) M(0) M(1) M(2) M(3) M(4) M(5) M(6) M(7) M(8) M(9) M(10) M(11) M(12) M(13) M(14) M(15)
+
+uint g_begin, g_end, g_tile_count;
+
+uint load_key(uint item) {
+    uint index = g_begin + item * 256u + gl_LocalInvocationID.x;
+    return index < g_end ? keys_in[index] : 0u;
+}
+
+// Stable rank of one batch: subgroup ballot match within a subgroup, per-subgroup count rows across
+// subgroups (as radix_downsweep.comp). Returns the key's tile-local position in digit order.
+uint rank_item(uint item, uint key) {
+    uint lid = gl_LocalInvocationID.x;
+    bool in_range = item * 256u + lid < g_tile_count;
+    uint digit = (key >> push.shift) & 0xFFu;
+    uvec4 mask = subgroupBallot(true);
+    for (uint bit = 0u; bit < 8u; ++bit) {
+        uvec4 vote = subgroupBallot(((digit >> bit) & 1u) == 1u);
+        bool mine = ((digit >> bit) & 1u) == 1u;
+        mask &= mine ? vote : ~vote;
+    }
+    mask &= subgroupBallot(in_range);  // inactive lanes must not count as peers
+    uint rank_in_subgroup = subgroupBallotExclusiveBitCount(mask);
+    if (in_range && rank_in_subgroup == 0u) {
+        s_mem[gl_SubgroupID * 256u + digit] = subgroupBallotBitCount(mask);
+    }
+    barrier();
+
+    uint slot = 0u;
+    if (in_range) {
+        uint before_subgroups = 0u;
+        for (uint sg = 0u; sg < gl_SubgroupID; ++sg) before_subgroups += s_mem[sg * 256u + digit];
+        slot = s_running[digit] + before_subgroups + rank_in_subgroup;
+    }
+    barrier();
+
+    // Fold this batch's counts into the running positions and clear the rows: invocation `lid`
+    // owns digit column `lid`, which nobody else touches until the barrier.
+    uint total = 0u;
+    for (uint sg = 0u; sg < gl_NumSubgroups; ++sg) {
+        total += s_mem[sg * 256u + lid];
+        s_mem[sg * 256u + lid] = 0u;
+    }
+    s_running[lid] += total;
+    barrier();
+    return slot;
+}
+
+bool item_in_range(uint item) { return item * 256u + gl_LocalInvocationID.x < g_tile_count; }
+
+// Reads tile position item * 256 + lid back in digit order, writes the key; returns its destination.
+uint write_key(uint item) {
+    uint j = item * 256u + gl_LocalInvocationID.x;
+    if (j >= g_tile_count) return 0u;
+    uint key = s_mem[j];
+    uint dst = s_base[(key >> push.shift) & 0xFFu] + j;
+    if (push.write_keys != 0u) keys_out[dst] = key;
+    return dst;
+}
+
+void main() {
+    uint lid = gl_LocalInvocationID.x;
+    uint block = gl_WorkGroupID.x;
+    g_begin = block * kTile;
+    g_end = min(g_begin + kTile, sort_count);
+    g_tile_count = g_end - g_begin;
+
+    // All of this invocation's key loads go out first; the keys stay in registers until staged.
+#define LOAD(i) uint k##i = load_key(uint(i));
+    FOR_ITEMS(LOAD)
+
+    // Two exclusive scans in one Hillis-Steele pass (one digit per invocation): the digit totals
+    // give the digit's global start, this tile's digit counts give the digit's tile-local start.
+    uint digit_total = digit_totals[lid];
+    uint offset = histograms[lid * num_blocks + block];  // this block's offset within the digit
+    uint next = block + 1u < num_blocks ? histograms[lid * num_blocks + block + 1u] : digit_total;
+    uint tile_digit_count = next - offset;
+    s_base[lid] = digit_total;
+    s_running[lid] = tile_digit_count;
+    for (uint i = lid; i < kMaxSubgroups * 256u; i += gl_WorkGroupSize.x) s_mem[i] = 0u;
+    barrier();
+    for (uint step = 1u; step < 256u; step <<= 1u) {
+        uint add_base = lid >= step ? s_base[lid - step] : 0u;
+        uint add_local = lid >= step ? s_running[lid - step] : 0u;
+        barrier();
+        s_base[lid] += add_base;
+        s_running[lid] += add_local;
+        barrier();
+    }
+    uint local_start = s_running[lid] - tile_digit_count;
+    s_running[lid] = local_start;
+    // Global destination of tile-local position j = s_base[digit] + j (modular arithmetic).
+    s_base[lid] = (s_base[lid] - digit_total) + offset - local_start;
+    barrier();
+
+    // 1) Rank every key of the tile, batch by batch in tile order.
+#define RANK(i) uint s##i = rank_item(uint(i), k##i);
+    FOR_ITEMS(RANK)
+
+    // 2) Stage the keys in digit order, then write them out position by position: consecutive
+    //    invocations hold consecutive positions, so a digit's run is one contiguous store burst.
+#define STAGE_KEY(i) if (item_in_range(uint(i))) s_mem[s##i] = k##i;
+    FOR_ITEMS(STAGE_KEY)
+    barrier();
+#define WRITE_KEY(i) uint d##i = write_key(uint(i));
+    FOR_ITEMS(WRITE_KEY)
+    barrier();
+
+    // 3) Same for the values: read in tile order, staged at the key's slot, written in digit order.
+#define STAGE_VALUE(i) if (item_in_range(uint(i))) s_mem[s##i] = values_in[g_begin + uint(i) * 256u + lid];
+    FOR_ITEMS(STAGE_VALUE)
+    barrier();
+#define WRITE_VALUE(i) if (item_in_range(uint(i))) values_out[d##i] = s_mem[uint(i) * 256u + lid];
+    FOR_ITEMS(WRITE_VALUE)
+}

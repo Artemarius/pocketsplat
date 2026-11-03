@@ -1,0 +1,49 @@
+# pocketsplat bench_web.py, viewer=spark (spark 2.4.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=counter-full.sh0.ply, splats=973948, sh=0, url_extras=-
+# load_s=2.1, backend=webgl2, canvas=540x974, page=384x693, splats_reported=973948
+# frames counted from requestAnimationFrame
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,1.0,59.58,16.60,16.70,0,38.2,41.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,2.1,60.09,16.60,16.70,0,38.2,41.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,3.1,60.09,16.60,16.70,0,38.2,41.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,4.1,60.09,16.60,16.70,0,38.2,41.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,5.1,60.08,16.60,16.70,0,38.2,41.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,6.1,60.08,16.60,16.70,0,38.4,42.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,7.2,60.09,16.60,16.70,0,38.4,42.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,8.2,60.09,16.60,16.70,0,38.4,42.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,9.2,60.10,16.60,16.70,0,38.4,42.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,10.2,60.08,16.60,16.70,0,38.4,42.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,11.2,60.08,16.60,16.70,0,38.4,42.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,12.3,60.09,16.60,16.70,0,38.4,42.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,13.3,60.08,16.60,16.70,0,38.4,42.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,14.3,60.08,16.60,16.70,0,38.4,42.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,15.3,60.08,16.60,16.70,0,38.4,42.4
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,16.3,60.08,16.60,16.71,0,38.9,44.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,17.4,60.07,16.65,16.70,0,38.9,44.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,18.4,60.07,16.60,16.71,0,38.9,44.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,19.5,60.08,16.60,16.70,0,38.9,44.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,20.5,60.08,16.60,16.70,0,38.9,44.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,21.5,60.08,16.60,16.70,0,38.9,44.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,22.6,60.08,16.60,16.70,0,38.9,44.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,23.6,60.08,16.60,16.70,0,38.9,44.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,24.6,60.08,16.60,16.70,0,38.9,44.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,25.6,60.08,16.60,16.70,0,38.9,44.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,26.6,60.08,16.60,16.70,0,39.3,45.0
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,27.7,60.09,16.60,16.70,0,39.3,45.0
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,28.7,60.08,16.60,16.70,0,39.3,45.0
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,29.7,60.08,16.60,16.70,0,39.3,45.0
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,30.7,60.09,16.60,16.70,0,39.3,45.0
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,31.7,60.09,16.60,16.70,0,39.3,45.0
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,32.8,60.09,16.60,16.70,0,39.3,45.0
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,33.8,60.09,16.60,16.70,0,39.3,45.0
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,34.8,60.09,16.60,16.70,0,39.3,45.0
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,35.8,60.08,16.60,16.70,0,39.3,45.0
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,36.8,60.08,16.60,16.70,0,39.4,45.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,37.9,60.09,16.60,16.70,0,39.4,45.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,38.9,60.09,16.60,16.70,0,39.4,45.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,39.9,60.08,16.60,16.70,0,39.4,45.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,41.0,60.08,16.60,16.70,0,39.4,45.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,42.0,60.09,16.60,16.70,0,39.4,45.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,43.1,60.08,16.60,16.70,0,39.4,45.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,44.1,60.09,16.60,16.70,0,39.4,45.1
+s24u,spark,2.4.0,webgl2,counter-full.sh0.ply,973948,0,540,974,45.1,60.08,16.60,16.70,0,39.4,45.1

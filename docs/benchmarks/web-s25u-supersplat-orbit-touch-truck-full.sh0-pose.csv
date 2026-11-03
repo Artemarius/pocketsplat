@@ -1,0 +1,73 @@
+# pocketsplat bench_web.py, viewer=supersplat (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.49, model=SM-S938B
+# scene=truck-full.sh0.ply, splats=1653927, sh=0, url_extras=-
+# load_s=3.5, backend=webgpu, canvas=540x976, page=384x693, splats_reported=1653927
+# camera=orbit 2pi/600 per rendered frame about focus [20.5307, 9.5044, -22.2442], distance 143.7, pitch -19.5 deg, fov 85 deg (viewer default framing), touch drags for pacing only (the camera ignores input)
+# frames counted from engine postrender events
+# orbit steps=6480, focus drift=0.00e+00 x distance
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c,raf_fps,gpu_busy_pct,gpu_mhz,current_ma,voltage_mv,charge_uah
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,1.3,68.50,16.00,23.80,0,35.8,42.6,70.09,39,342,-104687,4140,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,2.7,71.07,15.95,17.51,0,35.8,42.6,71.11,57,342,-104687,4140,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,4.1,71.62,15.95,17.45,0,35.8,42.6,71.65,55,342,40625,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,5.5,71.51,15.80,17.70,0,35.8,42.6,71.51,62,342,40625,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,6.8,71.60,15.85,17.70,0,35.7,41.7,71.65,64,342,40625,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,8.2,71.08,16.05,17.70,0,35.7,41.7,71.10,65,342,40625,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,9.6,71.45,15.90,17.50,0,35.7,41.7,71.50,60,342,40625,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,11.0,71.58,15.80,17.40,0,35.7,41.7,71.64,56,342,40625,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,12.3,71.58,15.80,17.73,0,35.7,41.7,71.65,55,342,40625,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,13.8,71.07,15.90,17.50,0,35.7,41.7,71.10,61,342,23437,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,15.1,71.65,15.85,17.80,0,35.7,41.7,71.65,64,342,23437,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,16.5,71.52,15.90,17.40,0,35.7,41.7,71.51,65,342,23437,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,17.9,70.74,15.95,17.65,0,35.4,40.8,71.51,60,342,23437,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,19.3,71.17,15.90,17.61,0,35.4,40.8,71.23,57,342,23437,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,20.6,71.51,15.80,17.42,0,35.4,40.8,71.51,57,342,23437,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,22.0,70.74,15.85,17.58,0,35.4,40.8,71.51,57,342,23437,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,23.4,71.52,16.00,17.30,0,35.4,40.8,71.51,63,342,23437,4146,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,24.8,70.49,15.85,17.72,0,35.4,40.8,71.24,65,342,15625,4147,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,26.2,71.45,16.00,17.52,0,35.4,40.8,71.51,61,342,15625,4147,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,27.5,71.44,16.10,17.50,0,35.4,40.8,71.51,59,342,15625,4147,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,28.9,71.47,15.70,17.62,0,35.3,40.3,71.51,56,342,15625,4147,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,30.3,71.04,15.85,17.70,0,35.3,40.3,71.09,57,342,15625,4147,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,31.7,71.42,15.90,17.52,0,35.3,40.3,71.50,64,342,15625,4147,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,33.1,71.46,15.90,17.22,0,35.3,40.3,71.51,65,342,15625,4147,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,34.5,70.72,16.00,17.93,0,35.3,40.3,71.51,61,342,64062,4148,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,35.9,71.04,16.00,17.50,0,35.3,40.3,71.10,57,342,64062,4148,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,37.3,71.44,15.90,17.40,0,35.3,40.3,71.50,55,342,64062,4148,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,38.6,71.44,16.00,17.70,0,35.3,40.3,71.50,56,342,64062,4148,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,40.0,71.45,16.20,17.22,0,35.2,40.1,71.50,64,342,64062,4148,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,41.4,70.35,16.20,17.60,0,35.2,40.1,71.09,63,342,64062,4148,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,42.8,71.59,16.00,17.55,0,35.2,40.1,71.65,61,342,64062,4148,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,44.2,70.74,15.75,17.70,0,35.2,40.1,71.50,57,342,84375,4150,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,45.5,71.48,15.80,17.52,0,35.2,40.1,71.50,55,342,84375,4150,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,47.0,71.05,15.90,17.61,0,35.2,40.1,71.10,59,342,84375,4150,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,48.3,71.48,15.90,17.50,0,35.2,40.1,71.51,62,342,84375,4150,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,49.7,71.63,15.70,17.60,0,35.2,40.1,71.65,65,342,84375,4150,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,51.1,71.49,16.00,17.60,0,35.1,39.9,71.50,62,342,84375,4150,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,52.5,70.33,15.80,17.62,0,35.1,39.9,71.09,57,342,84375,4150,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,53.8,71.53,16.00,17.34,0,35.1,39.9,71.51,55,342,84375,4150,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,55.2,71.48,15.90,17.62,0,35.1,39.9,71.50,58,342,117968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,56.6,71.51,15.90,17.42,0,35.0,39.7,71.51,60,342,117968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,58.0,71.07,16.00,17.50,0,35.0,39.7,71.10,66,342,117968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,59.4,71.50,15.80,17.70,0,35.0,39.7,71.51,62,342,117968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,60.7,71.61,15.90,17.60,0,35.0,39.7,71.65,60,342,117968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,62.1,71.47,16.00,17.50,0,35.0,39.7,71.51,56,342,117968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,63.5,70.34,15.90,17.70,0,35.0,39.7,71.11,55,342,117968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,64.9,71.60,15.75,17.72,0,35.0,39.7,71.65,62,342,142968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,66.3,71.46,15.90,17.62,0,35.0,39.7,71.51,65,342,142968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,67.6,70.71,16.05,17.52,0,35.0,39.5,71.51,63,342,142968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,69.1,70.51,15.85,17.51,0,35.0,39.5,71.23,59,342,142968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,70.4,71.60,15.90,17.70,0,35.0,39.5,71.65,56,342,142968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,71.8,71.51,15.90,17.42,0,35.0,39.5,71.51,55,342,142968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,73.2,71.47,16.00,17.42,0,35.0,39.5,71.51,62,342,142968,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,74.6,71.20,15.90,17.52,0,35.0,39.5,71.23,64,342,66406,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,75.9,71.61,16.00,17.50,0,35.0,39.5,71.65,65,342,66406,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,77.3,71.59,15.90,17.60,0,35.0,39.5,71.65,60,342,66406,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,78.6,70.88,16.10,17.40,0,34.9,39.4,71.65,55,342,66406,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,80.1,71.07,15.95,17.61,0,34.9,39.4,71.10,58,342,66406,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,81.4,71.63,15.95,17.50,0,34.9,39.4,71.65,60,342,66406,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,82.8,70.72,16.05,17.70,0,34.9,39.4,71.51,62,342,66406,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,84.2,71.45,16.10,17.42,0,34.9,39.4,71.51,64,342,66406,4149,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,85.6,70.45,15.90,17.61,0,34.9,39.4,71.23,59,342,66406,4148,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,86.9,71.48,15.90,17.42,0,34.9,39.4,71.50,57,342,66406,4148,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,88.3,70.85,16.00,17.53,0,34.9,39.4,71.64,57,342,66406,4148,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,89.7,71.60,16.05,17.50,0,34.9,39.3,71.65,58,342,66406,4148,3871050
+s25u,supersplat-orbit-touch,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,976,91.1,71.20,15.90,17.61,0,34.9,39.3,71.23,65,342,66406,4148,3871050

@@ -1,0 +1,7 @@
+device,scene,renderer,cap_fps,fps_cold,fps_late,busy,mhz,mcycles,visible,skin_max,status_max,power_w,charge_mah,fps_steady,mj_per_frame,gpu_ms_late
+s24u,stump-full.sh0,PocketSplat 16bit-c0.1-540x975,0,91.118,nan,99.000,841.562,9.418,1182932.745,40.200,1.000,2.862,9.874,88.465,32.35,nan
+s24u,truck-full.sh0,PocketSplat 16bit-c0.1-540x975,0,177.178,nan,88.438,838.938,4.191,423617.191,40.000,0.000,1.237,4.937,177.039,6.99,nan
+s24u,stump-full.sh0,supersplat-orbit-ourpose-touch,nan,54.070,nan,79.509,676.930,10.046,nan,35.100,0.000,0.955,0.000,53.642,17.80,nan
+s24u,stump-full.sh0,supersplat-orbit-touch,nan,59.420,nan,73.845,531.810,6.416,nan,36.200,0.000,1.086,-9.874,61.259,17.72,nan
+s24u,truck-full.sh0,supersplat-orbit-ourpose-touch,nan,55.900,nan,74.466,461.759,5.849,nan,36.500,0.000,2.005,-9.874,58.674,34.18,nan
+s24u,truck-full.sh0,supersplat-orbit-touch,nan,59.930,nan,69.625,298.714,3.281,nan,35.800,0.000,2.638,-19.748,63.329,41.66,nan

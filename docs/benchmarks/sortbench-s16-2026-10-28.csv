@@ -1,0 +1,311 @@
+# sortbench S16 (2026-10-28): unsorted random keys (half full-range, half low-range for
+# duplicates), values = indices, medians of 15 runs, correctness + stability checked per size.
+# 'profile' rows: one ALL_COMMANDS timestamp after each dispatch's barrier, summed per stage;
+# the Adreno 830 misattributes the spine stage into the downsweep (docs/sorting.md section 7).
+# run = repeat index of the same configuration in that session (drift control). The 8599af6
+# ranking rows ran after the battery runs (phones warm, on battery, over Wi-Fi adb).
+device,gpu,build,variant,count_rows,output,run,mode,keys,key_bits,unsorted_ms,ns_per_key,presorted_ms,upsweep_ms,spine_ms,downsweep_ms
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,plain,262144,32,1.360,5.19,1.171,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,plain,1000000,32,5.595,5.59,5.043,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,plain,4000000,32,25.688,6.42,23.145,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,plain,262144,16,0.770,2.94,0.481,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,plain,1000000,16,3.074,3.07,1.390,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,plain,4000000,16,14.769,3.69,4.438,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,profile,262144,32,1.365,5.21,,0.171,0.119,1.074
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,profile,1000000,32,5.575,5.58,,0.464,0.142,4.969
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,profile,4000000,32,26.035,6.51,,1.682,0.336,24.015
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,profile,262144,16,0.769,2.93,,0.087,0.060,0.622
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,profile,1000000,16,3.043,3.04,,0.243,0.071,2.729
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,profile,4000000,16,14.778,3.69,,0.889,0.168,13.720
+s24u,Adreno 750,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,plain,262144,32,1.483,5.66,1.354,,,
+s24u,Adreno 750,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,plain,1000000,32,4.930,4.93,4.616,,,
+s24u,Adreno 750,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,plain,4000000,32,20.596,5.15,18.767,,,
+s24u,Adreno 750,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,plain,262144,16,0.796,3.04,0.596,,,
+s24u,Adreno 750,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,plain,1000000,16,2.636,2.64,1.795,,,
+s24u,Adreno 750,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,plain,4000000,16,11.402,2.85,6.597,,,
+s24u,Adreno 750,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,profile,262144,32,1.487,5.67,,0.170,0.118,1.198
+s24u,Adreno 750,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,profile,1000000,32,4.936,4.94,,0.466,0.142,4.328
+s24u,Adreno 750,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,profile,4000000,32,20.575,5.14,,1.687,0.337,18.551
+s24u,Adreno 750,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,profile,262144,16,0.799,3.05,,0.087,0.059,0.652
+s24u,Adreno 750,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,profile,1000000,16,2.647,2.65,,0.244,0.071,2.332
+s24u,Adreno 750,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,profile,4000000,16,11.421,2.86,,0.891,0.170,10.362
+s24u,Adreno 750,f0d8618 + rows=16,f0d8618 with 16 count rows,16,values only,1,plain,262144,32,1.395,5.32,1.256,,,
+s24u,Adreno 750,f0d8618 + rows=16,f0d8618 with 16 count rows,16,values only,1,plain,1000000,32,4.382,4.38,4.080,,,
+s24u,Adreno 750,f0d8618 + rows=16,f0d8618 with 16 count rows,16,values only,1,plain,4000000,32,18.708,4.68,17.243,,,
+s24u,Adreno 750,f0d8618 + rows=16,f0d8618 with 16 count rows,16,values only,1,plain,262144,16,0.744,2.84,0.502,,,
+s24u,Adreno 750,f0d8618 + rows=16,f0d8618 with 16 count rows,16,values only,1,plain,1000000,16,2.403,2.40,1.438,,,
+s24u,Adreno 750,f0d8618 + rows=16,f0d8618 with 16 count rows,16,values only,1,plain,4000000,16,10.420,2.60,5.077,,,
+s24u,Adreno 750,f0d8618 + rows=16,f0d8618 with 16 count rows,16,values only,1,profile,262144,32,1.364,5.20,,0.172,0.119,1.073
+s24u,Adreno 750,f0d8618 + rows=16,f0d8618 with 16 count rows,16,values only,1,profile,1000000,32,4.368,4.37,,0.466,0.142,3.760
+s24u,Adreno 750,f0d8618 + rows=16,f0d8618 with 16 count rows,16,values only,1,profile,4000000,32,18.748,4.69,,1.686,0.337,16.728
+s24u,Adreno 750,f0d8618 + rows=16,f0d8618 with 16 count rows,16,values only,1,profile,262144,16,0.745,2.84,,0.088,0.059,0.596
+s24u,Adreno 750,f0d8618 + rows=16,f0d8618 with 16 count rows,16,values only,1,profile,1000000,16,2.404,2.40,,0.244,0.071,2.088
+s24u,Adreno 750,f0d8618 + rows=16,f0d8618 with 16 count rows,16,values only,1,profile,4000000,16,10.370,2.59,,0.890,0.168,9.311
+s24u,Adreno 750,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,plain,262144,32,2.122,8.09,1.964,,,
+s24u,Adreno 750,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,plain,1000000,32,7.861,7.86,7.343,,,
+s24u,Adreno 750,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,plain,4000000,32,30.320,7.58,28.432,,,
+s24u,Adreno 750,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,plain,262144,16,1.139,4.34,0.894,,,
+s24u,Adreno 750,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,plain,1000000,16,4.119,4.12,3.129,,,
+s24u,Adreno 750,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,plain,4000000,16,15.795,3.95,11.771,,,
+s24u,Adreno 750,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,profile,262144,32,2.129,8.12,,0.170,0.734,1.222
+s24u,Adreno 750,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,profile,1000000,32,7.855,7.86,,0.466,2.892,4.505
+s24u,Adreno 750,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,profile,4000000,32,30.298,7.57,,1.683,11.107,17.507
+s24u,Adreno 750,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,profile,262144,16,1.141,4.35,,0.088,0.370,0.684
+s24u,Adreno 750,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,profile,1000000,16,4.115,4.12,,0.243,1.442,2.430
+s24u,Adreno 750,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,profile,4000000,16,15.790,3.95,,0.890,5.544,9.360
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,keys+values,1,plain,262144,32,1.423,5.43,1.205,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,keys+values,1,plain,1000000,32,6.131,6.13,4.947,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,keys+values,1,plain,4000000,32,25.833,6.46,21.869,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,keys+values,1,plain,262144,16,0.823,3.14,0.480,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,keys+values,1,plain,1000000,16,3.454,3.45,1.382,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,keys+values,1,plain,4000000,16,14.662,3.67,4.441,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,keys+values,1,profile,262144,32,1.405,5.36,,0.172,0.119,1.115
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,keys+values,1,profile,1000000,32,6.143,6.14,,0.464,0.142,5.535
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,keys+values,1,profile,4000000,32,25.845,6.46,,1.683,0.336,23.824
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,keys+values,1,profile,262144,16,0.827,3.15,,0.088,0.060,0.678
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,keys+values,1,profile,1000000,16,3.471,3.47,,0.243,0.071,3.156
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,keys+values,1,profile,4000000,16,14.552,3.64,,0.888,0.168,13.494
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,plain,1000000,32,5.508,5.51,4.957,,,
+s24u,Adreno 750,f0d8618,4 count rows (f0d8618 default on Adreno),4,values only,1,plain,1000000,16,3.015,3.02,1.381,,,
+s24u,Adreno 750,2002c7e code,--count-rows 16,16,values only,1,plain,262144,32,1.360,5.19,1.244,,,
+s24u,Adreno 750,2002c7e code,--count-rows 16,16,values only,1,plain,1000000,32,4.374,4.37,4.148,,,
+s24u,Adreno 750,2002c7e code,--count-rows 16,16,values only,1,plain,4000000,32,17.243,4.31,17.067,,,
+s24u,Adreno 750,2002c7e code,--count-rows 16,16,values only,1,plain,262144,16,0.741,2.83,0.505,,,
+s24u,Adreno 750,2002c7e code,--count-rows 16,16,values only,1,plain,1000000,16,2.376,2.38,1.432,,,
+s24u,Adreno 750,2002c7e code,--count-rows 16,16,values only,1,plain,4000000,16,9.465,2.37,5.075,,,
+s24u,Adreno 750,2002c7e code,--count-rows 4,4,values only,1,plain,262144,32,1.366,5.21,1.171,,,
+s24u,Adreno 750,2002c7e code,--count-rows 4,4,values only,1,plain,1000000,32,5.577,5.58,4.999,,,
+s24u,Adreno 750,2002c7e code,--count-rows 4,4,values only,1,plain,4000000,32,23.212,5.80,22.204,,,
+s24u,Adreno 750,2002c7e code,--count-rows 4,4,values only,1,plain,262144,16,0.775,2.96,0.479,,,
+s24u,Adreno 750,2002c7e code,--count-rows 4,4,values only,1,plain,1000000,16,3.035,3.04,1.386,,,
+s24u,Adreno 750,2002c7e code,--count-rows 4,4,values only,1,plain,4000000,16,12.336,3.08,4.438,,,
+s24u,Adreno 750,2002c7e code,--count-rows 28,28,values only,1,plain,262144,32,1.683,6.42,1.626,,,
+s24u,Adreno 750,2002c7e code,--count-rows 28,28,values only,1,plain,1000000,32,5.410,5.41,5.125,,,
+s24u,Adreno 750,2002c7e code,--count-rows 28,28,values only,1,plain,4000000,32,20.635,5.16,19.626,,,
+s24u,Adreno 750,2002c7e code,--count-rows 28,28,values only,1,plain,262144,16,0.873,3.33,0.704,,,
+s24u,Adreno 750,2002c7e code,--count-rows 28,28,values only,1,plain,1000000,16,2.807,2.81,2.132,,,
+s24u,Adreno 750,2002c7e code,--count-rows 28,28,values only,1,plain,4000000,16,10.743,2.69,7.947,,,
+s24u,Adreno 750,2002c7e code,--count-rows 8,8,values only,1,plain,262144,32,1.383,5.28,1.221,,,
+s24u,Adreno 750,2002c7e code,--count-rows 8,8,values only,1,plain,1000000,32,5.018,5.02,4.628,,,
+s24u,Adreno 750,2002c7e code,--count-rows 8,8,values only,1,plain,4000000,32,21.205,5.30,21.483,,,
+s24u,Adreno 750,2002c7e code,--count-rows 8,8,values only,1,plain,262144,16,0.765,2.92,0.495,,,
+s24u,Adreno 750,2002c7e code,--count-rows 8,8,values only,1,plain,1000000,16,2.777,2.78,1.392,,,
+s24u,Adreno 750,2002c7e code,--count-rows 8,8,values only,1,plain,4000000,16,11.150,2.79,4.541,,,
+s24u,Adreno 750,2002c7e code,--count-rows 24,24,values only,1,plain,262144,32,1.674,6.39,1.617,,,
+s24u,Adreno 750,2002c7e code,--count-rows 24,24,values only,1,plain,1000000,32,5.406,5.41,5.115,,,
+s24u,Adreno 750,2002c7e code,--count-rows 24,24,values only,1,plain,4000000,32,20.620,5.16,19.586,,,
+s24u,Adreno 750,2002c7e code,--count-rows 24,24,values only,1,plain,262144,16,0.873,3.33,0.701,,,
+s24u,Adreno 750,2002c7e code,--count-rows 24,24,values only,1,plain,1000000,16,2.801,2.80,2.127,,,
+s24u,Adreno 750,2002c7e code,--count-rows 24,24,values only,1,plain,4000000,16,10.726,2.68,7.927,,,
+s24u,Adreno 750,2002c7e code,--count-rows 12,12,values only,1,plain,262144,32,1.367,5.21,1.243,,,
+s24u,Adreno 750,2002c7e code,--count-rows 12,12,values only,1,plain,1000000,32,4.335,4.33,4.056,,,
+s24u,Adreno 750,2002c7e code,--count-rows 12,12,values only,1,plain,4000000,32,16.852,4.21,16.803,,,
+s24u,Adreno 750,2002c7e code,--count-rows 12,12,values only,1,plain,262144,16,0.742,2.83,0.506,,,
+s24u,Adreno 750,2002c7e code,--count-rows 12,12,values only,1,plain,1000000,16,2.363,2.36,1.431,,,
+s24u,Adreno 750,2002c7e code,--count-rows 12,12,values only,1,plain,4000000,16,9.139,2.28,5.055,,,
+s24u,Adreno 750,2002c7e code,--count-rows 20,20,values only,1,plain,262144,32,1.675,6.39,1.614,,,
+s24u,Adreno 750,2002c7e code,--count-rows 20,20,values only,1,plain,1000000,32,5.377,5.38,5.106,,,
+s24u,Adreno 750,2002c7e code,--count-rows 20,20,values only,1,plain,4000000,32,20.541,5.14,19.555,,,
+s24u,Adreno 750,2002c7e code,--count-rows 20,20,values only,1,plain,262144,16,0.874,3.33,0.700,,,
+s24u,Adreno 750,2002c7e code,--count-rows 20,20,values only,1,plain,1000000,16,2.802,2.80,2.115,,,
+s24u,Adreno 750,2002c7e code,--count-rows 20,20,values only,1,plain,4000000,16,10.705,2.68,7.894,,,
+s24u,Adreno 750,2002c7e code,--count-rows 16,16,values only,2,plain,262144,32,1.362,5.20,1.241,,,
+s24u,Adreno 750,2002c7e code,--count-rows 16,16,values only,2,plain,1000000,32,4.345,4.34,4.073,,,
+s24u,Adreno 750,2002c7e code,--count-rows 16,16,values only,2,plain,4000000,32,16.860,4.21,17.173,,,
+s24u,Adreno 750,2002c7e code,--count-rows 16,16,values only,2,plain,262144,16,0.742,2.83,0.505,,,
+s24u,Adreno 750,2002c7e code,--count-rows 16,16,values only,2,plain,1000000,16,2.357,2.36,1.432,,,
+s24u,Adreno 750,2002c7e code,--count-rows 16,16,values only,2,plain,4000000,16,9.143,2.29,5.077,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,plain,262144,32,1.153,4.40,1.025,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,plain,1000000,32,3.993,3.99,3.625,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,plain,4000000,32,15.164,3.79,13.957,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,plain,262144,16,0.641,2.45,0.408,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,plain,1000000,16,2.220,2.22,1.190,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,plain,4000000,16,8.298,2.07,4.180,,,
+s25u,Adreno 830,2002c7e code,--count-rows 4,4,values only,1,plain,262144,32,1.312,5.00,1.117,,,
+s25u,Adreno 830,2002c7e code,--count-rows 4,4,values only,1,plain,1000000,32,5.451,5.45,4.782,,,
+s25u,Adreno 830,2002c7e code,--count-rows 4,4,values only,1,plain,4000000,32,22.939,5.73,21.088,,,
+s25u,Adreno 830,2002c7e code,--count-rows 4,4,values only,1,plain,262144,16,0.644,2.46,0.389,,,
+s25u,Adreno 830,2002c7e code,--count-rows 4,4,values only,1,plain,1000000,16,2.784,2.78,1.044,,,
+s25u,Adreno 830,2002c7e code,--count-rows 4,4,values only,1,plain,4000000,16,11.324,2.83,3.100,,,
+s25u,Adreno 830,2002c7e code,--count-rows 28,28,values only,1,plain,262144,32,1.481,5.65,1.407,,,
+s25u,Adreno 830,2002c7e code,--count-rows 28,28,values only,1,plain,1000000,32,4.732,4.73,4.446,,,
+s25u,Adreno 830,2002c7e code,--count-rows 28,28,values only,1,plain,4000000,32,18.048,4.51,16.854,,,
+s25u,Adreno 830,2002c7e code,--count-rows 28,28,values only,1,plain,262144,16,0.749,2.86,0.594,,,
+s25u,Adreno 830,2002c7e code,--count-rows 28,28,values only,1,plain,1000000,16,2.480,2.48,1.852,,,
+s25u,Adreno 830,2002c7e code,--count-rows 28,28,values only,1,plain,4000000,16,9.503,2.38,6.917,,,
+s25u,Adreno 830,2002c7e code,--count-rows 8,8,values only,1,plain,262144,32,1.143,4.36,1.046,,,
+s25u,Adreno 830,2002c7e code,--count-rows 8,8,values only,1,plain,1000000,32,4.413,4.41,4.033,,,
+s25u,Adreno 830,2002c7e code,--count-rows 8,8,values only,1,plain,4000000,32,17.998,4.50,16.819,,,
+s25u,Adreno 830,2002c7e code,--count-rows 8,8,values only,1,plain,262144,16,0.638,2.43,0.398,,,
+s25u,Adreno 830,2002c7e code,--count-rows 8,8,values only,1,plain,1000000,16,2.433,2.43,1.041,,,
+s25u,Adreno 830,2002c7e code,--count-rows 8,8,values only,1,plain,4000000,16,9.584,2.40,3.318,,,
+s25u,Adreno 830,2002c7e code,--count-rows 24,24,values only,1,plain,262144,32,1.457,5.56,1.391,,,
+s25u,Adreno 830,2002c7e code,--count-rows 24,24,values only,1,plain,1000000,32,4.707,4.71,4.415,,,
+s25u,Adreno 830,2002c7e code,--count-rows 24,24,values only,1,plain,4000000,32,17.964,4.49,16.769,,,
+s25u,Adreno 830,2002c7e code,--count-rows 24,24,values only,1,plain,262144,16,0.751,2.86,0.592,,,
+s25u,Adreno 830,2002c7e code,--count-rows 24,24,values only,1,plain,1000000,16,2.479,2.48,1.840,,,
+s25u,Adreno 830,2002c7e code,--count-rows 24,24,values only,1,plain,4000000,16,9.464,2.37,6.872,,,
+s25u,Adreno 830,2002c7e code,--count-rows 12,12,values only,1,plain,262144,32,1.161,4.43,1.034,,,
+s25u,Adreno 830,2002c7e code,--count-rows 12,12,values only,1,plain,1000000,32,4.027,4.03,3.682,,,
+s25u,Adreno 830,2002c7e code,--count-rows 12,12,values only,1,plain,4000000,32,14.938,3.73,14.075,,,
+s25u,Adreno 830,2002c7e code,--count-rows 12,12,values only,1,plain,262144,16,0.642,2.45,0.408,,,
+s25u,Adreno 830,2002c7e code,--count-rows 12,12,values only,1,plain,1000000,16,2.204,2.20,1.180,,,
+s25u,Adreno 830,2002c7e code,--count-rows 12,12,values only,1,plain,4000000,16,8.369,2.09,4.155,,,
+s25u,Adreno 830,2002c7e code,--count-rows 20,20,values only,1,plain,262144,32,1.467,5.60,1.395,,,
+s25u,Adreno 830,2002c7e code,--count-rows 20,20,values only,1,plain,1000000,32,4.705,4.71,4.409,,,
+s25u,Adreno 830,2002c7e code,--count-rows 20,20,values only,1,plain,4000000,32,17.891,4.47,16.700,,,
+s25u,Adreno 830,2002c7e code,--count-rows 20,20,values only,1,plain,262144,16,0.758,2.89,0.602,,,
+s25u,Adreno 830,2002c7e code,--count-rows 20,20,values only,1,plain,1000000,16,2.467,2.47,1.829,,,
+s25u,Adreno 830,2002c7e code,--count-rows 20,20,values only,1,plain,4000000,16,9.438,2.36,6.832,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,2,plain,262144,32,1.160,4.43,1.029,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,2,plain,1000000,32,4.029,4.03,3.665,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,2,plain,4000000,32,15.047,3.76,14.581,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,2,plain,262144,16,0.647,2.47,0.417,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,2,plain,1000000,16,2.220,2.22,1.187,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,2,plain,4000000,16,8.293,2.07,4.185,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,plain,262144,32,1.327,5.06,1.119,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,plain,1000000,32,5.407,5.41,4.755,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,plain,4000000,32,22.219,5.55,20.623,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,plain,262144,16,0.658,2.51,0.396,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,plain,1000000,16,2.713,2.71,1.039,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,plain,4000000,16,11.228,2.81,3.094,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,profile,262144,32,1.170,4.46,,0.098,0.008,1.064
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,profile,1000000,32,5.164,5.16,,0.304,0.014,4.844
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,profile,4000000,32,22.397,5.60,,1.076,0.017,21.308
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,profile,262144,16,0.707,2.70,,0.050,0.004,0.653
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,profile,1000000,16,2.689,2.69,,0.153,0.007,2.529
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,profile,4000000,16,11.165,2.79,,0.546,0.008,10.612
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,keys+values,1,plain,262144,32,1.477,5.63,1.147,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,keys+values,1,plain,1000000,32,5.925,5.92,4.647,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,keys+values,1,plain,4000000,32,24.571,6.14,20.028,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,keys+values,1,plain,262144,16,0.769,2.93,0.396,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,keys+values,1,plain,1000000,16,3.722,3.72,1.093,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,keys+values,1,plain,4000000,16,14.419,3.60,3.094,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,keys+values,1,profile,262144,32,1.383,5.28,,0.100,0.008,1.271
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,keys+values,1,profile,1000000,32,5.893,5.89,,0.303,0.014,5.576
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,keys+values,1,profile,4000000,32,24.033,6.01,,1.077,0.017,22.942
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,keys+values,1,profile,262144,16,0.750,2.86,,0.050,0.004,0.695
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,keys+values,1,profile,1000000,16,3.569,3.57,,0.155,0.007,3.407
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,keys+values,1,profile,4000000,16,14.291,3.57,,0.547,0.008,13.738
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,plain,1000000,32,5.404,5.40,4.829,,,
+s25u,Adreno 830,"2002c7e code, rows=4",4 count rows (pre-2002c7e default),4,values only,1,plain,1000000,16,2.677,2.68,1.039,,,
+s25u,Adreno 830,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,plain,262144,32,1.850,7.06,1.698,,,
+s25u,Adreno 830,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,plain,1000000,32,7.218,7.22,6.766,,,
+s25u,Adreno 830,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,plain,4000000,32,27.191,6.80,26.219,,,
+s25u,Adreno 830,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,plain,262144,16,0.977,3.73,0.747,,,
+s25u,Adreno 830,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,plain,1000000,16,3.724,3.72,2.705,,,
+s25u,Adreno 830,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,plain,4000000,16,14.408,3.60,10.242,,,
+s25u,Adreno 830,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,profile,262144,32,1.840,7.02,,0.103,0.008,1.729
+s25u,Adreno 830,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,profile,1000000,32,7.019,7.02,,0.309,0.013,6.698
+s25u,Adreno 830,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,profile,4000000,32,27.161,6.79,,1.082,0.017,26.069
+s25u,Adreno 830,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,profile,262144,16,0.991,3.78,,0.052,0.004,0.934
+s25u,Adreno 830,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,profile,1000000,16,3.679,3.68,,0.157,0.007,3.515
+s25u,Adreno 830,5ef86a3 + 64-WG spine,"old sort, spine dispatched as 64 workgroups (1 working)",16,values only,1,profile,4000000,16,14.185,3.55,,0.547,0.008,13.628
+s25u,Adreno 830,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,plain,262144,32,1.322,5.04,1.204,,,
+s25u,Adreno 830,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,plain,1000000,32,4.585,4.58,4.328,,,
+s25u,Adreno 830,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,plain,4000000,32,17.271,4.32,16.483,,,
+s25u,Adreno 830,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,plain,262144,16,0.724,2.76,0.516,,,
+s25u,Adreno 830,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,plain,1000000,16,2.486,2.49,1.594,,,
+s25u,Adreno 830,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,plain,4000000,16,9.273,2.32,5.806,,,
+s25u,Adreno 830,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,profile,262144,32,1.313,5.01,,0.101,0.008,1.202
+s25u,Adreno 830,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,profile,1000000,32,4.584,4.58,,0.309,0.014,4.259
+s25u,Adreno 830,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,profile,4000000,32,17.314,4.33,,1.094,0.017,16.197
+s25u,Adreno 830,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,profile,262144,16,0.706,2.69,,0.050,0.004,0.650
+s25u,Adreno 830,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,profile,1000000,16,2.458,2.46,,0.154,0.007,2.297
+s25u,Adreno 830,f0d8618 spine / 5ef86a3 downsweep,parallel spine + old downsweep,16,values only,1,profile,4000000,16,9.367,2.34,,0.551,0.008,8.803
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,plain,262144,32,1.164,4.44,1.030,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,plain,1000000,32,4.013,4.01,3.650,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,plain,4000000,32,15.144,3.79,14.505,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,plain,262144,16,0.664,2.53,0.423,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,plain,1000000,16,2.244,2.24,1.195,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,plain,4000000,16,8.302,2.08,4.176,,,
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,profile,262144,32,1.147,4.38,,0.101,0.008,1.037
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,profile,1000000,32,3.981,3.98,,0.306,0.014,3.663
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,profile,4000000,32,15.012,3.75,,1.078,0.017,13.916
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,profile,262144,16,0.646,2.46,,0.050,0.004,0.592
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,profile,1000000,16,2.224,2.22,,0.154,0.007,2.063
+s25u,Adreno 830,2002c7e code,--count-rows 16,16,values only,1,profile,4000000,16,8.294,2.07,,0.549,0.008,7.735
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 16,16,values only,1,plain,262144,32,1.356,5.17,1.245,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 16,16,values only,1,plain,1000000,32,4.489,4.49,4.185,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 16,16,values only,1,plain,4000000,32,18.813,4.70,18.264,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 16,16,values only,1,plain,262144,16,0.743,2.83,0.506,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 16,16,values only,1,plain,1000000,16,2.463,2.46,1.444,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 16,16,values only,1,plain,4000000,16,10.539,2.63,5.079,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 16,16,values only,1,plain,262144,32,1.331,5.08,1.244,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 16,16,values only,1,plain,1000000,32,4.182,4.18,3.883,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 16,16,values only,1,plain,4000000,32,15.856,3.96,14.867,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 16,16,values only,1,plain,262144,16,0.711,2.71,0.508,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 16,16,values only,1,plain,1000000,16,2.219,2.22,1.417,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 16,16,values only,1,plain,4000000,16,8.427,2.11,5.163,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 12,12,values only,1,plain,262144,32,1.253,4.78,1.092,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 12,12,values only,1,plain,1000000,32,4.350,4.35,4.008,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 12,12,values only,1,plain,4000000,32,18.635,4.66,18.143,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 12,12,values only,1,plain,262144,16,0.720,2.75,0.434,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 12,12,values only,1,plain,1000000,16,2.427,2.43,1.230,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 12,12,values only,1,plain,4000000,16,10.486,2.62,4.018,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 20,20,values only,1,plain,262144,32,1.336,5.10,1.244,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 20,20,values only,1,plain,1000000,32,4.195,4.20,3.906,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 20,20,values only,1,plain,4000000,32,15.891,3.97,14.910,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 20,20,values only,1,plain,262144,16,0.712,2.72,0.508,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 20,20,values only,1,plain,1000000,16,2.227,2.23,1.427,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 20,20,values only,1,plain,4000000,16,8.448,2.11,5.178,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 12,12,values only,1,plain,262144,32,1.362,5.20,1.237,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 12,12,values only,1,plain,1000000,32,4.429,4.43,4.102,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 12,12,values only,1,plain,4000000,32,18.993,4.75,18.121,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 12,12,values only,1,plain,262144,16,0.743,2.83,0.505,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 12,12,values only,1,plain,1000000,16,2.441,2.44,1.437,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 12,12,values only,1,plain,4000000,16,10.560,2.64,5.054,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 16,16,values only,2,plain,262144,32,1.332,5.08,1.244,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 16,16,values only,2,plain,1000000,32,4.193,4.19,3.909,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 16,16,values only,2,plain,4000000,32,15.856,3.96,14.900,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 16,16,values only,2,plain,262144,16,0.711,2.71,0.507,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 16,16,values only,2,plain,1000000,16,2.222,2.22,1.420,,,
+s24u,Adreno 750,8599af6,--ranking mask --count-rows 16,16,values only,2,plain,4000000,16,8.437,2.11,5.170,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 16,16,values only,2,plain,262144,32,1.364,5.20,1.246,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 16,16,values only,2,plain,1000000,32,4.429,4.43,4.139,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 16,16,values only,2,plain,4000000,32,18.003,4.50,17.453,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 16,16,values only,2,plain,262144,16,0.739,2.82,0.505,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 16,16,values only,2,plain,1000000,16,2.408,2.41,1.437,,,
+s24u,Adreno 750,8599af6,--ranking ballot --count-rows 16,16,values only,2,plain,4000000,16,10.073,2.52,5.077,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 16,16,values only,1,plain,262144,32,1.164,4.44,1.029,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 16,16,values only,1,plain,1000000,32,4.012,4.01,3.620,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 16,16,values only,1,plain,4000000,32,15.130,3.78,14.477,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 16,16,values only,1,plain,262144,16,0.640,2.44,0.407,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 16,16,values only,1,plain,1000000,16,2.213,2.21,1.195,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 16,16,values only,1,plain,4000000,16,8.288,2.07,4.177,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 16,16,values only,1,plain,262144,32,1.384,5.28,1.276,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 16,16,values only,1,plain,1000000,32,4.277,4.28,3.856,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 16,16,values only,1,plain,4000000,32,16.280,4.07,14.740,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 16,16,values only,1,plain,262144,16,0.718,2.74,0.405,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 16,16,values only,1,plain,1000000,16,2.350,2.35,1.153,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 16,16,values only,1,plain,4000000,16,9.013,2.25,4.239,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 12,12,values only,1,plain,262144,32,1.222,4.66,1.044,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 12,12,values only,1,plain,1000000,32,4.027,4.03,3.517,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 12,12,values only,1,plain,4000000,32,15.482,3.87,14.103,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 12,12,values only,1,plain,262144,16,0.693,2.64,0.347,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 12,12,values only,1,plain,1000000,16,2.288,2.29,0.936,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 12,12,values only,1,plain,4000000,16,8.710,2.18,3.046,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 20,20,values only,1,plain,262144,32,1.384,5.28,1.268,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 20,20,values only,1,plain,1000000,32,4.281,4.28,3.850,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 20,20,values only,1,plain,4000000,32,16.321,4.08,14.770,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 20,20,values only,1,plain,262144,16,0.723,2.76,0.411,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 20,20,values only,1,plain,1000000,16,2.353,2.35,1.154,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 20,20,values only,1,plain,4000000,16,9.037,2.26,4.262,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 12,12,values only,1,plain,262144,32,1.160,4.43,1.024,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 12,12,values only,1,plain,1000000,32,3.992,3.99,3.614,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 12,12,values only,1,plain,4000000,32,14.984,3.75,14.137,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 12,12,values only,1,plain,262144,16,0.639,2.44,0.405,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 12,12,values only,1,plain,1000000,16,2.218,2.22,1.186,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 12,12,values only,1,plain,4000000,16,8.381,2.10,4.149,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 16,16,values only,2,plain,262144,32,1.384,5.28,1.273,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 16,16,values only,2,plain,1000000,32,4.271,4.27,3.822,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 16,16,values only,2,plain,4000000,32,16.258,4.06,14.681,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 16,16,values only,2,plain,262144,16,0.720,2.75,0.407,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 16,16,values only,2,plain,1000000,16,2.350,2.35,1.154,,,
+s25u,Adreno 830,8599af6,--ranking mask --count-rows 16,16,values only,2,plain,4000000,16,9.016,2.25,4.233,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 16,16,values only,2,plain,262144,32,1.161,4.43,1.014,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 16,16,values only,2,plain,1000000,32,3.979,3.98,3.600,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 16,16,values only,2,plain,4000000,32,14.845,3.71,13.876,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 16,16,values only,2,plain,262144,16,0.637,2.43,0.401,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 16,16,values only,2,plain,1000000,16,2.226,2.23,1.189,,,
+s25u,Adreno 830,8599af6,--ranking ballot --count-rows 16,16,values only,2,plain,4000000,16,8.262,2.07,4.178,,,

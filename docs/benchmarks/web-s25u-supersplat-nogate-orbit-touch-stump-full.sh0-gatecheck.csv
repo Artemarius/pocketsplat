@@ -1,0 +1,32 @@
+# pocketsplat bench_web.py, viewer=supersplat-nogate (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.49, model=SM-S938B
+# scene=stump-full.sh0.ply, splats=4049567, sh=0, url_extras=&nogate
+# load_s=25.2, backend=webgpu, canvas=540x976, page=384x693, splats_reported=4049567
+# camera=orbit 2pi/600 per rendered frame about focus [15.1927, 23.0038, -26.8095], distance 300.7, pitch -19.5 deg (viewer default framing), touch drags for pacing only (the camera ignores input)
+# frames counted from engine postrender events
+# orbit steps=3098, focus drift=9.45e-17 x distance
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c,raf_fps,gpu_busy_pct
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,1.4,66.54,15.60,18.64,0,36.4,39.1,66.43,24
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,2.9,70.52,15.80,22.09,0,36.4,39.1,70.57,81
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,4.2,71.56,15.60,19.12,0,36.4,39.1,71.51,76
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,5.9,69.86,15.90,19.50,0,36.4,39.1,69.63,75
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,8.5,66.01,16.30,21.85,0,35.6,40.0,66.11,77
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,10.0,68.85,16.15,23.88,0,35.6,40.0,68.86,82
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,11.4,70.91,15.90,18.94,0,35.6,40.0,70.94,81
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,14.1,65.82,16.30,18.50,0,35.6,39.8,65.79,82
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,15.8,64.10,16.20,27.40,0,35.6,39.8,64.13,83
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,17.2,70.91,15.65,19.62,0,35.6,39.8,70.94,77
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,19.7,66.25,16.40,18.60,0,35.6,39.8,66.21,77
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,21.5,66.28,16.50,24.67,0,35.6,39.8,66.34,78
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,22.9,66.96,16.00,26.96,0,35.6,39.8,66.99,83
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,25.3,66.73,16.30,18.15,0,35.7,39.8,66.66,73
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,27.2,66.83,16.00,22.77,0,35.7,39.8,66.87,84
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,28.6,71.39,15.60,18.83,0,35.7,39.8,71.38,74
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,30.7,68.06,16.30,17.89,0,35.7,39.8,68.01,73
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,32.9,65.04,16.20,23.50,0,35.7,39.8,65.07,80
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,34.3,71.31,15.70,19.03,0,35.7,39.8,71.37,76
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,36.1,68.99,15.85,20.32,0,35.7,39.9,68.74,75
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,38.7,65.21,16.50,18.09,0,35.7,39.9,65.30,81
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,40.1,68.53,15.70,24.86,0,35.7,39.9,68.57,82
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,41.7,68.73,15.90,24.19,0,35.7,39.9,68.56,79
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,44.5,65.13,16.40,22.81,0,35.7,39.9,65.12,79
+s25u,supersplat-nogate-orbit-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,45.8,69.89,15.65,19.75,0,35.7,39.9,70.22,76

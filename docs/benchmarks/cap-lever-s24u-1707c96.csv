@@ -1,0 +1,9 @@
+# Contribution-cull threshold vs GPU clock at a fixed frame rate (S17, 2026-10-28): S24U, stump-full,
+# 540x975, 16-bit keys, capped at 53 fps (bench_android.py --target-fps 53), APK 1707c96, 60 s runs over USB
+# after a cool-down to 37 C skin. Frame columns: means over 0-30 s of the app's per-frame CSV; kgsl columns:
+# host samples every 2 s from 15 to 65 s after launch.
+device,scene,min_contribution_px,fps,visible,gpu_ms,preprocess_ms,sort_ms,draw_ms,kgsl_busy_pct,gpu_mhz
+s24u,stump-full.sh0,0.1,52.9,1187796,15.61,5.58,3.57,6.07,79,595
+s24u,stump-full.sh0,0.2,53.0,872810,15.52,5.68,4.27,5.09,78,500
+s24u,stump-full.sh0,0.5,53.0,513105,15.11,6.07,3.73,4.55,76,310
+s24u,stump-full.sh0,1,53.0,310830,13.56,5.78,2.96,3.83,68,231

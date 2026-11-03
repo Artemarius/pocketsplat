@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat (supersplat-viewer 1.41.0), browser=Chrome/149.0.7827.102, model=SM-S938B
+# scene=counter-full.sh0.ply, splats=973948, sh=0, url_extras=-
+# load_s=2.3, backend=webgpu, canvas=540x976, page=384x693, splats_reported=973948
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,1.3,71.49,16.15,18.26,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,2.6,71.83,16.00,17.53,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,3.9,72.37,16.10,17.95,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,5.2,72.28,15.80,17.70,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,6.5,72.26,15.80,17.99,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,7.8,71.75,16.00,17.80,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,9.1,72.38,16.00,17.75,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,10.4,72.17,16.00,17.65,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,11.7,72.09,16.00,17.74,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,13.0,71.89,16.20,17.60,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,14.3,72.23,15.70,17.90,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,15.6,72.21,16.20,17.35,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,16.9,72.35,16.00,18.05,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,18.2,71.91,15.80,17.74,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,19.5,72.24,16.00,17.50,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,20.8,72.26,16.00,17.68,0,37.2,42.2
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,22.1,72.18,16.20,17.95,0,37.1,42.3
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,23.4,71.77,16.10,17.73,0,37.1,42.3
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,24.7,72.26,15.95,17.70,0,37.1,42.3
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,26.0,72.42,15.90,17.55,0,37.1,42.3
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,27.2,72.23,16.05,17.65,0,37.1,42.3
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,28.6,71.65,16.15,17.62,0,37.1,42.3
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,29.9,72.34,16.10,17.90,0,37.1,42.3
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,31.2,72.22,15.75,17.69,0,37.1,42.3
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,32.4,72.36,15.90,17.75,0,37.1,42.1
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,33.8,71.64,15.85,17.83,0,37.1,42.1
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,35.1,72.33,15.80,17.75,0,37.1,42.1
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,36.4,72.20,15.85,17.80,0,37.1,42.1
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,37.7,72.19,16.30,17.80,0,37.1,42.1
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,39.0,71.59,15.95,17.73,0,37.1,42.1
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,40.3,72.30,15.75,17.89,0,37.1,42.1
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,41.6,72.21,16.15,17.70,0,37.1,42.1
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,42.9,72.19,16.15,17.60,0,37.2,42.1
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,44.2,71.76,16.00,17.76,0,37.2,42.1
+s25u,supersplat,1.41.0,webgpu,counter-full.sh0.ply,973948,0,540,976,45.5,72.19,16.05,17.69,0,37.2,42.1

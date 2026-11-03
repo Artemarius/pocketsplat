@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat-nogate (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=museum1.sh3-full.sh0.ply, splats=314457, sh=0, url_extras=&nogate
+# load_s=1.1, backend=webgpu, canvas=540x975, page=384x693, splats_reported=314457
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,1.3,71.55,15.50,17.80,1,38.0,40.8
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,2.6,71.49,15.70,18.24,1,38.0,40.8
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,3.9,72.24,15.55,18.90,1,38.0,40.8
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,5.2,72.26,15.30,18.98,1,38.0,40.8
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,6.5,72.32,15.05,18.80,1,38.0,40.8
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,7.9,71.38,15.90,17.66,1,38.0,40.8
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,9.2,72.28,15.80,17.70,1,38.0,40.8
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,10.5,72.47,14.80,18.75,1,38.0,40.8
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,11.8,72.09,15.20,18.76,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,13.2,71.41,15.80,17.62,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,14.5,72.29,15.70,18.34,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,15.8,72.21,15.20,18.80,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,17.0,72.26,15.80,17.79,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,18.4,70.67,15.80,19.54,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,19.7,72.12,15.40,18.78,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,21.0,72.39,15.80,18.50,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,22.3,72.41,15.90,18.50,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,23.7,71.25,15.70,19.21,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,25.0,72.28,15.30,18.35,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,26.3,72.27,15.45,18.10,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,27.5,72.42,15.60,17.60,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,28.9,70.95,15.45,18.90,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,30.2,72.43,15.60,18.25,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,31.5,72.19,15.35,18.59,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,32.8,72.27,15.20,18.40,1,38.1,42.1
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,34.2,71.38,15.85,18.10,1,38.1,42.1
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,35.5,72.22,15.80,17.55,1,38.1,42.1
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,36.7,72.45,15.30,18.40,1,38.1,42.1
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,38.0,72.38,15.30,18.90,1,38.1,42.1
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,39.4,71.50,15.40,18.48,1,38.1,42.1
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,40.7,72.43,15.70,18.75,1,38.1,42.1
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,42.0,72.22,15.05,18.80,1,38.1,42.1
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,43.2,72.26,15.30,18.73,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,44.6,71.56,16.00,17.82,1,38.1,42.0
+s24u,supersplat-nogate,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,975,45.9,72.13,16.10,17.44,1,38.1,42.0

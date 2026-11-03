@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat (supersplat-viewer 1.41.0), browser=Chrome/149.0.7827.102, model=SM-S938B
+# scene=museum1.sh3-full.sh0.ply, splats=314457, sh=0, url_extras=-
+# load_s=1.0, backend=webgpu, canvas=540x976, page=384x693, splats_reported=314457
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,1.3,72.12,15.95,18.45,0,38.7,47.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,2.7,71.67,15.85,18.43,0,38.7,47.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,3.9,72.19,16.15,17.85,0,38.7,47.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,5.2,72.38,16.00,17.90,0,38.7,47.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,6.5,72.22,16.00,17.70,0,38.7,47.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,7.8,71.77,16.10,17.73,0,38.7,47.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,9.1,72.24,16.10,17.70,0,38.7,47.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,10.4,72.40,16.20,17.75,0,38.7,47.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,11.7,72.23,16.25,17.75,0,38.6,45.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,13.0,71.93,16.10,17.40,0,38.6,45.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,14.3,72.19,15.90,18.04,0,38.6,45.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,15.6,72.35,16.10,17.50,0,38.6,45.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,16.9,72.23,16.05,17.44,0,38.6,45.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,18.2,71.73,16.20,17.33,0,38.6,45.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,19.5,72.08,15.95,17.71,0,38.6,45.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,20.8,72.21,16.10,17.54,0,38.6,45.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,22.0,72.38,16.20,17.40,0,38.2,44.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,23.4,71.78,16.00,18.00,0,38.2,44.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,24.7,72.25,16.00,17.99,0,38.2,44.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,25.9,72.34,15.90,18.45,0,38.2,44.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,27.2,72.23,15.90,18.19,0,38.2,44.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,28.6,71.75,16.50,17.93,0,38.2,44.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,29.9,72.21,16.00,17.69,0,38.2,44.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,31.2,72.25,16.00,17.50,0,38.2,44.2
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,32.4,72.28,16.25,17.40,0,37.9,43.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,33.8,71.76,16.20,17.70,0,37.9,43.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,35.1,72.22,16.20,17.60,0,37.9,43.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,36.3,72.39,16.20,17.50,0,37.9,43.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,37.6,72.36,16.10,17.40,0,37.9,43.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,39.0,71.80,16.00,17.73,0,37.9,43.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,40.2,72.41,16.30,17.55,0,37.9,43.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,41.5,72.25,16.10,17.74,0,37.9,43.5
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,42.8,72.33,16.10,17.50,0,37.5,43.0
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,44.1,71.90,15.90,17.70,0,37.5,43.0
+s25u,supersplat,1.41.0,webgpu,museum1.sh3-full.sh0.ply,314457,0,540,976,45.4,72.38,16.20,17.60,0,37.5,43.0

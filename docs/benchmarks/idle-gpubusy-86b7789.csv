@@ -1,0 +1,7 @@
+# On-demand frames (ADR-0008 session): Android viewer opened on a scene via the open_scene intent, then the
+# kgsl gpu_busy_percentage sampled every 2 s for 30 s while idle and every 1 s during scripted drags.
+# Before this build the viewer redrew every vsync. Build 86b7789, 2026-10-28.
+device,scene,idle_mean_pct,idle_max_pct,idle_samples,drag_mean_pct,drag_samples
+s24u,museum1.sh3-full,0.0,0,15,77.7,10
+s25u,museum1.sh3-full,0.0,0,15,79.6,10
+s25u,stump-full,0.0,0,15,97.8,10

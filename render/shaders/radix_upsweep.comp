@@ -1,0 +1,40 @@
+#version 460
+// Pass: radix sort upsweep (one of 3 passes per 8-bit digit; see docs/sorting.md §4)
+// Inputs:  keys[] (current ping-pong side), args {count, num_blocks} written by the CPU (direct
+//          path) or the prepare_indirect pass (GPU-driven path), push constants (digit shift).
+// Outputs: histograms[bin * num_blocks + block] - per-block digit counts, bin-major so the
+//          spine pass scans one contiguous array.
+// Sync:    caller barriers between upsweep -> spine -> downsweep. No inter-workgroup
+//          communication, no forward-progress assumptions (mobile-safe, CLAUDE.md §2.5).
+
+layout(local_size_x_id = 0, local_size_x = 256) in;
+
+layout(std430, set = 0, binding = 0) readonly buffer Keys { uint keys[]; };
+layout(std430, set = 0, binding = 1) writeonly buffer Histograms { uint histograms[]; };
+layout(std430, set = 0, binding = 2) readonly buffer SortArgs { uint sort_count; uint num_blocks; };
+
+layout(push_constant) uniform Push {
+    uint shift;  // 0, 8, 16, 24
+    uint elements_per_block;
+} push;
+
+shared uint s_hist[256];
+
+void main() {
+    uint lid = gl_LocalInvocationID.x;
+    uint block = gl_WorkGroupID.x;
+    for (uint i = lid; i < 256u; i += gl_WorkGroupSize.x) s_hist[i] = 0u;
+    barrier();
+
+    uint begin = block * push.elements_per_block;
+    uint end = min(begin + push.elements_per_block, sort_count);
+    for (uint i = begin + lid; i < end; i += gl_WorkGroupSize.x) {
+        uint digit = (keys[i] >> push.shift) & 0xFFu;
+        atomicAdd(s_hist[digit], 1u);
+    }
+    barrier();
+
+    for (uint i = lid; i < 256u; i += gl_WorkGroupSize.x) {
+        histograms[i * num_blocks + block] = s_hist[i];
+    }
+}

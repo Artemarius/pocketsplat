@@ -1,0 +1,42 @@
+# pocketsplat bench_web.py, viewer=spark (spark 2.4.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=museum1.sh3-full.sh0.ply, splats=314457, sh=0, url_extras=-
+# load_s=1.0, backend=webgl2, canvas=540x974, page=384x693, splats_reported=314457
+# frames counted from requestAnimationFrame
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,1.1,117.55,8.30,8.40,0,38.5,43.2
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,2.4,113.72,8.30,16.60,0,38.5,43.2
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,3.6,116.84,8.30,8.40,0,38.5,43.2
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,4.8,116.80,8.30,8.40,0,38.5,43.2
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,6.0,116.78,8.30,8.40,0,38.5,43.2
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,7.2,116.78,8.30,8.40,0,38.7,43.8
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,9.8,85.23,8.40,16.70,0,38.7,43.8
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,11.0,116.78,8.30,8.40,0,38.7,43.8
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,12.2,117.54,8.30,8.40,0,38.7,43.8
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,13.4,117.68,8.30,8.40,0,38.7,43.8
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,14.7,113.11,8.30,16.60,0,38.7,43.8
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,15.9,117.71,8.30,8.40,0,38.7,43.8
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,17.1,117.62,8.30,8.40,0,38.7,43.8
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,18.3,116.83,8.30,8.40,0,38.7,43.8
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,19.4,117.52,8.30,8.40,0,38.9,44.2
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,20.7,113.14,8.30,16.60,0,38.9,44.2
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,21.9,116.82,8.30,8.40,0,38.9,44.2
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,23.1,116.68,8.30,8.40,0,38.9,44.2
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,24.2,117.58,8.30,8.40,0,38.9,44.2
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,25.4,118.48,8.30,8.40,0,39.0,44.4
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,26.7,113.59,8.30,16.60,0,39.0,44.4
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,27.9,116.78,8.30,8.40,0,39.0,44.4
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,29.0,117.57,8.30,8.40,0,39.0,44.4
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,30.2,116.72,8.30,8.40,0,39.0,44.4
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,31.4,117.68,8.30,8.40,0,39.0,44.4
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,32.7,113.92,8.30,14.55,0,39.0,44.4
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,33.9,117.70,8.30,8.40,0,39.0,44.4
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,35.1,116.63,8.30,8.40,0,39.0,44.4
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,36.3,116.80,8.30,8.40,0,39.0,44.4
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,37.4,118.45,8.30,8.40,0,39.2,44.7
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,38.7,113.00,8.30,16.60,0,39.2,44.7
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,39.9,116.74,8.30,8.40,0,39.2,44.7
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,41.1,117.67,8.30,8.40,0,39.2,44.7
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,42.3,116.66,8.30,8.40,0,39.2,44.7
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,43.4,116.63,8.30,8.40,0,39.2,44.7
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,44.6,112.75,8.30,16.60,0,39.2,44.7
+s24u,spark-touch,2.4.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,974,45.8,117.50,8.30,8.40,0,39.2,44.7

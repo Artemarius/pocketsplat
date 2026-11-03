@@ -1,0 +1,5 @@
+device,apk,round,scene,resolution,key_bits,min_contribution,coverage_strength,fps,gpu_mhz_median,preprocess_ms,sort_ms,draw_ms,gpu_ms,preprocess_mcycles,gpu_mcycles,visible,thermal_status_max
+s25u,0.1-fd0883a-dirty,r1,stump-full.sh0.pspk,864x1872,16,0.1,0,109.7,1200,2.53,2.22,4.29,9.26,3.04,11.11,1196774,1
+s25u,0.1-fd0883a-dirty,r1,stump-full.sh0.pspk,864x1872,16,0.1,0.5,118.9,900,2.76,1.88,3.36,8.27,2.48,7.45,856381,2
+s25u,0.1-fd0883a-dirty,r2,stump-full.sh0.pspk,864x1872,16,0.1,0,85.2,900,3.17,2.67,5.63,11.70,2.85,10.53,1196774,2
+s25u,0.1-fd0883a-dirty,r2,stump-full.sh0.pspk,864x1872,16,0.1,0.5,105.9,734,3.08,2.15,3.96,9.41,2.26,6.91,856044,2

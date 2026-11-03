@@ -1,0 +1,49 @@
+# pocketsplat bench_web.py, viewer=spark (spark 2.4.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=stump-full.sh0.ply, splats=4049567, sh=0, url_extras=-
+# load_s=8.2, backend=webgl2, canvas=540x974, page=384x693, splats_reported=4049567
+# frames counted from requestAnimationFrame
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,1.0,51.21,16.70,33.20,0,37.8,40.9
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,2.1,51.10,16.70,33.30,0,37.8,40.9
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,3.1,49.90,16.70,33.26,0,37.8,40.9
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,4.1,50.32,16.70,33.30,0,37.8,40.9
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,5.1,51.21,16.70,33.24,0,37.8,40.9
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,6.1,49.90,16.70,33.30,0,38.9,43.0
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,7.2,50.69,16.70,33.30,0,38.9,43.0
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,8.2,51.07,16.70,33.25,0,38.9,43.0
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,9.2,50.07,16.70,33.30,0,38.9,43.0
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,10.2,49.48,16.70,33.30,0,38.9,43.0
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,11.3,49.90,16.70,33.30,0,38.9,43.0
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,12.3,46.30,16.70,33.37,0,38.9,43.0
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,13.3,24.24,41.20,74.96,0,38.9,43.0
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,14.3,25.37,33.70,73.80,0,38.9,43.0
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,15.4,23.83,33.70,82.30,0,38.9,43.0
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,16.4,25.24,25.00,83.16,1,41.1,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,17.4,23.84,33.30,81.65,1,41.1,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,18.5,23.63,41.90,82.07,1,41.1,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,19.5,24.68,33.40,73.90,1,41.1,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,20.5,25.52,33.20,74.59,1,41.1,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,21.6,23.39,41.85,83.18,1,41.1,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,22.7,27.89,25.20,74.82,1,41.1,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,23.7,31.22,24.90,58.30,1,41.1,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,24.7,31.68,25.00,63.28,1,41.1,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,25.7,31.57,24.90,58.20,1,41.1,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,26.7,32.04,24.95,58.30,1,40.3,47.6
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,27.8,31.72,25.00,58.30,1,40.3,47.6
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,28.8,32.39,25.00,58.20,1,40.3,47.6
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,29.8,31.40,33.30,58.26,1,40.3,47.6
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,30.8,32.04,25.00,58.20,1,40.3,47.6
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,31.9,32.39,33.40,58.25,1,40.3,47.6
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,33.0,26.91,33.30,80.29,1,40.3,47.6
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,34.0,24.64,37.25,74.99,1,40.3,47.6
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,35.0,25.97,29.25,81.80,1,40.3,47.6
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,36.0,24.03,41.70,81.98,1,40.3,47.6
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,37.0,24.03,33.50,74.78,1,40.9,48.1
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,38.1,23.83,49.80,74.58,1,40.9,48.1
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,39.2,24.86,37.45,73.41,1,40.9,48.1
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,40.2,25.08,41.50,82.99,1,40.9,48.1
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,41.2,25.46,25.00,81.54,1,40.9,48.1
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,42.3,24.46,41.90,74.50,1,40.8,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,43.4,25.34,25.00,80.41,1,40.8,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,44.4,24.47,37.60,82.41,1,40.8,48.5
+s24u,spark,2.4.0,webgl2,stump-full.sh0.ply,4049567,0,540,974,45.4,23.42,41.90,82.80,1,40.8,48.5

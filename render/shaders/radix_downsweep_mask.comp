@@ -1,0 +1,111 @@
+#version 460
+// Pass: radix sort downsweep/scatter, shared-bitmask ranking (RadixSort ranking variant; same
+//       inputs, outputs and sync as radix_downsweep.comp, which ranks with subgroup ballots).
+// Inputs:  keys_in/values_in (current ping-pong side), scanned histograms from the spine (the
+//          block's offset within each digit) and digit_totals (scanned here into digit starts).
+// Outputs: values_out (and keys_out unless push.write_keys == 0) scattered in stable digit order.
+// Sync:    caller barriers between passes; no inter-workgroup communication (mobile-safe).
+//
+// Stable ranking without subgroup operations: per batch, every invocation sets bit (lid % 32) of
+// word (lid / 32) in its digit's 256-bit mask with one shared atomicOr; after a barrier its rank in
+// the batch is the number of set bits below lid in that mask (popcounts of the lower words + its
+// own word under a below-mask). The digit's highest set bit carries the batch count on, the
+// lowest set bit of each word clears it. Independent of the subgroup size by construction. Idea
+// from splatkit's radix_scatter (MIT); written independently. Assumes a 256-wide workgroup.
+// constant_id 1 = padding rows (1 KB each) on top of the 10 KB the ranking needs: shared memory
+// sets how many workgroups an Adreno core keeps resident, and 14-18 KB sorted fastest
+// (docs/sorting.md section 7).
+
+layout(local_size_x_id = 0, local_size_x = 256) in;
+layout(constant_id = 1) const uint kPadRows = 8u;
+
+layout(std430, set = 0, binding = 0) readonly buffer KeysIn { uint keys_in[]; };
+layout(std430, set = 0, binding = 1) readonly buffer ValuesIn { uint values_in[]; };
+layout(std430, set = 0, binding = 2) writeonly buffer KeysOut { uint keys_out[]; };
+layout(std430, set = 0, binding = 3) writeonly buffer ValuesOut { uint values_out[]; };
+layout(std430, set = 0, binding = 4) readonly buffer Histograms { uint histograms[]; };
+layout(std430, set = 0, binding = 5) readonly buffer SortArgs { uint sort_count; uint num_blocks; };
+layout(std430, set = 0, binding = 6) readonly buffer DigitTotals { uint digit_totals[]; };
+
+layout(push_constant) uniform Push {
+    uint shift;
+    uint elements_per_block;
+    uint write_keys;  // 0 = last digit pass of a sort whose caller reads only the values
+} push;
+
+shared uint s_spine[256];       // this block's scatter base per digit
+shared uint s_running[256];     // elements of each digit already scattered (tile)
+shared uint s_masks[256 * 8];   // per digit, which invocations of the current batch hold it
+shared uint s_pad[kPadRows * 256u + 1u];  // occupancy padding (read once, so it is allocated)
+
+void main() {
+    uint lid = gl_LocalInvocationID.x;
+    uint block = gl_WorkGroupID.x;
+
+    // Digit start = exclusive scan of the digit totals (Hillis-Steele, one digit per invocation).
+    uint digit_total = digit_totals[lid];
+    s_spine[lid] = digit_total;
+    s_running[lid] = 0u;
+    for (uint i = lid; i < 256u * 8u; i += gl_WorkGroupSize.x) s_masks[i] = 0u;
+    for (uint i = lid; i < kPadRows * 256u + 1u; i += gl_WorkGroupSize.x) s_pad[i] = 0u;
+    barrier();
+    for (uint offset = 1u; offset < 256u; offset <<= 1u) {
+        uint addend = lid >= offset ? s_spine[lid - offset] : 0u;
+        barrier();
+        s_spine[lid] += addend;
+        barrier();
+    }
+    s_spine[lid] += histograms[lid * num_blocks + block] - digit_total + s_pad[lid % (kPadRows * 256u + 1u)];
+    barrier();
+
+    uint word = lid >> 5u;
+    uint bit = 1u << (lid & 31u);
+    uint below = bit - 1u;
+    uint begin = block * push.elements_per_block;
+    uint end = min(begin + push.elements_per_block, sort_count);
+    // Software pipelining as in radix_downsweep.comp: the next batch's loads go out first.
+    uint next_key = begin + lid < end ? keys_in[begin + lid] : 0u;
+    uint next_value = begin + lid < end ? values_in[begin + lid] : 0u;
+    for (uint batch = begin; batch < end; batch += gl_WorkGroupSize.x) {
+        uint index = batch + lid;
+        bool in_range = index < end;
+        uint key = next_key;
+        uint value = next_value;
+        uint ahead = index + gl_WorkGroupSize.x;
+        if (ahead < end) {
+            next_key = keys_in[ahead];
+            next_value = values_in[ahead];
+        }
+        uint digit = (key >> push.shift) & 0xFFu;
+        uint row = digit * 8u;
+
+        if (in_range) atomicOr(s_masks[row + word], bit);
+        barrier();
+
+        uint rank = 0u;
+        uint own = 0u;
+        bool last = false;
+        if (in_range) {
+            own = s_masks[row + word];
+            uint before = bitCount(own & below);
+            uint after = own & ~(bit | below);
+            for (uint w = 0u; w < 8u; ++w) {
+                uint m = s_masks[row + w];
+                if (w < word) before += bitCount(m);
+                if (w > word) after |= m;
+            }
+            rank = s_running[digit] + before;
+            last = after == 0u;
+            uint dst = s_spine[digit] + rank;
+            if (push.write_keys != 0u) keys_out[dst] = key;
+            values_out[dst] = value;
+        }
+        barrier();
+
+        // The digit's highest invocation carries the count on; each set word's lowest bit clears
+        // the word. Every read of s_running / s_masks for this batch happened before the barrier.
+        if (last) s_running[digit] = rank + 1u;
+        if (in_range && findLSB(own) == int(lid & 31u)) s_masks[row + word] = 0u;
+        barrier();
+    }
+}

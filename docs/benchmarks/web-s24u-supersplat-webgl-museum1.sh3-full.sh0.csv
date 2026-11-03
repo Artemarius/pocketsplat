@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat-webgl (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=museum1.sh3-full.sh0.ply, splats=314457, sh=0, url_extras=&webgl
+# load_s=1.0, backend=webgl2, canvas=540x975, page=384x693, splats_reported=None
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,1.3,72.16,16.20,17.64,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,2.6,71.59,16.30,17.70,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,3.9,72.24,16.35,17.40,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,5.2,72.24,16.30,17.50,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,6.6,71.59,16.20,17.42,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,8.0,71.04,16.50,17.32,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,9.2,72.37,16.50,17.45,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,10.5,72.35,16.50,17.25,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,11.8,72.21,16.55,17.40,0,38.5,43.1
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,13.2,71.34,16.40,17.40,0,38.5,43.1
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,14.5,72.07,16.30,17.60,0,38.5,43.1
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,15.8,72.40,16.30,17.35,0,38.5,43.1
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,17.1,72.03,16.50,17.40,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,18.5,71.34,16.40,17.30,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,19.8,72.18,16.40,17.40,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,21.1,72.08,16.40,17.50,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,22.4,72.19,16.45,17.30,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,23.7,71.35,16.40,17.30,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,25.0,72.35,16.40,17.45,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,26.3,72.35,16.30,17.35,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,27.6,72.23,16.25,17.25,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,29.0,71.07,16.50,17.40,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,30.3,72.37,16.30,17.30,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,31.6,72.23,16.50,17.20,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,32.9,72.22,16.50,17.30,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,34.3,71.23,16.30,17.40,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,35.6,72.21,16.25,17.57,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,36.8,72.38,16.20,17.95,0,38.4,42.7
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,38.1,72.37,16.20,17.50,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,39.5,71.30,16.30,18.49,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,40.8,72.22,16.45,17.64,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,42.0,72.43,16.10,18.05,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,43.3,72.25,16.30,17.65,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,44.7,71.74,16.40,17.13,0,38.5,42.9
+s24u,supersplat-webgl,1.41.0,webgl2,museum1.sh3-full.sh0.ply,314457,0,540,975,46.0,72.39,16.40,17.35,0,38.5,42.9

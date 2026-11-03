@@ -1,0 +1,39 @@
+# pocketsplat bench_web.py, viewer=supersplat-stochastic (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=truck-full.sh0.ply, splats=1653927, sh=0, url_extras=&stochastic=mobile
+# load_s=4.1, backend=webgpu, canvas=1080x1950, page=384x693, splats_reported=None
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,1.5,64.96,15.55,31.67,0,37.8,41.2
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,2.9,68.04,15.65,25.34,0,37.8,41.2
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,4.2,70.64,15.85,22.71,0,37.8,41.2
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,5.5,67.75,16.15,25.75,0,37.8,41.2
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,6.7,68.73,14.80,26.35,0,38.1,42.1
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,8.1,70.89,16.20,22.73,0,38.1,42.1
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,9.5,68.98,16.00,23.80,0,38.1,42.1
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,10.7,64.91,13.75,29.40,0,38.1,42.1
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,12.0,68.67,14.80,24.82,0,38.1,42.1
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,13.4,71.24,15.40,19.50,0,38.1,42.1
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,14.7,71.35,15.45,22.74,0,38.1,42.1
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,16.0,71.81,15.15,19.44,0,38.1,42.1
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,17.3,71.95,15.65,17.81,0,38.4,42.8
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,18.7,71.40,15.95,17.76,0,38.4,42.8
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,20.0,72.46,14.30,19.55,0,38.4,42.8
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,21.3,72.26,15.55,18.34,0,38.4,42.8
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,22.6,71.59,15.80,22.10,0,38.4,42.8
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,24.0,68.82,16.15,25.30,0,38.4,42.8
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,25.3,69.51,15.25,23.70,0,38.4,42.8
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,26.6,72.32,14.85,20.77,0,38.4,42.8
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,27.9,72.24,14.35,20.71,0,38.6,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,29.3,70.18,16.00,23.38,0,38.6,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,30.6,72.50,14.55,18.74,0,38.6,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,31.8,72.50,15.70,17.85,0,38.6,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,33.1,72.42,15.40,19.00,0,38.6,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,34.5,71.35,15.55,20.80,0,38.6,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,35.8,72.25,15.90,17.65,0,38.6,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,37.1,72.45,15.20,18.55,0,38.6,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,38.3,72.44,15.20,19.65,0,38.7,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,39.7,71.14,15.60,19.13,0,38.7,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,41.0,72.15,15.70,17.64,0,38.7,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,42.4,72.10,15.40,18.64,0,38.7,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,43.6,72.23,14.05,20.50,0,38.7,43.3
+s24u,supersplat-stochastic,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,1080,1950,45.1,71.21,15.90,17.60,0,38.7,43.3

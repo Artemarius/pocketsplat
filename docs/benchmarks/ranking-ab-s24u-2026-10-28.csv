@@ -1,0 +1,14 @@
+# In-app downsweep ranking A/B, S24U (Adreno 750), 2026-10-28: two APKs from the same tree (3e22953 +
+# 1707c96 content), identical except RadixSort's default ranking (ballot = shipped, mask = opt-in
+# shared-bitmask). 864x1872 protocol resolution, 16-bit keys, 0.1 px contribution cull, bench orbit,
+# 45 s runs over USB, runs interleaved ballot/mask/ballot/mask per scene after a cool-down to 38.5 C
+# skin. Columns are means over the cold window (0-30 s). Frame CSVs were not kept (bench-out).
+device,gpu,apk_ranking,scene,run,frames,fps,gpu_ms,cull_ms,preprocess_ms,sort_ms,draw_ms,visible,thermal_status_max,headroom_end
+s24u,Adreno 750,ballot,drjohnson-full,1,1738,57.9,17.25,0.18,4.77,4.04,8.26,1674264,1,0.84
+s24u,Adreno 750,mask,drjohnson-full,2,1776,59.2,16.88,0.18,4.72,3.77,8.22,1675740,1,0.84
+s24u,Adreno 750,ballot,drjohnson-full,3,1747,58.2,17.16,0.18,4.75,4.03,8.21,1675064,1,0.84
+s24u,Adreno 750,mask,drjohnson-full,4,1749,58.3,17.14,0.18,4.81,3.82,8.33,1675202,1,0.86
+s24u,Adreno 750,ballot,stump-full,1,2752,91.7,10.90,0.25,3.71,2.55,4.39,1195920,0,0.70
+s24u,Adreno 750,mask,stump-full,2,2357,78.6,12.72,0.30,4.44,2.79,5.19,1194288,0,0.79
+s24u,Adreno 750,ballot,stump-full,3,2625,87.5,11.43,0.26,3.91,2.63,4.62,1196056,0,0.81
+s24u,Adreno 750,mask,stump-full,4,2625,87.5,11.43,0.27,3.98,2.49,4.69,1196056,0,0.82

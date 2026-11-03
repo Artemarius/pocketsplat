@@ -1,0 +1,56 @@
+# --- private planning (never commit) ---
+PROJECT.md
+notes/private/
+claude-code-setup-prompt.md
+
+# --- build ---
+build/
+build-*/
+out/
+cmake-build-*/
+*.spv
+
+# --- android / gradle ---
+android/.gradle/
+android/**/build/
+android/local.properties
+android/.cxx/
+android/**/.cxx/
+*.apk
+*.aab
+*.hprof
+
+# --- IDE ---
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.swp
+
+# --- claude code local state ---
+.claude/settings.local.json
+
+# --- test data (large binaries, external licenses) ---
+data/**
+!data/README.md
+!data/manifest.json
+*.ply
+*.spz
+*.sog
+*.splat
+*.ksplat
+*.pspk
+
+# --- benchmark raw dumps (keep curated CSVs under docs/benchmarks) ---
+bench-out/
+*.perfetto-trace
+
+# --- app artifacts ---
+imgui.ini
+__pycache__/
+bench-out/
+
+# --- benchmark tooling caches (pinned third-party viewer builds) ---
+.cache/
+dist/

@@ -1,0 +1,41 @@
+# pocketsplat bench_web.py, viewer=supersplat (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=drjohnson-full.sh0.ply, splats=2668497, sh=0, url_extras=-
+# load_s=6.4, backend=webgpu, canvas=540x975, page=384x693, splats_reported=2668497
+# camera=orbit 2pi/600 per rendered frame about focus [0.0626, -0.6591, -0.6539], distance 16.94, pitch -19.5 deg (viewer default framing), touch drags for pacing only (the camera ignores input)
+# frames counted from engine postrender events
+# orbit steps=2260, focus drift=0.00e+00 x distance
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c,raf_fps
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,1.4,49.64,16.85,33.96,0,36.9,41.8,60.43
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,2.8,49.65,16.30,33.24,0,36.9,41.8,54.55
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,4.0,52.00,16.85,32.49,0,36.9,41.8,67.12
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,5.2,54.39,16.80,32.54,0,36.9,41.8,69.02
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,6.5,52.06,17.50,32.08,0,36.9,41.8,68.10
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,7.9,49.75,16.75,34.69,0,36.9,41.8,60.07
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,9.2,48.35,17.45,35.29,0,36.9,41.8,60.08
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,10.5,49.33,17.05,34.84,0,36.9,41.8,67.79
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,11.8,48.55,17.30,36.00,0,37.7,43.2,61.27
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,13.1,51.60,17.00,34.41,0,37.7,43.2,64.70
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,14.4,53.05,16.90,32.06,0,37.7,43.2,69.44
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,15.6,54.38,17.10,31.52,0,37.7,43.2,69.14
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,16.9,53.78,16.90,31.27,0,37.7,43.2,70.50
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,18.2,56.61,16.80,31.01,0,37.7,43.2,67.30
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,19.4,53.95,16.60,33.05,0,37.7,43.2,67.96
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,20.7,52.56,16.90,30.40,0,37.7,43.2,70.04
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,21.9,54.20,16.90,31.82,0,38.1,43.9,69.58
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,23.3,51.52,17.00,32.66,0,38.1,43.9,67.60
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,24.6,55.39,16.70,32.30,0,38.1,43.9,68.54
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,25.9,47.16,24.35,36.67,0,38.1,43.9,65.12
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,27.2,48.75,16.40,35.30,0,38.1,43.9,56.14
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,28.9,53.03,16.85,32.98,0,38.1,43.9,63.66
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,30.1,52.73,16.90,33.06,0,38.1,43.9,63.42
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,31.4,49.17,17.45,33.09,0,38.1,43.9,60.87
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,32.7,48.87,16.90,34.61,0,38.4,44.7,61.23
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,34.1,49.11,16.90,36.41,0,38.4,44.7,64.48
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,35.4,48.50,17.10,34.40,0,38.4,44.7,54.69
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,36.7,48.31,20.15,35.58,0,38.4,44.7,55.04
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,38.0,48.70,16.10,35.00,0,38.4,45.1,58.91
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,39.5,44.22,24.75,40.43,0,38.4,45.1,61.46
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,40.8,44.30,24.60,37.96,0,38.4,45.1,66.76
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,42.2,44.68,24.60,40.30,0,38.4,45.1,62.25
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,43.6,44.57,24.75,39.53,0,38.7,45.1,64.87
+s24u,supersplat-orbit-touch,1.41.0,webgpu,drjohnson-full.sh0.ply,2668497,0,540,975,45.2,42.83,24.80,41.61,0,38.7,45.1,59.42

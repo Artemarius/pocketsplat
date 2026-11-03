@@ -1,0 +1,5 @@
+device,apk,round,scene,resolution,key_bits,min_contribution,coverage_strength,fps,gpu_mhz_median,preprocess_ms,sort_ms,draw_ms,gpu_ms,preprocess_mcycles,gpu_mcycles,visible,thermal_status_max
+s24u,0.1-ee64fe0,r1,stump-full.sh0.pspk,864x1872,16,0.1,0,97.8,903,3.69,2.68,3.64,10.21,3.33,9.22,1195808,0
+s24u,0.1-ee64fe0,r1,stump-full.sh0.pspk,864x1872,16,0.1,0.5,123.0,903,3.41,1.94,2.53,8.16,3.08,7.37,859463,0
+s24u,0.1-ee64fe0,r2,stump-full.sh0.pspk,864x1872,16,0.1,0,92.0,834,3.98,2.66,4.01,10.92,3.32,9.11,1193979,0
+s24u,0.1-ee64fe0,r2,stump-full.sh0.pspk,864x1872,16,0.1,0.5,115.6,834,3.56,2.01,2.69,8.59,2.97,7.16,859605,1

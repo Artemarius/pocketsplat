@@ -1,0 +1,13 @@
+# Equal-work sustained runs on battery (S17, 2026-10-28): PocketSplat 1707c96 frame-capped at the rate SuperSplat
+# WebGPU 1.41.0 delivered in S16, vs SuperSplat (in-page orbit + pacing drags, 120 Hz forced), 540x975, same splats,
+# 10 min each, Wi-Fi adb, skin <= 36 C at start. Power = dumpsys battery current x voltage averaged from 60 s;
+# energy per frame = power / frames per second over the same window. scripts/summarize_equal_work.py.
+device,scene,renderer,cap_fps,fps_cold,fps_late,busy,skin_max,status_max,power_w,charge_mah,fps_steady,mj_per_frame,gpu_ms_late
+s24u,stump-full.sh0,PocketSplat (capped),53,52.949,52.975,81.554,40.600,1.000,3.863,167.858,52.984,72.92,15.570
+s24u,stump-full.sh0,SuperSplat WebGPU,nan,54.340,53.190,76.775,38.700,0.000,2.848,133.299,53.772,52.97,nan
+s24u,truck-full.sh0,PocketSplat (capped),64,64.001,64.000,81.535,36.600,0.000,2.292,98.740,64.000,35.82,12.897
+s24u,truck-full.sh0,SuperSplat WebGPU,nan,63.165,64.650,69.781,36.800,0.000,2.355,113.551,64.057,36.77,nan
+s25u,stump-full.sh0,PocketSplat (capped),66,65.997,66.000,84.885,42.800,2.000,5.713,216.700,66.000,86.56,13.729
+s25u,stump-full.sh0,SuperSplat WebGPU,nan,63.630,70.160,73.788,38.700,0.000,2.857,118.200,69.979,40.82,nan
+s25u,truck-full.sh0,PocketSplat (capped),69,68.997,69.000,81.350,36.800,0.000,2.376,93.575,69.000,34.43,11.882
+s25u,truck-full.sh0,SuperSplat WebGPU,nan,70.140,70.510,63.506,36.700,0.000,2.190,88.650,70.100,31.24,nan

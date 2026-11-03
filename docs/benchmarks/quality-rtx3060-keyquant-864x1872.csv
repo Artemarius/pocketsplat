@@ -1,0 +1,21 @@
+scene,variant,flags,compared_to,resolution,psnr_min_db,psnr_mean_db,moved_px_max_pct
+stump-full,ref,--key-bits 32,ref,864x1872,inf,inf,0.0000
+stump-full,k16,--key-bits 16,ref,864x1872,51.9286,53.0927,0.7020
+stump-full,k16@repeat,--key-bits 16,k16,864x1872,57.8124,59.2074,0.2489
+stump-full,log16,--key-bits 16,ref,864x1872,50.6038,52.0143,0.8544
+stump-full,log16@repeat,--key-bits 16,log16,864x1872,55.6924,56.9535,0.3149
+drjohnson-full,ref,--key-bits 32,ref,864x1872,inf,inf,0.0000
+drjohnson-full,k16,--key-bits 16,ref,864x1872,60.8960,63.5895,0.1515
+drjohnson-full,k16@repeat,--key-bits 16,k16,864x1872,61.5869,67.0960,0.0794
+drjohnson-full,log16,--key-bits 16,ref,864x1872,62.5305,67.2034,0.0817
+drjohnson-full,log16@repeat,--key-bits 16,log16,864x1872,65.0810,70.0032,0.0553
+truck-full,ref,--key-bits 32,ref,864x1872,inf,inf,0.0000
+truck-full,k16,--key-bits 16,ref,864x1872,52.7556,55.2054,0.4661
+truck-full,k16@repeat,--key-bits 16,k16,864x1872,59.8054,60.9592,0.1737
+truck-full,log16,--key-bits 16,ref,864x1872,52.8869,56.6672,0.3232
+truck-full,log16@repeat,--key-bits 16,log16,864x1872,53.9739,59.9792,0.1413
+bicycle-4m,ref,--key-bits 32,ref,864x1872,inf,inf,0.0000
+bicycle-4m,k16,--key-bits 16,ref,864x1872,42.6948,49.6812,1.9733
+bicycle-4m,k16@repeat,--key-bits 16,k16,864x1872,51.2035,53.1282,0.4565
+bicycle-4m,log16,--key-bits 16,ref,864x1872,45.0556,51.5299,0.9419
+bicycle-4m,log16@repeat,--key-bits 16,log16,864x1872,53.4194,58.2738,0.2885

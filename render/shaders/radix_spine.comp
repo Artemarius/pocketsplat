@@ -1,0 +1,50 @@
+#version 460
+// Pass: radix sort spine (one workgroup per digit: dispatch 256 x 1 x 1)
+// Inputs:  histograms[bin * num_blocks + block] from the upsweep; args {count, num_blocks}.
+// Outputs: every digit's row replaced by its exclusive prefix sum over the blocks (the block's
+//          offset within that digit), and digit_totals[digit] = the digit's element count. The
+//          downsweep adds the exclusive scan of digit_totals (the digit's global start).
+// Sync:    caller barriers upsweep -> spine -> downsweep. Each workgroup owns one row: no
+//          cross-workgroup communication, no forward-progress assumptions (mobile-safe).
+//          Replaces a single-workgroup scan of the whole array that serialized 245 chunks on one
+//          core at 1M keys (half the sort time on the RTX 3060). Per-digit scan idea from
+//          splatkit's radix_scan (MIT); written independently. Assumes a 256-wide workgroup.
+
+layout(local_size_x_id = 0, local_size_x = 256) in;
+
+layout(std430, set = 0, binding = 0) buffer Histograms { uint histograms[]; };
+layout(std430, set = 0, binding = 1) readonly buffer SortArgs { uint sort_count; uint num_blocks; };
+layout(std430, set = 0, binding = 2) writeonly buffer DigitTotals { uint digit_totals[]; };
+
+shared uint s_scan[256];
+
+void main() {
+    uint lid = gl_LocalInvocationID.x;
+    uint row = gl_WorkGroupID.x * num_blocks;
+
+    // Each invocation owns a contiguous run of blocks (1 per invocation up to 1M keys, 4 at 4M):
+    // sum the run, scan the 256 run sums, then rewrite the run as exclusive offsets.
+    uint per_thread = (num_blocks + 255u) / 256u;
+    uint begin = min(lid * per_thread, num_blocks);
+    uint end = min(begin + per_thread, num_blocks);
+    uint run_sum = 0u;
+    for (uint b = begin; b < end; ++b) run_sum += histograms[row + b];
+
+    // Hillis-Steele inclusive scan in shared memory.
+    s_scan[lid] = run_sum;
+    barrier();
+    for (uint offset = 1u; offset < 256u; offset <<= 1u) {
+        uint addend = lid >= offset ? s_scan[lid - offset] : 0u;
+        barrier();
+        s_scan[lid] += addend;
+        barrier();
+    }
+
+    uint running = s_scan[lid] - run_sum;
+    for (uint b = begin; b < end; ++b) {
+        uint count = histograms[row + b];
+        histograms[row + b] = running;
+        running += count;
+    }
+    if (lid == 255u) digit_totals[gl_WorkGroupID.x] = s_scan[255u];
+}

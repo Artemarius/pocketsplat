@@ -1,0 +1,26 @@
+# pocketsplat bench_web.py, viewer=spark (spark 2.4.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=drjohnson-full.sh0.ply, splats=2668497, sh=0, url_extras=-
+# load_s=6.1, backend=webgl2, canvas=540x974, page=384x693, splats_reported=2668497
+# frames counted from requestAnimationFrame
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,1.4,76.01,8.40,33.30,1,38.3,42.7
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,3.0,63.58,8.40,41.60,1,38.3,42.7
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,4.5,67.43,8.40,41.60,1,38.3,42.7
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,5.9,73.52,8.40,33.30,1,38.3,42.7
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,7.5,63.32,8.40,41.60,1,41.1,46.9
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,9.1,69.04,8.40,33.30,1,41.1,46.9
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,10.6,72.89,8.40,33.20,1,41.1,46.9
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,12.3,62.83,8.40,41.50,1,41.1,46.9
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,13.8,73.03,8.40,33.30,1,41.1,46.9
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,15.4,69.20,8.40,33.25,1,41.1,46.9
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,17.9,37.53,16.65,86.21,1,41.1,46.9
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,20.8,30.96,33.25,91.49,2,42.9,51.2
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,23.4,32.84,25.00,83.30,2,42.9,51.2
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,26.6,25.82,33.20,108.20,2,41.6,49.6
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,29.5,28.68,33.20,99.83,2,41.6,49.6
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,32.2,33.51,25.00,83.30,2,41.6,49.6
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,34.9,30.31,29.10,91.50,2,41.6,49.6
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,38.0,25.87,33.00,100.91,2,41.4,48.6
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,40.9,30.83,25.00,88.63,2,41.4,48.6
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,43.5,32.49,25.10,83.20,2,41.4,48.6
+s24u,spark-touch,2.4.0,webgl2,drjohnson-full.sh0.ply,2668497,0,540,974,46.5,27.34,33.30,108.10,2,41.4,48.6

@@ -1,0 +1,2 @@
+device,run,controller,cap_fps,fps_cold,fps_late,p5_fps,p99_ms,on_target_late,on_target_all,mcycles_late,status_max,skin_max,mj_per_frame,time_at,psnr_min_w,psnr_mean_w
+s25u,a745524-stump-full.sh0-16bit-ctl-864x1872-cap60-vote-triangle,on,60,59.75,60.00,60.0,18.20,0.9932,0.9933,8.468,1,41.4,65.09,c 0.1: 910 s / c 0.2: 890 s,40.71,43.75

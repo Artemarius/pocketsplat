@@ -1,0 +1,13 @@
+protocol,window_s,device,run,controller,cap_fps,fps_cold,fps_late,p5_fps,p99_ms,on_target_late,on_target_all,mcycles_late,status_max,skin_max,mj_per_frame,time_at,psnr_min_w,psnr_mean_w,start_skin_c,first_status1_s,first_status2_s
+10min-unequal-start,300-600,s24u,1d3faec-stump-full.sh0-16bit-c0.1-864x1872-cap60-triangle,off,60,59.91,59.97,60.0,17.50,0.9979,0.9963,8.891,1,40.9,85.90,c 0.1: 600 s,43.38,46.08,31.2,459,
+10min-unequal-start,300-600,s24u,1d3faec-stump-full.sh0-16bit-ctl-864x1872-cap60-triangle,on,60,59.87,60.00,60.0,17.60,0.9984,0.9971,4.839,0,39.3,62.61,c 0.1: 20 s / c 0.2: 228 s / c 0.5: 352 s,34.12,37.45,35.8,,
+10min-unequal-start,300-600,s25u,1d3faec-stump-full.sh0-16bit-c0.1-864x1872-cap60-triangle,off,60,59.90,60.00,60.0,17.60,0.9996,0.9989,9.645,2,42.3,79.60,c 0.1: 600 s,43.38,46.08,36.0,68,256
+10min-unequal-start,300-600,s25u,1d3faec-stump-full.sh0-16bit-ctl-864x1872-cap60-triangle,on,60,59.76,59.99,60.0,17.65,0.9989,0.9985,9.575,1,40.9,79.74,c 0.1: 585 s / c 0.2: 15 s,43.25,45.96,29.9,590,
+20min-equal-start,300-600,s24u,1d3faec-stump-full.sh0-16bit-c0.1-864x1872-cap60-triangle,off,60,59.95,60.00,60.0,17.77,0.9952,0.9958,9.059,2,44.1,83.09,c 0.1: 1200 s,43.38,46.08,32.1,308,578
+20min-equal-start,300-600,s24u,1d3faec-stump-full.sh0-16bit-ctl-864x1872-cap60-triangle,on,60,59.91,60.00,60.0,17.48,0.9994,0.9980,7.200,0,39.5,61.73,c 0.1: 357 s / c 0.2: 202 s / c 0.5: 641 s,35.91,39.06,30.5,,
+20min-equal-start,300-600,s25u,1d3faec-stump-full.sh0-16bit-c0.1-864x1872-cap60-triangle,off,60,59.88,60.00,60.0,17.65,0.9992,0.9990,9.685,2,44.3,77.14,c 0.1: 1200 s,43.38,46.08,31.8,387,568
+20min-equal-start,300-600,s25u,1d3faec-stump-full.sh0-16bit-ctl-864x1872-cap60-triangle,on,60,59.89,60.00,60.0,17.59,0.9992,0.9987,6.241,2,42.0,57.29,c 0.1: 331 s / c 0.2: 331 s / c 0.5: 538 s,36.38,39.55,32.4,336,908
+20min-equal-start,600-1200,s24u,1d3faec-stump-full.sh0-16bit-c0.1-864x1872-cap60-triangle,off,60,59.95,60.00,60.0,17.83,0.9946,0.9958,9.105,2,44.1,83.09,c 0.1: 1200 s,43.38,46.08,32.1,308,578
+20min-equal-start,600-1200,s24u,1d3faec-stump-full.sh0-16bit-ctl-864x1872-cap60-triangle,on,60,59.91,60.00,60.0,17.54,0.9987,0.9980,4.820,0,39.5,61.73,c 0.1: 357 s / c 0.2: 202 s / c 0.5: 641 s,35.91,39.06,30.5,,
+20min-equal-start,600-1200,s25u,1d3faec-stump-full.sh0-16bit-c0.1-864x1872-cap60-triangle,off,60,59.88,60.00,60.0,17.65,0.9990,0.9990,9.673,2,44.3,77.14,c 0.1: 1200 s,43.38,46.08,31.8,387,568
+20min-equal-start,600-1200,s25u,1d3faec-stump-full.sh0-16bit-ctl-864x1872-cap60-triangle,on,60,59.89,60.00,60.0,17.58,0.9988,0.9987,5.999,2,42.0,57.29,c 0.1: 331 s / c 0.2: 331 s / c 0.5: 538 s,36.38,39.55,32.4,336,908

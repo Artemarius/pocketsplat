@@ -1,0 +1,73 @@
+# pocketsplat bench_web.py, viewer=supersplat (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.49, model=SM-S938B
+# scene=stump-full.sh0.ply, splats=4049567, sh=0, url_extras=-
+# load_s=8.5, backend=webgpu, canvas=540x976, page=384x693, splats_reported=4049567
+# camera=orbit 2pi/600 per rendered frame about focus [9.2997, 22.2775, -9.2522], distance 170.7, pitch -17.2 deg, fov 60 deg (PocketSplat bench pose: 1.2 x robust diagonal, start yaw 0.6 rad), touch drags for pacing only (the camera ignores input)
+# frames counted from engine postrender events
+# orbit steps=6327, focus drift=1.93e-16 x distance
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c,raf_fps,gpu_busy_pct,gpu_mhz,current_ma,voltage_mv,charge_uah
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,1.4,61.11,15.90,17.78,0,28.6,29.8,64.69,50,734,-396093,4138,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,2.9,70.31,16.00,19.65,0,28.6,29.8,71.10,80,832,-396093,4138,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,4.2,70.94,15.60,19.16,0,28.6,29.8,71.65,77,832,-396093,4138,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,5.5,70.95,15.80,19.40,0,28.6,29.8,71.80,76,832,-396093,4138,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,6.9,70.85,15.30,20.38,0,28.6,29.8,71.66,76,832,-396093,4138,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,8.3,69.04,15.90,21.37,0,28.6,29.8,71.24,75,734,-396093,4138,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,9.7,70.77,15.80,19.88,0,28.6,29.8,71.51,75,832,-396093,4138,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,11.0,70.10,15.80,20.88,0,28.6,29.8,71.65,78,832,-396093,4138,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,12.4,70.85,16.00,18.40,0,29.4,32.8,71.66,75,734,-470312,4151,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,13.8,70.63,16.10,17.54,0,29.4,32.8,71.37,78,734,-470312,4151,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,15.1,70.83,15.90,20.89,0,29.4,32.8,71.65,81,734,-470312,4151,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,16.5,70.81,15.80,18.69,0,29.4,32.8,71.64,76,734,-470312,4151,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,17.9,65.64,16.20,24.96,0,29.4,32.8,71.51,75,832,-470312,4151,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,19.3,70.36,16.30,17.93,0,29.4,32.8,71.10,77,832,-470312,4151,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,20.6,70.99,15.90,18.11,0,29.4,32.8,71.79,74,832,-470312,4151,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,22.0,70.75,15.95,18.22,0,29.4,32.8,71.50,74,832,-442187,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,23.4,70.85,16.10,17.82,0,29.8,33.9,71.65,76,734,-442187,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,24.8,66.17,16.25,24.43,0,29.8,33.9,71.24,78,734,-442187,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,26.1,70.91,16.30,19.09,0,29.8,33.9,71.65,77,734,-442187,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,27.5,67.91,16.20,23.70,0,29.8,33.9,71.64,77,734,-442187,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,28.9,70.74,15.90,20.63,0,30.2,34.8,71.50,80,734,-442187,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,30.2,69.15,16.00,23.18,0,30.2,34.8,71.36,77,734,-442187,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,31.6,70.84,15.80,18.20,0,30.2,34.8,71.65,78,832,-544531,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,33.0,70.73,15.60,19.10,0,30.2,34.8,71.50,74,832,-544531,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,34.4,70.71,15.95,18.25,0,30.2,34.8,71.51,76,734,-544531,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,35.8,68.93,16.20,21.84,0,30.2,34.8,71.11,78,734,-544531,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,37.1,70.44,16.10,20.69,0,30.2,34.8,71.21,81,734,-544531,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,38.5,70.89,15.90,17.89,0,30.2,34.8,71.65,75,832,-544531,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,39.9,71.63,16.00,17.93,0,30.5,35.6,71.64,75,832,-544531,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,41.3,69.61,15.75,20.20,0,30.5,35.6,71.10,75,734,-544531,4148,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,42.6,70.74,16.15,17.82,0,30.5,35.6,71.51,75,734,-546875,4147,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,44.0,69.80,15.60,21.26,0,30.5,35.6,71.35,78,734,-546875,4147,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,45.3,69.52,16.00,21.63,0,30.5,35.6,71.80,80,734,-546875,4147,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,46.7,70.44,15.95,18.30,0,30.5,35.6,71.23,78,734,-546875,4147,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,48.1,70.11,15.90,20.73,0,30.5,35.6,71.65,78,734,-546875,4147,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,49.5,69.39,16.00,23.12,0,30.5,35.6,71.65,79,734,-546875,4147,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,50.8,70.10,16.00,18.47,0,31.0,36.5,71.65,75,660,-546875,4147,3940000
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,52.2,66.86,16.10,25.00,0,31.0,36.5,70.51,79,734,-378125,4150,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,53.6,64.80,16.55,24.87,0,31.0,36.5,71.51,76,734,-378125,4150,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,54.9,70.81,16.00,18.95,0,31.0,36.5,71.65,80,734,-378125,4150,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,56.3,71.00,16.00,18.03,0,31.0,36.5,71.79,79,734,-378125,4150,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,57.7,70.78,16.00,18.23,0,31.0,36.5,70.81,80,734,-378125,4150,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,59.1,70.86,16.10,17.63,0,31.0,36.5,71.65,78,734,-378125,4150,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,60.4,67.33,16.00,24.79,0,31.0,36.5,71.18,82,734,-378125,4150,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,61.8,68.53,16.10,22.78,0,31.3,37.0,71.51,78,734,-378125,4150,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,63.2,70.53,15.95,21.05,0,31.3,37.0,71.23,80,734,-447656,4146,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,64.5,70.72,16.05,19.65,0,31.3,37.0,71.50,79,734,-447656,4146,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,65.9,70.88,16.00,20.69,0,31.3,37.0,71.65,79,734,-447656,4146,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,67.2,70.99,16.00,17.80,0,31.3,37.0,71.80,81,734,-447656,4146,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,68.6,68.67,15.90,23.15,0,31.3,37.0,70.81,76,660,-447656,4146,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,70.0,68.48,16.20,23.20,0,31.3,37.0,71.50,80,832,-447656,4146,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,71.4,70.74,16.10,18.70,0,31.3,37.0,71.50,76,832,-447656,4146,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,72.8,70.83,15.90,17.90,0,31.5,37.3,71.65,74,832,-467968,4145,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,74.2,70.29,16.10,17.71,0,31.5,37.3,71.10,75,832,-467968,4145,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,75.5,70.79,16.00,18.00,0,31.5,37.3,71.51,78,832,-467968,4145,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,76.9,70.73,15.70,18.00,0,31.5,37.3,71.50,73,832,-467968,4145,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,78.3,71.46,16.20,17.60,0,31.5,37.3,71.50,73,734,-467968,4145,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,79.7,68.01,16.05,22.70,0,31.5,37.3,70.21,79,734,-467968,4145,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,81.0,70.88,15.90,18.57,0,31.5,37.3,71.63,79,734,-467968,4145,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,82.4,70.75,15.85,20.12,0,31.5,37.3,71.50,81,734,-575781,4140,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,83.8,69.70,16.10,20.60,0,31.7,37.6,71.20,80,734,-575781,4140,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,85.2,70.46,16.15,18.36,0,31.7,37.6,71.23,77,660,-575781,4140,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,86.5,67.13,16.20,24.76,0,31.7,37.6,70.90,80,734,-575781,4140,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,87.9,67.90,16.10,25.00,0,31.7,37.6,70.90,78,832,-575781,4140,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,89.3,70.73,15.90,19.95,0,31.9,37.9,71.50,76,832,-575781,4140,3930150
+s25u,supersplat-orbit-ourpose-touch,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,976,90.7,70.35,16.10,20.41,0,31.9,37.9,71.09,79,734,-575781,4140,3930150

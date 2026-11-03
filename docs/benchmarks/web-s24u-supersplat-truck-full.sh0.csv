@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=truck-full.sh0.ply, splats=1653927, sh=0, url_extras=-
+# load_s=4.1, backend=webgpu, canvas=540x975, page=384x693, splats_reported=None
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,1.3,66.33,15.70,30.77,1,38.4,41.5
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,2.6,70.13,16.40,21.33,1,38.4,41.5
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,3.9,71.58,15.60,19.06,1,38.4,41.5
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,5.2,72.24,14.60,21.13,1,38.4,41.5
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,6.5,72.53,15.80,21.12,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,7.9,71.36,14.95,19.20,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,9.2,72.24,15.00,20.08,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,10.4,71.94,16.10,22.55,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,11.7,72.45,15.40,19.70,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,13.1,71.20,15.60,19.40,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,14.4,72.45,15.50,21.20,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,15.7,72.26,15.65,22.09,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,17.0,72.29,15.20,18.90,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,18.4,71.20,15.40,19.61,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,19.7,71.75,15.85,21.48,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,21.0,72.28,14.70,19.94,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,22.3,72.25,14.55,19.14,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,23.7,71.20,15.90,21.03,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,25.0,72.24,14.30,22.45,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,26.2,72.28,14.75,19.44,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,27.5,72.21,14.85,19.55,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,28.9,70.94,16.35,21.43,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,30.2,72.39,13.70,20.40,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,31.5,72.29,14.80,19.07,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,32.8,72.21,15.30,21.75,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,34.2,70.36,15.90,22.01,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,35.5,72.14,15.00,19.48,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,36.8,72.22,14.10,20.00,1,38.5,42.4
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,38.1,71.77,16.15,23.24,1,38.5,42.3
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,39.5,71.52,15.90,20.12,1,38.5,42.3
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,40.8,72.28,14.95,19.70,1,38.5,42.3
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,42.0,72.43,13.80,21.85,1,38.5,42.3
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,43.3,72.23,13.65,22.48,1,38.5,42.3
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,44.7,71.53,15.75,18.45,1,38.5,42.3
+s24u,supersplat,1.41.0,webgpu,truck-full.sh0.ply,1653927,0,540,975,46.0,72.38,15.00,20.40,1,38.5,42.3

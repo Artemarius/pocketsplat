@@ -1,0 +1,40 @@
+# pocketsplat bench_web.py, viewer=supersplat-nogate (supersplat-viewer 1.41.0), browser=Chrome/156.0.8078.47, model=SM-S928B
+# scene=stump-full.sh0.ply, splats=4049567, sh=0, url_extras=&nogate
+# load_s=9.2, backend=webgpu, canvas=540x975, page=384x693, splats_reported=4049567
+# frames counted from engine frameend events
+device,viewer,viewer_version,backend,scene,splats_total,sh_degree,canvas_w,canvas_h,t_s,fps,ms_p50,ms_p95,thermal_status,skin_c,ap_c
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,1.5,62.02,15.70,20.70,0,37.3,40.2
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,2.8,69.84,15.80,24.02,0,37.3,40.2
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,4.1,72.12,14.20,21.70,0,37.3,40.2
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,5.4,71.43,15.00,22.10,0,37.3,40.2
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,6.7,70.36,13.60,24.68,0,37.7,41.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,8.1,71.33,15.65,19.19,0,37.7,41.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,9.4,71.79,15.00,21.09,0,37.7,41.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,10.7,70.68,14.55,22.15,0,37.7,41.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,11.9,72.39,14.80,21.55,0,37.7,41.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,13.3,71.11,15.70,22.28,0,37.7,41.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,14.6,71.03,15.00,22.15,0,37.7,41.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,15.9,70.97,14.30,22.65,0,37.7,41.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,17.2,71.25,15.45,23.19,0,38.0,42.2
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,18.6,70.50,15.30,21.52,0,38.0,42.2
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,19.9,68.54,15.20,25.58,0,38.0,42.2
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,21.2,71.97,14.90,22.70,0,38.0,42.2
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,22.5,71.77,14.90,22.12,0,38.1,42.6
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,23.9,70.67,15.10,21.38,0,38.1,42.6
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,25.2,71.32,14.00,21.99,0,38.1,42.6
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,26.5,71.16,15.00,22.80,0,38.1,42.6
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,27.7,71.15,13.90,22.07,0,38.1,42.6
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,29.1,69.48,15.35,22.80,0,38.1,42.6
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,30.4,71.91,14.80,21.30,0,38.1,42.6
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,31.7,71.50,15.30,22.25,0,38.1,42.6
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,33.0,71.59,13.80,21.70,0,38.2,42.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,34.4,71.57,15.40,21.56,0,38.2,42.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,35.7,71.72,15.70,21.58,0,38.2,42.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,37.0,70.94,13.60,23.45,0,38.2,42.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,38.2,72.37,14.60,21.85,0,38.2,42.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,39.6,70.88,15.40,22.03,0,38.2,42.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,40.9,71.99,14.00,22.05,0,38.2,42.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,42.2,70.63,14.80,23.23,0,38.2,42.9
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,43.5,70.29,14.10,23.75,0,38.3,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,44.9,71.09,15.50,21.16,0,38.3,43.2
+s24u,supersplat-nogate,1.41.0,webgpu,stump-full.sh0.ply,4049567,0,540,975,46.2,71.18,15.55,21.19,0,38.3,43.2
