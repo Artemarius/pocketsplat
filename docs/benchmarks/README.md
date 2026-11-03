@@ -17,6 +17,18 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
   viewer (WebGPU / WebGL2 / sort-free), Spark and splatkit on the same phone, splats and canvas.
 - `web-<device>-<viewer>-<scene>.csv` — per-second web-viewer rows from `scripts/bench_web.py`
   (`#` header: viewer version, browser, backend actually requested, canvas size, load time).
+- `side-by-side-s24u-f89eb4d-2026-11-03.csv` — the README's side-by-side clip
+  (`docs/media/side-by-side-s24u.webp`). It holds per-second fps of PocketSplat and the SuperSplat
+  viewer on the same start-view swing (`--pose home` in both drivers), recorded and unrecorded,
+  with GPU cycles per frame in the header.
+  * **Display stretch:** with `--width/--height`, the app's 540×975 buffer is scaled to the full
+    1080×2340 screen, so the phone shows it about 20 % taller than it is. This is display-only: the
+    GPU renders the same pixels. The clip undoes the stretch.
+  * **Recording changes Chrome's pacing:** SuperSplat ran faster while screen-recorded, at 69.9 vs
+    57.4 fps (page rAF 71 vs 67 Hz, GPU < 80 % busy). That is Chrome's pacing, not its GPU.
+  * **Interference:** a first set of these runs (14:55–15:05) overlapped another project's app
+    install and camera recording on the same phone and was discarded. The rerun's event log was
+    clean, and its numbers matched within 7 %.
 - `splatkit-s25u-orbit.csv` — splatkit's dev app on the S25U, pose-matched to our bench orbit (GPU ms,
   sort/cull ms, drawn splats per scene and render scale); see `public-baseline.md`.
 - `idle-gpubusy-<hash>.csv` — GPU busy % with the Android viewer idle vs dragging (on-demand frames).

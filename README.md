@@ -134,6 +134,24 @@ Four changes moved the stump frame rate on the S24 Ultra:
   <img alt="PocketSplat vs SuperSplat at the same camera pose: fps and GPU cycles per frame" src="docs/figures/supersplat-pose-light.svg">
 </picture>
 
+<p align="center">
+  <img src="docs/media/side-by-side-s24u.webp" width="540"
+       alt="Side by side on a Galaxy S24 Ultra: PocketSplat at about 178 fps and the SuperSplat viewer at 70 fps, both swinging around a rusty car">
+</p>
+
+The clip compares the two renderers on the same S24 Ultra, recorded one after the other:
+* **Same inputs**: the same 1.68 M splats (beetle, CC BY 4.0), the same 540×975 canvas, and the
+  same camera path. The path is a ±30° swing about the start view that advances 0.2° per rendered
+  frame, so the faster renderer gets further through it.
+* **Labels**: per-second fps from each run's CSV.
+* **Pacing**: Chrome holds the page at about 70 Hz with the GPU 78 % busy, so most of the 2.4× gap
+  here is the browser's pacing.
+* **Per frame**: PocketSplat's GPU spends 27–29 % fewer cycles (5.1 vs 7.0 M while recorded, 4.5 vs
+  6.3 M without recording).
+
+The full 16 s MP4 is on the release. The runs are in the
+[CSV](docs/benchmarks/side-by-side-s24u-f89eb4d-2026-11-03.csv).
+
 * **SuperSplat viewer (PlayCanvas, WebGPU), 540×975, same canvas.** Both renderers use our bench
   camera, which keeps SuperSplat rendering every frame.
   * S24 Ultra: stump **95** vs 61 fps, bicycle **83** vs 59, drjohnson **70** vs 52.
@@ -325,9 +343,10 @@ public specs, not ported from copyleft or non-commercial code.
 * *hornedlizard* and *racoonfamily* are sample assets of
   [nianticlabs/spz](https://github.com/nianticlabs/spz) (MIT, © 2024 Niantic Labs). hornedlizard
   ships in the app and the Windows zip.
-* *beetle*, shown in the phone recording, is from the
+* *beetle*, shown in the phone recording and the side-by-side clip, is from the
   [loopce/gaussiansplats](https://huggingface.co/datasets/loopce/gaussiansplats) dataset under
-  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). It was cleaned for the recording
-  (2.07 M → 1.0 M splats). It is not redistributed here.
+  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). It was cleaned for each: to 1.0 M
+  splats for the recording and at full count (1.68 M) for the side-by-side. It is not
+  redistributed here.
 * The INRIA 3DGS pretrained models (Mip-NeRF 360, Tanks and Temples, Deep Blending) are used for
   measurements only. They are not redistributed and not shown.
