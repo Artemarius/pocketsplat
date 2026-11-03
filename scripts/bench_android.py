@@ -349,8 +349,8 @@ def main() -> int:
                              "<stem>.pscov sidecar in files/scenes (--push it)")
     parser.add_argument("--pose", default="orbit", choices=["orbit", "home"],
                         help="orbit: full turn about +y around the framing box every 600 frames (every run "
-                             "before S26); home: +-30 deg swing about the scene's start view, phase 2pi/600 "
-                             "per frame (bench_web.py --pose home gives SuperSplat the same path)")
+                             "before S26); home: +-30 deg triangle-wave swing about the scene's start view, "
+                             "0.2 deg per frame (bench_web.py --pose home gives SuperSplat the same path)")
     parser.add_argument("--vote-fps", action="store_true",
                         help="ask the compositor for --target-fps, so the panel runs at that rate as in "
                              "interactive use (without it the panel stays at 120 Hz at every cap)")

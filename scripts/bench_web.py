@@ -135,7 +135,8 @@ window.__viewer.then(v => {
   const stepDeg = 360 / 600;
   const place = (k) => {
     if (pose && pose.home) {  // swing about the start view: arm turned about home.up (Rodrigues)
-      const h = pose.home, a = pose.amp * Math.PI / 180 * Math.sin(2 * Math.PI * (k % 600) / 600);
+      const u = (k % 600) / 600, tri = u < 0.25 ? 4 * u : (u < 0.75 ? 2 - 4 * u : 4 * u - 4);
+      const h = pose.home, a = pose.amp * Math.PI / 180 * tri;
       const ax = h.up, c = Math.cos(a), s = Math.sin(a);
       const v = [h.eye[0] - h.focus[0], h.eye[1] - h.focus[1], h.eye[2] - h.focus[2]];
       const d = ax[0] * v[0] + ax[1] * v[1] + ax[2] * v[2];
@@ -189,8 +190,9 @@ def pose_home(bench_csv: Path) -> dict:
 
     The app records the HomeView it computed (splatcore::estimate_home_view, RUB world) in its bench
     CSV header; RUB (x, y, z) is (-x, y, -z) in the viewer's world (pose_ours). Same swing as the
-    app: the eye turned about home.up through home.focus by 30 deg * sin(2pi k / 600) at rendered
-    frame k, 60 deg vertical FOV. cam.look() keeps the viewer's +y up, the app looks with home.up:
+    app: the eye turned about home.up through home.focus by 30 deg * tri(k / 600) at rendered
+    frame k (triangle wave: every frame moves the camera, or the viewer skips the render and the
+    orbit, which steps on rendered frames, stalls - as a sine swing did at its turning points), 60 deg vertical FOV. cam.look() keeps the viewer's +y up, the app looks with home.up:
     the two images agree in roll only where home.up is close to +y."""
     header = " ".join(line for line in bench_csv.read_text(encoding="utf-8").splitlines() if line.startswith("#"))
     home = {}
@@ -701,7 +703,7 @@ def run(args) -> int:
             server.shutdown()
             return 1
         if home:
-            meta.append(f"# camera=home-swing-30deg/600f (bench_android.py --pose home) from {Path(args.home_from).name}: "
+            meta.append(f"# camera=home-swing-30deg-tri/600f (bench_android.py --pose home) from {Path(args.home_from).name}: "
                         f"viewer-world home {json.dumps(pose['home'])}, fov 60 deg"
                         + (", touch drags for pacing only (the camera ignores input)" if touch else ""))
         else:

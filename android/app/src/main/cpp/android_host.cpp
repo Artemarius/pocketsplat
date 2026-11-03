@@ -582,8 +582,9 @@ void AndroidHost::render() {
         if (m_bench_active && m_bench_config.home_swing) {
             const glm::vec3 focus(m_home.focus[0], m_home.focus[1], m_home.focus[2]);
             const glm::vec3 up(m_home.up[0], m_home.up[1], m_home.up[2]);
-            const float phase = 6.2831853f * static_cast<float>(m_bench_frame % 600) / 600.0f;
-            const float angle = glm::radians(kHomeSwingDeg) * std::sin(phase);
+            const float u = static_cast<float>(m_bench_frame % 600) / 600.0f;
+            const float tri = u < 0.25f ? 4.0f * u : (u < 0.75f ? 2.0f - 4.0f * u : 4.0f * u - 4.0f);
+            const float angle = glm::radians(kHomeSwingDeg) * tri;
             const glm::vec3 arm = glm::vec3(m_home.eye[0], m_home.eye[1], m_home.eye[2]) - focus;
             eye = focus + glm::angleAxis(angle, up) * arm;
             view = glm::lookAt(eye, focus, up);
@@ -893,7 +894,7 @@ std::string AndroidHost::stop_bench() {
         << ", draw_probe=" << static_cast<std::uint32_t>(m_bench_draw_probe)
         << ", frame_rate_vote=" << (m_bench_config.vote_fps ? m_bench_config.target_fps : 0.0f)
         << ", coverage_strength=" << (m_splats.has_coverage() ? m_splats.coverage_strength() : 0.0f)
-        << (m_bench_config.home_swing ? ", orbit=home-swing-30deg/600f" : ", orbit=2pi/600f");
+        << (m_bench_config.home_swing ? ", orbit=home-swing-30deg-tri/600f" : ", orbit=2pi/600f");
     if (m_bench_config.home_swing) {
         csv << ", home_focus=" << vec3_text(m_home.focus) << ", home_eye=" << vec3_text(m_home.eye)
             << ", home_up=" << vec3_text(m_home.up);

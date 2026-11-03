@@ -131,9 +131,11 @@ public:
         bool vote_fps = false;
         // Camera path. false: the framing orbit (full turn about +y every 600 frames, every run
         // before S26). true: a swing about the open scene's start view (splatcore::HomeView), the
-        // eye turned about home.up through home.focus by kHomeSwingDeg * sin(2 pi k / 600) at
-        // rendered frame k - near the capture trajectory for scenes whose up is not +y, the pose
-        // bench_web.py --pose home gives the SuperSplat viewer.
+        // eye turned about home.up through home.focus by kHomeSwingDeg * tri(k / 600) at rendered
+        // frame k (triangle wave 0 -> 1 -> 0 -> -1 -> 0: a constant 0.2 deg per frame, so every frame
+        // moves the camera - SuperSplat's on-demand renderer skips frames whose pose barely changes,
+        // which stalled a sine swing at its turning points) - near the capture trajectory for scenes whose up
+        // is not +y, the pose bench_web.py --pose home gives the SuperSplat viewer.
         bool home_swing = false;
     };
     static constexpr float kHomeSwingDeg = 30.0f;
