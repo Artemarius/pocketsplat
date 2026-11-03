@@ -21,6 +21,9 @@ negative results.
 |---|---|---|
 | A 4.05 M-splat scene (stump) at 864×1872 on a Galaxy S24 Ultra (Adreno 750), cold. It ran at 34 fps when it first rendered. 105 fps on a Galaxy S25 Ultra (Adreno 830). | A thermal controller trades image quality for heat using Android's headroom forecast. Over 20 min of stump on battery the S24 Ultra stayed at status 0 and used 26 % less energy per frame than at the fixed setting, which reached status 2 at 9.6 min. | GPU radix sort of 16-bit depth keys at 1 M keys on the Adreno 750 (4.3 ns with 32 bits). It uses no forward-progress assumptions and no fixed subgroup size. |
 
+The [technical write-up](docs/writeup.md) tells the longer story: the frame design, the sort, the
+bugs every test missed, the measurement mistakes, and heat.
+
 ## Try it
 
 <img src="docs/media/phone-s24u-highlight.webp" width="240" align="right"

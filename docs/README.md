@@ -13,6 +13,7 @@ a new document.
 | `../CLAUDE.md` | Hard constraints, toolchain, conventions, build/test commands, workflow rules | Contributors / AI sessions |
 | `../THIRD_PARTY.md` | Every dependency: pinned tag, license, verified LICENSE first line | Contributors |
 | `../PROJECT.md` *(gitignored)* | Private roadmap: strategy, phase plan with gates, risk register, decision log, session log | Owner only — never committed |
+| `writeup.md` | Long-form technical write-up (first person): the question, the frame, the sort, correctness, measurement, heat, negative results, limits. Narrative over the ADRs and benchmarks; every number links to its source | Public |
 | `formats.md` | PLY/SPZ/GPU-pack layouts, encodings, coordinate systems | Contributors |
 | `cleaning.md` | Cleaning ops, defaults, ordering, reporting rules | Contributors |
 | `sorting.md` | Why the mobile sort is hard, our sort design, rejected alternatives | Contributors |
