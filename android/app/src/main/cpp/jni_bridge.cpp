@@ -41,6 +41,7 @@ void log_failure(const char* what, const splatcore::Status& status) {
 std::atomic<int> g_import_stage{-1};  // ImportStage as int, -1 = no import running
 std::atomic<bool> g_import_cancel{false};
 std::atomic<bool> g_import_active{false};
+std::string g_open_error;  // last nativeOpenScene failure, render thread only
 
 }  // namespace
 
@@ -64,8 +65,14 @@ JNIEXPORT void JNICALL Java_com_pocketsplat_app_SplatEngine_nativeDestroy(JNIEnv
 JNIEXPORT jboolean JNICALL Java_com_pocketsplat_app_SplatEngine_nativeOpenScene(JNIEnv* env, jobject,
                                                                                 jlong handle, jstring path) {
     const splatcore::Status status = host_of(handle)->open_scene(to_string(env, path));
+    g_open_error = status.ok() ? "" : status.error();
     if (!status.ok()) log_failure("open scene", status);
     return status.ok() ? JNI_TRUE : JNI_FALSE;
+}
+
+// The error of the last failed nativeOpenScene, for the UI (render thread, like the open itself).
+JNIEXPORT jstring JNICALL Java_com_pocketsplat_app_SplatEngine_nativeLastOpenError(JNIEnv* env, jobject) {
+    return env->NewStringUTF(g_open_error.c_str());
 }
 
 // [splat count, SH degree, pivot x, y, z, framing diagonal, eye x, y, z, orientation w, x, y, z,

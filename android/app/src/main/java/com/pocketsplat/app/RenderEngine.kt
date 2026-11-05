@@ -198,8 +198,14 @@ class RenderEngine {
         latch.await()
     }
 
+    /** Why the last [openScene] failed (the native status text), null after a success. */
+    @Volatile
+    var lastOpenError: String? = null
+        private set
+
     fun openScene(path: String, onDone: (FloatArray?) -> Unit) = handler.post {
         val ok = handle != 0L && SplatEngine.nativeOpenScene(handle, path)
+        lastOpenError = if (ok) null else SplatEngine.nativeLastOpenError()
         val info = if (ok) SplatEngine.nativeSceneInfo(handle) else null
         if (info != null && info.size >= 16) {
             // Home view: near the capture, looking at the main object (splatcore::estimate_home_view).

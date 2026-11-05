@@ -116,9 +116,9 @@ splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack
     // the device's descriptor range (Adreno 750: 128 MB / 32 B = 4,194,304 splats).
     const std::uint64_t max_splats = context.max_storage_buffer_range() / kRecordBytes;
     if (m_count > max_splats) {
-        return Status::failure("scene has " + std::to_string(m_count) + " splats; this GPU renders at most " +
-                               std::to_string(max_splats) +
-                               " (maxStorageBufferRange) - re-import with a budget");
+        return Status::failure("the scene has " + std::to_string(m_count) +
+                               " splats, this GPU draws at most " + std::to_string(max_splats) +
+                               " (maxStorageBufferRange): import it again with a smaller budget");
     }
     if (pack.header.chunk_size != splatcore::kPackChunkSize) {
         return Status::failure("pack chunk size does not match the renderer's workgroup mapping");

@@ -17,6 +17,9 @@ object SplatEngine {
     external fun nativeDestroy(handle: Long)
     external fun nativeOpenScene(handle: Long, path: String): Boolean
 
+    /** The error of the last failed [nativeOpenScene] (render thread), "" if none. */
+    external fun nativeLastOpenError(): String
+
     /**
      * [splat count, SH degree, pivot x, y, z, framing diagonal, eye x, y, z, orientation w, x, y, z,
      *  up x, y, z, has backside info, its source (0 cameras, 1 room, 2 object, -1 none)]:

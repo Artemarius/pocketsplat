@@ -297,14 +297,14 @@ private suspend fun stageCameraFiles(
 
 private fun backsideLabel(source: Int): String = when (source) {
     0 -> "from capture cameras"
-    1 -> "inferred: room"
-    2 -> "inferred: object"
-    else -> "none"
+    1 -> "guessed: room"
+    2 -> "guessed: object"
+    else -> "not set up"
 }
 
 /** Which guess fits which capture (ADR-0015: the wrong one costs many wrong reveals). */
 private const val kBacksideTypeHint =
-    "room: captured walking through it - object: captured going around it"
+    "room: the capture walked through it - object: the capture went around it"
 
 /** Interactive backside fade strength (applied while a gesture moves the view, ADR-0015). */
 private const val kDefaultBacksideFade = 0.75f
@@ -384,6 +384,7 @@ private fun ViewerScreen(
     var currentFile by remember { mutableStateOf<File?>(null) }
     var stats by remember { mutableStateOf<FloatArray?>(null) }
     var openFailed by remember { mutableStateOf(false) }
+    var openError by remember { mutableStateOf<String?>(null) }
     var levelOrbit by remember { mutableStateOf(false) }
     var coverageStrength by remember { mutableStateOf(initialCoverageStrength) }
     var fadeWhileMoving by remember { mutableStateOf(initialFadeWhileMoving) }
@@ -434,6 +435,7 @@ private fun ViewerScreen(
             sceneName = if (result != null) file.name else null
             currentFile = if (result != null) file else null
             openFailed = result == null
+            openError = if (result == null) "${file.name}: ${engine.lastOpenError ?: "see logcat"}" else null
         }
     }
 
@@ -683,18 +685,19 @@ private fun ViewerScreen(
                             color = Color.Cyan)
                     }
                     // Backside info: lets the fade hide what the capture never saw from the viewer's side.
+                    Text("Backside fade (see through what the capture never saw):", color = Color.White)
                     Row {
-                        Text("Backside: ", modifier = Modifier.padding(top = 12.dp), color = Color.White)
-                        listOf(-1 to "off", 1 to "room", 2 to "object", 0 to "cameras…").forEach { (value, label) ->
-                            TextButton(onClick = {
-                                backside = value
-                                if (value == 0) {
-                                    cameraTarget = null
-                                    pickCameras.launch(arrayOf("*/*"))
-                                }
-                            }) { Text(label, color = if (backside == value) Color.Yellow else Color.Cyan) }
+                        listOf(-1 to "off", 1 to "guess: room", 2 to "guess: object").forEach { (value, label) ->
+                            TextButton(onClick = { backside = value }) {
+                                Text(label, color = if (backside == value) Color.Yellow else Color.Cyan)
+                            }
                         }
                     }
+                    TextButton(onClick = {
+                        backside = 0
+                        cameraTarget = null
+                        pickCameras.launch(arrayOf("*/*"))
+                    }) { Text("from capture camera files…", color = if (backside == 0) Color.Yellow else Color.Cyan) }
                     if (backside == 0) {
                         Text(
                             if (cameraFiles.isEmpty()) "pick cameras.json, transforms.json, or COLMAP cameras + images"
@@ -747,7 +750,7 @@ private fun ViewerScreen(
                     TextButton(onClick = { showLicences = true }) {
                         Text("About & licences", color = Color.Cyan)
                     }
-                    if (openFailed) Text("Open failed - see logcat.", color = Color.Red)
+                    if (openFailed) Text("Open failed - ${openError ?: "see logcat."}", color = Color.Red)
                     importStatus?.let { Text(it, color = Color.Yellow) }
                     benchMessage?.let { Text(it, color = Color.Yellow) }
                 }
@@ -783,33 +786,15 @@ private fun ViewerScreen(
                             Text("Orbit: ${if (levelOrbit) "level" else "free trackball"}", color = Color.Cyan)
                         }
                         val source = if (info.size >= 18 && info[16] > 0f) info[17].toInt() else -1
-                        if (currentFile?.extension?.lowercase() == "pspk") {
-                            Text("Backside info: ${backsideLabel(source)}", color = Color.White)
-                            if (backsideBusy) {
-                                Text("computing…", color = Color.Yellow)
-                            } else {
-                                Row {
-                                    Text(if (source >= 0) "Redo: " else "Add: ",
-                                        modifier = Modifier.padding(top = 12.dp), color = Color.White)
-                                    TextButton(onClick = { currentFile?.let { computeBackside(it, 1, emptyList()) } }) {
-                                        Text("room", color = Color.Cyan)
-                                    }
-                                    TextButton(onClick = { currentFile?.let { computeBackside(it, 2, emptyList()) } }) {
-                                        Text("object", color = Color.Cyan)
-                                    }
-                                    TextButton(onClick = {
-                                        cameraTarget = currentFile
-                                        pickCameras.launch(arrayOf("*/*"))
-                                    }) { Text("cameras…", color = Color.Cyan) }
-                                }
-                            }
-                            if (source < 0) {
-                                Text(kBacksideTypeHint, color = Color(0xFFBBBBBB), style = MaterialTheme.typography.bodySmall)
-                            }
-                            backsideMessage?.let { Text(it, color = Color.Yellow) }
+                        val isPack = currentFile?.extension?.lowercase() == "pspk"
+                        val guessRoom = { currentFile?.let { computeBackside(it, 1, emptyList()) } }
+                        val guessObject = { currentFile?.let { computeBackside(it, 2, emptyList()) } }
+                        val useCameras = {
+                            cameraTarget = currentFile
+                            pickCameras.launch(arrayOf("*/*"))
                         }
-                        if (info.size >= 17 && info[16] > 0f) {
-                            Text("Backside fade %.2f".format(coverageStrength), color = Color.White)
+                        if (source >= 0) {
+                            Text("Backside fade %.2f - %s".format(coverageStrength, backsideLabel(source)), color = Color.White)
                             Slider(
                                 value = coverageStrength,
                                 onValueChange = {
@@ -824,7 +809,32 @@ private fun ViewerScreen(
                             }) {
                                 Text("Fade: ${if (fadeWhileMoving) "while moving" else "always"}", color = Color.Cyan)
                             }
+                            if (isPack && !backsideBusy) {
+                                Row {
+                                    Text("Try another guess: ", modifier = Modifier.padding(top = 12.dp), color = Color.White)
+                                    TextButton(onClick = { guessRoom() }) { Text("room", color = Color.Cyan) }
+                                    TextButton(onClick = { guessObject() }) { Text("object", color = Color.Cyan) }
+                                    TextButton(onClick = { useCameras() }) { Text("cameras…", color = Color.Cyan) }
+                                }
+                            }
+                        } else if (isPack && !backsideBusy) {
+                            Text("Backside fade: see through what the capture never saw", color = Color.White)
+                            Text(
+                                "Not set up for this scene. Guess it from how it was captured:",
+                                color = Color(0xFFBBBBBB), style = MaterialTheme.typography.bodySmall,
+                            )
+                            TextButton(onClick = { guessRoom() }) {
+                                Text("Guess: room (walked through)", color = Color.Green)
+                            }
+                            TextButton(onClick = { guessObject() }) {
+                                Text("Guess: object (went around it)", color = Color.Green)
+                            }
+                            TextButton(onClick = { useCameras() }) {
+                                Text("Use capture camera files…", color = Color.Cyan)
+                            }
                         }
+                        if (backsideBusy) Text("Backside fade: computing…", color = Color.Yellow)
+                        backsideMessage?.let { Text(it, color = Color.Yellow) }
                         Row {
                             TextButton(onClick = { engine.resetHome() }) { Text("Home view", color = Color.Cyan) }
                             TextButton(onClick = { overlayVisible = false }) { Text("Hide overlay", color = Color.Cyan) }
