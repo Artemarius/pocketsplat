@@ -259,7 +259,8 @@ resolution as a thermal rung (no power saved), and copying draw records into sor
 ## Known limitations
 
 * **Scene size on the Adreno 750**: at most 4,194,304 splats per scene. That is the 128 MB
-  storage-buffer range divided by 32 B draw records. Larger scenes are budget-pruned on import. The
+  storage-buffer range divided by 32 B draw records. Larger scenes are budget-pruned on import; a
+  larger pack opens as its 4,194,304 most important splats under a "partial scene" warning. The
   830 renders the full 4.48 M-splat bicycle at 65 fps.
 * **SH degree 0 and 1 only**, by design: higher degrees are truncated on import.
 * **Devices**: arm64, Android 13+, Vulkan 1.3. Measured on two Samsung phones with Adreno GPUs
