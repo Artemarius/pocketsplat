@@ -1,8 +1,12 @@
 # ADR-0015 — Backside info: camera files in three formats, else virtual cameras for a scene type the user picks
 
-**Status**: proposed (2026-11-05, S27). Implemented and measured against the INRIA scenes' real
+**Status**: accepted (2026-11-05, S27). Implemented and measured against the INRIA scenes' real
 cameras on the desktop (Evidence), and run on the S24U for timing and cross-platform agreement.
-Open: the owner's hand-held judgment on the S24U, in particular of the "while moving" default.
+The owner then used it hand-held on the S24U (release APK 0.2.0): "works great", "so useful on
+drjohnson" (a guessed room), and beetle with a guessed object "works amazingly". Two follow-ups
+from that session: the release ramp stalled when the fingers rested before lifting (on-demand
+rendering left it without frames; fixed, Evidence), and the wording now offers the guess
+("Guess: room (walked through)", "Guess: object (went around it)") where a scene has none.
 
 **Extends**: ADR-0013 (the coverage fade and its `.pscov` sidecar). The fade, the shader and the
 sidecar layout are unchanged; the header's `reserved` word becomes `source`.
@@ -61,7 +65,11 @@ hides content from a view the user has settled on.
 * Readers (`splatcore_tests` `Capture.*`, 8 tests): COLMAP binary and text and `transforms.json`
   agree with `cameras.json` on the same synthetic cameras; the format sniffing; a truncated
   `images.bin` is an error; a `transforms.json` in nerfstudio's frame is undone; foreign
-  cameras are rejected. ctest: see the session's commit.
+  cameras are rejected. ctest 111/111 at acceptance.
+* Gesture gating (S24U, scripted `input motionevent`, verbose log): drag then rest 1.5 s then
+  lift -> full strength back 0.33 s after the lift (the 0.25 s ease-out; before the fix it stayed
+  faded until the next touch); a tap never fades; lifting while moving and resting before the
+  drag behave alike.
 * Real data (`tandt_db.zip`'s COLMAP models, local only): COLMAP `.bin` and INRIA `cameras.json`
   give byte-identical sidecars on truck and drjohnson. A `transforms.json` written as
   `ns-process-data` writes it from truck's COLMAP model is undone automatically and gives the
