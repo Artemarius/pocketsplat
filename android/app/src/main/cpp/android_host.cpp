@@ -430,7 +430,11 @@ splatcore::Status AndroidHost::open_scene(const std::string& path) {
                 splatcore::parse_coverage(bytes, pack.value());
             if (masks) {
                 m_coverage = std::move(masks.value());
-                LOGI("coverage: %s", cov_path.c_str());
+                splatcore::CoverageHeader header;
+                std::memcpy(&header, bytes.data(), sizeof(header));  // parse_coverage checked the size
+                m_coverage_source = static_cast<int>(header.source);
+                LOGI("coverage: %s (source %d, %u cameras)", cov_path.c_str(), m_coverage_source,
+                     header.camera_count);
             } else {
                 LOGE("coverage %s ignored: %s", cov_path.c_str(), masks.error().c_str());
             }

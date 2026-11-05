@@ -7,6 +7,8 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.view.ViewConfiguration
+import kotlin.math.hypot
 
 /**
  * SurfaceView hosting the Vulkan swapchain, with the touch camera: one finger turns the trackball,
@@ -27,6 +29,19 @@ class SplatSurfaceView(context: Context, private val engine: RenderEngine) :
     private var scaling = false
     private var lastFocusX = 0f
     private var lastFocusY = 0f
+    // A gesture "moves" once a finger travels past the touch slop or a pinch starts: taps and the
+    // double-tap pick never show the backside fade (RenderEngine.setGesture).
+    private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
+    private var downX = 0f
+    private var downY = 0f
+    private var moving = false
+
+    private fun startMoving() {
+        if (!moving) {
+            moving = true
+            engine.setGesture(true)
+        }
+    }
     private val scaleDetector = ScaleGestureDetector(
         context,
         object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -43,6 +58,7 @@ class SplatSurfaceView(context: Context, private val engine: RenderEngine) :
 
             override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
                 scaling = true
+                startMoving()
                 lastFocusX = detector.focusX
                 lastFocusY = detector.focusY
                 return true
@@ -117,7 +133,11 @@ class SplatSurfaceView(context: Context, private val engine: RenderEngine) :
         scaleDetector.onTouchEvent(event)
         tapDetector.onTouchEvent(event)
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> anchor(event, 0)
+            MotionEvent.ACTION_DOWN -> {
+                anchor(event, 0)
+                downX = event.x
+                downY = event.y
+            }
             MotionEvent.ACTION_POINTER_UP -> {
                 // The tracked finger lifted: follow one that stays, from where it is now.
                 val up = event.actionIndex
@@ -128,12 +148,17 @@ class SplatSurfaceView(context: Context, private val engine: RenderEngine) :
                 if (i >= 0) {
                     val x = event.getX(i)
                     val y = event.getY(i)
+                    if (!moving && hypot(event.x - downX, event.y - downY) > touchSlop) startMoving()
                     if (!scaling && event.pointerCount == 1) engine.orbit(x - lastX, y - lastY)
                     lastX = x
                     lastY = y
                 }
             }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> activeId = MotionEvent.INVALID_POINTER_ID
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                activeId = MotionEvent.INVALID_POINTER_ID
+                if (moving) engine.setGesture(false)
+                moving = false
+            }
         }
         return true
     }

@@ -5,11 +5,19 @@
 #include <android/native_window_jni.h>
 #include <jni.h>
 
+#include <algorithm>
 #include <atomic>
+#include <chrono>
+#include <cstdio>
+#include <fstream>
+#include <iterator>
 #include <string>
+#include <vector>
 
 #include "android_host.h"
+#include "splatcore/capture.h"
 #include "splatcore/scene_import.h"
+#include "splatcore/scene_load.h"
 
 namespace {
 
@@ -61,16 +69,17 @@ JNIEXPORT jboolean JNICALL Java_com_pocketsplat_app_SplatEngine_nativeOpenScene(
 }
 
 // [splat count, SH degree, pivot x, y, z, framing diagonal, eye x, y, z, orientation w, x, y, z,
-//  scene up x, y, z, has coverage]: the home view (splatcore::estimate_home_view) as a trackball
-// pose, the fitted ground normal a level orbit turns about, and 1 when the scene has a coverage
-// sidecar (the fade slider applies).
+//  scene up x, y, z, has coverage, coverage source]: the home view (splatcore::estimate_home_view)
+// as a trackball pose, the fitted ground normal a level orbit turns about, 1 when the scene has a
+// coverage sidecar (the fade slider applies), and where it came from (splatcore::CaptureSource:
+// 0 capture cameras, 1 inferred room, 2 inferred object; -1 none).
 JNIEXPORT jfloatArray JNICALL Java_com_pocketsplat_app_SplatEngine_nativeSceneInfo(JNIEnv* env, jobject,
                                                                                    jlong handle) {
     const pocketsplat::AndroidHost* host = host_of(handle);
     const splatcore::HomeView& home = host->home_view();
     float orientation[4];
     host->home_orientation(orientation);
-    const float values[17] = {static_cast<float>(host->splat_count()),
+    const float values[18] = {static_cast<float>(host->splat_count()),
                               static_cast<float>(host->sh_degree()),
                               home.focus[0],
                               home.focus[1],
@@ -86,9 +95,10 @@ JNIEXPORT jfloatArray JNICALL Java_com_pocketsplat_app_SplatEngine_nativeSceneIn
                               home.up[0],
                               home.up[1],
                               home.up[2],
-                              host->has_coverage() ? 1.0f : 0.0f};
-    jfloatArray out = env->NewFloatArray(17);
-    env->SetFloatArrayRegion(out, 0, 17, values);
+                              host->has_coverage() ? 1.0f : 0.0f,
+                              static_cast<float>(host->coverage_source())};
+    jfloatArray out = env->NewFloatArray(18);
+    env->SetFloatArrayRegion(out, 0, 18, values);
     return out;
 }
 
@@ -243,6 +253,57 @@ JNIEXPORT jstring JNICALL Java_com_pocketsplat_app_SplatEngine_nativeImportScene
                         static_cast<unsigned long long>(report.value().input_count), report.value().count,
                         report.value().sh_degree);
     return env->NewStringUTF("");
+}
+
+// Backside info for a scene (ADR-0015): writes <scene stem>.pscov next to `scene` from capture
+// camera files (source 0: cameras.json, transforms.json, or COLMAP cameras + images) or from
+// virtual cameras for a scene type (1 room, 2 object; `camera_files` ignored). Runs on a
+// background thread. Returns "ok: <summary>" or the error.
+JNIEXPORT jstring JNICALL Java_com_pocketsplat_app_SplatEngine_nativeComputeCoverage(
+    JNIEnv* env, jobject, jstring scene, jint source, jobjectArray camera_files) {
+    const auto start = std::chrono::steady_clock::now();
+    const std::string path = to_string(env, scene);
+    splatcore::Result<splatcore::GpuPack> pack = splatcore::load_scene_pack(path, 0);
+    if (!pack) return env->NewStringUTF(pack.error().c_str());
+    std::vector<splatcore::CaptureFile> files;
+    const jsize n = camera_files != nullptr ? env->GetArrayLength(camera_files) : 0;
+    for (jsize i = 0; i < n; ++i) {
+        auto* item = static_cast<jstring>(env->GetObjectArrayElement(camera_files, i));
+        splatcore::CaptureFile f;
+        const std::string file_path = to_string(env, item);
+        env->DeleteLocalRef(item);
+        f.name = file_path.substr(file_path.find_last_of('/') + 1);
+        std::ifstream in(file_path, std::ios::binary);
+        if (!in) return env->NewStringUTF(("cannot read " + f.name).c_str());
+        f.bytes.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+        files.push_back(std::move(f));
+    }
+    const auto kind = static_cast<splatcore::CaptureSource>(std::clamp(static_cast<int>(source), 0, 2));
+    splatcore::Result<splatcore::CoverageSidecar> sidecar =
+        splatcore::make_coverage_sidecar(pack.value(), kind, files);
+    if (!sidecar) {
+        __android_log_print(ANDROID_LOG_ERROR, "PocketSplat", "coverage: %s", sidecar.error().c_str());
+        return env->NewStringUTF(sidecar.error().c_str());
+    }
+    const std::string out_path = path.substr(0, path.find_last_of('.')) + ".pscov";
+    const std::string tmp = out_path + ".tmp";
+    {
+        std::ofstream out(tmp, std::ios::binary | std::ios::trunc);
+        out.write(reinterpret_cast<const char*>(sidecar.value().bytes.data()),
+                  static_cast<std::streamsize>(sidecar.value().bytes.size()));
+        if (!out.flush()) return env->NewStringUTF("cannot write the backside file");
+    }
+    if (std::rename(tmp.c_str(), out_path.c_str()) != 0)
+        return env->NewStringUTF("cannot write the backside file");
+    const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    const char* what = kind == splatcore::CaptureSource::kCameras ? "capture cameras"
+                       : kind == splatcore::CaptureSource::kRoom  ? "virtual cameras (room)"
+                                                                  : "virtual cameras (object)";
+    char summary[160];
+    std::snprintf(summary, sizeof(summary), "ok: %zu %s, they see %.0f %% of the scene, %.1f s",
+                  sidecar.value().cameras, what, 100.0 * sidecar.value().fit, seconds);
+    __android_log_print(ANDROID_LOG_INFO, "PocketSplat", "coverage %s: %s", out_path.c_str(), summary);
+    return env->NewStringUTF(summary);
 }
 
 // Stage of the running import as an ImportStage ordinal (0 read, 1 clean, 2 SOR, 3 pack,

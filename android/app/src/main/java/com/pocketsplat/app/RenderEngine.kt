@@ -102,12 +102,53 @@ class RenderEngine {
         if (handle != 0L) SplatEngine.nativeStartTrace(handle, path)
     }
 
-    /** Coverage fade (ADR-0013): 0 = unchanged, 1 = splats seen from unobserved directions vanish. */
+    // Backside fade (ADR-0013, ADR-0015). The slider's strength applies either always or only while
+    // a gesture moves the view (the default: the fade helps while searching for a viewpoint, and
+    // the full scene comes back when the fingers stop), easing out over FADE_RELEASE_NS.
+    private var fadeStrength = 0f
+    private var fadeWhileMoving = false
+    private var gestureActive = false
+    private var fadeReleaseNanos = 0L
+    private var appliedStrength = -1f
+
+    /** Backside fade strength: 0 = unchanged, 1 = splats seen from unobserved directions vanish. */
     fun setCoverageStrength(strength: Float) = handler.post {
-        if (handle != 0L) {
-            SplatEngine.nativeSetCoverageStrength(handle, strength)
+        fadeStrength = strength
+        applyFade()
+    }
+
+    /** true: the fade shows only while a drag or pinch is under way; false: always. */
+    fun setFadeWhileMoving(on: Boolean) = handler.post {
+        fadeWhileMoving = on
+        applyFade()
+    }
+
+    /** A drag or pinch started moving the view (true) or the last finger lifted (false). */
+    fun setGesture(active: Boolean) = handler.post {
+        if (active == gestureActive) return@post
+        gestureActive = active
+        if (!active) fadeReleaseNanos = System.nanoTime()
+        applyFade()
+    }
+
+    private fun fadeLevel(): Float {
+        if (!fadeWhileMoving || gestureActive) return 1f
+        val t = (System.nanoTime() - fadeReleaseNanos) / FADE_RELEASE_NS.toFloat()
+        if (t >= 1f) return 0f
+        val s = 1f - t
+        return s * s * (3f - 2f * s)
+    }
+
+    /** Pushes the effective strength when it changed; true while the release ramp still runs. */
+    private fun applyFade(): Boolean {
+        val level = fadeLevel()
+        val target = fadeStrength * level
+        if (handle != 0L && target != appliedStrength) {
+            SplatEngine.nativeSetCoverageStrength(handle, target)
+            appliedStrength = target
             requestRender()
         }
+        return fadeWhileMoving && !gestureActive && level > 0f
     }
 
     fun setAdaptiveQuality(on: Boolean) = handler.post {
@@ -360,6 +401,7 @@ class RenderEngine {
             mainHandler.post { done?.invoke(summary.ifEmpty { null }) }
             pendingFrames = SETTLE_FRAMES // the vsync-on swapchain gets fresh frames, then idles
         }
+        if (applyFade()) pendingFrames = maxOf(pendingFrames, 1) // the release ramp needs frames
         SplatEngine.nativeRender(handle)
         if (pendingFrames > 0) pendingFrames--
         if (pickPending) {
@@ -377,6 +419,7 @@ class RenderEngine {
 
     private companion object {
         const val SETTLE_FRAMES = 3 // frames in flight (2) + 1
+        const val FADE_RELEASE_NS = 250_000_000L // backside fade eases out this long after a gesture
         const val THERMAL_TICK_MS = 1000L
         const val PACE_SLACK_NS = 4_000_000L // half a 120 Hz vsync period
         const val ORBIT_RAD_PER_PX = 0.005f

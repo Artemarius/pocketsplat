@@ -92,6 +92,9 @@ public:
     // <stem>.pscov sidecar next to the pack (has_coverage), bench runs included.
     void set_coverage_strength(float strength);
     bool has_coverage() const { return m_renderer_ready ? m_splats.has_coverage() : m_coverage.has_value(); }
+    // Where the open scene's sidecar came from (splatcore::CaptureSource: 0 capture cameras,
+    // 1 inferred room, 2 inferred object), -1 without one.
+    int coverage_source() const { return has_coverage() ? m_coverage_source : -1; }
     bool adaptive_quality() const { return m_adaptive.has_value(); }
     bool thermal_tick();
     // Rate the render thread paces interactive frames at; 0 = free-running (bench).
@@ -194,6 +197,7 @@ private:
     std::optional<splatcore::GpuPack> m_pack;              // held until the renderer can be created
     std::optional<std::vector<std::uint32_t>> m_coverage;  // the pack's sidecar masks, likewise
     float m_coverage_strength = 0.0f;
+    int m_coverage_source = -1;
     std::string m_scene_name;  // file name of the open scene (trace header)
     splatcore::SceneFraming m_framing{{0.0f, 0.0f, 0.0f}, 1.0f};
     std::uint32_t m_splat_count = 0;

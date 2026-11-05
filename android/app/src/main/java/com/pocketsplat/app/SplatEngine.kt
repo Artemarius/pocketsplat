@@ -18,7 +18,8 @@ object SplatEngine {
     external fun nativeOpenScene(handle: Long, path: String): Boolean
 
     /**
-     * [splat count, SH degree, pivot x, y, z, framing diagonal, eye x, y, z, orientation w, x, y, z]:
+     * [splat count, SH degree, pivot x, y, z, framing diagonal, eye x, y, z, orientation w, x, y, z,
+     *  up x, y, z, has backside info, its source (0 cameras, 1 room, 2 object, -1 none)]:
      * the scene's home view (near the capture, looking at the main object) as a trackball pose.
      */
     external fun nativeSceneInfo(handle: Long): FloatArray
@@ -72,6 +73,14 @@ object SplatEngine {
      *  contribution threshold px, adaptive-quality rung (-1 = off)]
      */
     external fun nativeGetStats(handle: Long): FloatArray
+
+    /**
+     * Backside info (ADR-0015): writes `<scene stem>.pscov` next to [scene] from capture camera
+     * files ([source] 0: cameras.json, transforms.json, or COLMAP cameras + images) or virtual
+     * cameras for a scene type (1 room, 2 object). Blocks for seconds - call off the main thread.
+     * Returns "ok: <summary>" or the error.
+     */
+    external fun nativeComputeCoverage(scene: String, source: Int, cameraFiles: Array<String>): String
 
     /** Header-only probe: [splat count, SH degree, file bytes]; null = not a loadable scene. */
     external fun nativeProbeScene(path: String): LongArray?

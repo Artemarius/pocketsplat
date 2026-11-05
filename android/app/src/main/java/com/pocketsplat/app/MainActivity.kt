@@ -97,18 +97,35 @@ class MainActivity : ComponentActivity() {
         val request = benchRequestFromIntent()
         // Scripted interactive open (no bench): e.g. idle-power checks of on-demand rendering.
         val openScene = intent.getStringExtra("open_scene")
+        // Scripted backside info for open_scene (ADR-0015): "room", "object" or "cameras" with
+        // backside_files = comma-separated paths the app can read (e.g. under files/cameras).
+        val backsideRequest = when (intent.getStringExtra("backside")) {
+            "cameras" -> 0
+            "room" -> 1
+            "object" -> 2
+            else -> -1
+        }
+        val backsideFiles = intent.getStringExtra("backside_files")?.split(',')?.filter { it.isNotBlank() }
+            ?.map { File(it) }.orEmpty()
         // Hand-held sessions: every interactive controller sample goes to files/trace/<name>.csv.
         intent.getStringExtra("interactive_trace")?.let { name ->
             engine.startTrace(File(File(filesDir, "trace").apply { mkdirs() }, "$name.csv").path)
         }
         val protocolRes = protocolResolution()
-        // Coverage fade strength for scripted runs (bench and open_scene); the overlay slider
-        // changes it interactively.
-        val coverageStrength = intent.getFloatExtra("coverage_strength", 0f).coerceIn(0f, 1f)
+        // Backside fade (ADR-0015): interactive use fades at kDefaultBacksideFade while a gesture
+        // moves the view; scripted runs (bench_android.py passes coverage_strength) fade at their
+        // strength all the time, as every bench since ADR-0013. The overlay changes both.
+        val scriptedFade = intent.hasExtra("coverage_strength")
+        val coverageStrength =
+            if (scriptedFade) intent.getFloatExtra("coverage_strength", 0f).coerceIn(0f, 1f) else kDefaultBacksideFade
+        engine.setFadeWhileMoving(!scriptedFade)
         engine.setCoverageStrength(coverageStrength)
         setContent {
             MaterialTheme {
-                ViewerScreen(engine, ::sceneFiles, request, openScene, protocolRes, filesDir, coverageStrength)
+                ViewerScreen(
+                    engine, ::sceneFiles, request, openScene, protocolRes, filesDir, coverageStrength,
+                    !scriptedFade, backsideRequest, backsideFiles,
+                )
             }
         }
     }
@@ -241,6 +258,57 @@ private suspend fun stageSafPick(
     ImportCandidate(copy, name, probe[0], probe[1], deleteAfter = true)
 }
 
+/**
+ * Copies picked capture-camera files (cameras.json, transforms.json, or COLMAP cameras + images)
+ * into cache/import/cameras, replacing any earlier pick. Returns the copies (empty on failure,
+ * reported through [onStatus]).
+ */
+private suspend fun stageCameraFiles(
+    context: Context, uris: List<Uri>, onStatus: (String?) -> Unit,
+): List<File> = withContext(Dispatchers.IO) {
+    val dir = File(context.cacheDir, "import/cameras")
+    dir.deleteRecursively()
+    dir.mkdirs()
+    val out = mutableListOf<File>()
+    for (uri in uris) {
+        var name = "cameras"
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (idx >= 0) cursor.getString(idx)?.let { name = it }
+            }
+        }
+        val copy = File(dir, sanitizeName(name))
+        try {
+            onStatus("copying $name")
+            context.contentResolver.openInputStream(uri).use { input ->
+                if (input == null) throw IllegalStateException("cannot open $name")
+                copy.outputStream().use { input.copyTo(it) }
+            }
+            out += copy
+        } catch (e: Exception) {
+            onStatus("copy failed: ${e.message}")
+            return@withContext emptyList<File>()
+        }
+    }
+    onStatus(null)
+    out
+}
+
+private fun backsideLabel(source: Int): String = when (source) {
+    0 -> "from capture cameras"
+    1 -> "inferred: room"
+    2 -> "inferred: object"
+    else -> "none"
+}
+
+/** Which guess fits which capture (ADR-0015: the wrong one costs many wrong reveals). */
+private const val kBacksideTypeHint =
+    "room: captured walking through it - object: captured going around it"
+
+/** Interactive backside fade strength (applied while a gesture moves the view, ADR-0015). */
+private const val kDefaultBacksideFade = 0.75f
+
 private const val kSampleAsset = "samples/hornedlizard.spz"
 private const val kPrefs = "pocketsplat"
 private const val kSampleInstalled = "sample_installed"
@@ -306,6 +374,9 @@ private fun ViewerScreen(
     protocolRes: Pair<Int, Int>?,
     filesDir: File,
     initialCoverageStrength: Float,
+    initialFadeWhileMoving: Boolean,
+    backsideRequest: Int = -1,
+    backsideRequestFiles: List<File> = emptyList(),
 ) {
     var surfaceView by remember { mutableStateOf<SplatSurfaceView?>(null) }
     var sceneName by remember { mutableStateOf<String?>(null) }
@@ -315,6 +386,7 @@ private fun ViewerScreen(
     var openFailed by remember { mutableStateOf(false) }
     var levelOrbit by remember { mutableStateOf(false) }
     var coverageStrength by remember { mutableStateOf(initialCoverageStrength) }
+    var fadeWhileMoving by remember { mutableStateOf(initialFadeWhileMoving) }
     // Hidden overlay = full-screen view: system bars hidden too (an edge swipe shows them for a
     // moment); a small knob in the corner brings both back.
     var overlayVisible by remember { mutableStateOf(true) }
@@ -334,6 +406,12 @@ private fun ViewerScreen(
     var budget by remember { mutableLongStateOf(1_000_000L) }
     var stagingJob by remember { mutableStateOf<Job?>(null) }
     var showLicences by remember { mutableStateOf(false) }
+    // Backside info (ADR-0015): -1 off, 0 capture camera files, 1 room, 2 object.
+    var backside by remember { mutableStateOf(-1) }
+    var cameraFiles by remember { mutableStateOf<List<File>>(emptyList()) }
+    var cameraTarget by remember { mutableStateOf<File?>(null) } // open pack the picked cameras are for
+    var backsideBusy by remember { mutableStateOf(false) }
+    var backsideMessage by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -374,6 +452,41 @@ private fun ViewerScreen(
         }
     }
 
+    /** Computes the backside sidecar of [file] in the background, then (re)opens it. */
+    fun computeBackside(file: File, source: Int, files: List<File>, keepFiles: Boolean = false) {
+        backsideBusy = true
+        backsideMessage = "computing backside info…"
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                SplatEngine.nativeComputeCoverage(file.absolutePath, source, files.map { it.absolutePath }.toTypedArray())
+            }
+            if (!keepFiles) files.forEach { it.delete() }
+            if (source == 0 && !keepFiles) cameraFiles = emptyList()
+            backsideBusy = false
+            backsideMessage = if (result.startsWith("ok")) "backside: ${result.removePrefix("ok: ")}"
+            else "backside info failed: $result"
+            openPack(file)
+        }
+    }
+
+    val pickCameras = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        val target = cameraTarget
+        if (uris.isEmpty()) {
+            if (target == null && cameraFiles.isEmpty()) backside = -1
+            return@rememberLauncherForActivityResult
+        }
+        scope.launch {
+            val files = stageCameraFiles(context, uris) { backsideMessage = it }
+            if (target != null) {
+                cameraTarget = null
+                if (files.isNotEmpty()) computeBackside(target, 0, files)
+            } else {
+                cameraFiles = files
+                if (files.isEmpty()) backside = -1
+            }
+        }
+    }
+
     fun startImport(candidate: ImportCandidate) {
         val scenesDir = File(filesDir, "scenes").apply { mkdirs() }
         val dst = File(scenesDir, sanitizeName(candidate.displayName.substringBeforeLast('.')) + ".pspk")
@@ -400,7 +513,9 @@ private fun ViewerScreen(
                 importCandidate = null
                 importStatus = null
                 sceneList = refreshScenes()
-                openPack(dst)
+                val kind = backside
+                backside = -1
+                if (kind >= 0) computeBackside(dst, kind, if (kind == 0) cameraFiles else emptyList()) else openPack(dst)
             } else {
                 importStatus = error // candidate (and any cache copy) stays for a retry
             }
@@ -455,7 +570,12 @@ private fun ViewerScreen(
                     benchRequest.controller, benchRequest.voteFps, benchRequest.homeSwing)
             }
         } else if (openSceneName != null) {
-            sceneList.find { it.name == openSceneName }?.let { openPack(it) }
+            sceneList.find { it.name == openSceneName }?.let {
+                // Scripted: the camera files stay where the caller put them (computeBackside
+                // deletes only its own staged copies).
+                if (backsideRequest >= 0) computeBackside(it, backsideRequest, backsideRequestFiles, keepFiles = true)
+                else openPack(it)
+            }
         } else if (!prefs.getBoolean(kSampleInstalled, false)) {
             // First launch: import the bundled sample (same pipeline and defaults as a picked file)
             // and open it. Scripted launches above skip this, so bench runs never import.
@@ -562,6 +682,28 @@ private fun ViewerScreen(
                         Text("Deep clean (floater removal): ${if (deepClean) "on" else "off"}",
                             color = Color.Cyan)
                     }
+                    // Backside info: lets the fade hide what the capture never saw from the viewer's side.
+                    Row {
+                        Text("Backside: ", modifier = Modifier.padding(top = 12.dp), color = Color.White)
+                        listOf(-1 to "off", 1 to "room", 2 to "object", 0 to "cameras…").forEach { (value, label) ->
+                            TextButton(onClick = {
+                                backside = value
+                                if (value == 0) {
+                                    cameraTarget = null
+                                    pickCameras.launch(arrayOf("*/*"))
+                                }
+                            }) { Text(label, color = if (backside == value) Color.Yellow else Color.Cyan) }
+                        }
+                    }
+                    if (backside == 0) {
+                        Text(
+                            if (cameraFiles.isEmpty()) "pick cameras.json, transforms.json, or COLMAP cameras + images"
+                            else cameraFiles.joinToString { it.name },
+                            color = Color.White,
+                        )
+                    } else if (backside > 0) {
+                        Text(kBacksideTypeHint, color = Color(0xFFBBBBBB), style = MaterialTheme.typography.bodySmall)
+                    }
                     Row {
                         TextButton(onClick = { startImport(candidate) }) {
                             Text("Import", color = Color.Green)
@@ -640,8 +782,34 @@ private fun ViewerScreen(
                         }) {
                             Text("Orbit: ${if (levelOrbit) "level" else "free trackball"}", color = Color.Cyan)
                         }
+                        val source = if (info.size >= 18 && info[16] > 0f) info[17].toInt() else -1
+                        if (currentFile?.extension?.lowercase() == "pspk") {
+                            Text("Backside info: ${backsideLabel(source)}", color = Color.White)
+                            if (backsideBusy) {
+                                Text("computing…", color = Color.Yellow)
+                            } else {
+                                Row {
+                                    Text(if (source >= 0) "Redo: " else "Add: ",
+                                        modifier = Modifier.padding(top = 12.dp), color = Color.White)
+                                    TextButton(onClick = { currentFile?.let { computeBackside(it, 1, emptyList()) } }) {
+                                        Text("room", color = Color.Cyan)
+                                    }
+                                    TextButton(onClick = { currentFile?.let { computeBackside(it, 2, emptyList()) } }) {
+                                        Text("object", color = Color.Cyan)
+                                    }
+                                    TextButton(onClick = {
+                                        cameraTarget = currentFile
+                                        pickCameras.launch(arrayOf("*/*"))
+                                    }) { Text("cameras…", color = Color.Cyan) }
+                                }
+                            }
+                            if (source < 0) {
+                                Text(kBacksideTypeHint, color = Color(0xFFBBBBBB), style = MaterialTheme.typography.bodySmall)
+                            }
+                            backsideMessage?.let { Text(it, color = Color.Yellow) }
+                        }
                         if (info.size >= 17 && info[16] > 0f) {
-                            Text("Coverage fade %.2f".format(coverageStrength), color = Color.White)
+                            Text("Backside fade %.2f".format(coverageStrength), color = Color.White)
                             Slider(
                                 value = coverageStrength,
                                 onValueChange = {
@@ -650,6 +818,12 @@ private fun ViewerScreen(
                                 },
                                 modifier = Modifier.width(280.dp),
                             )
+                            TextButton(onClick = {
+                                fadeWhileMoving = !fadeWhileMoving
+                                engine.setFadeWhileMoving(fadeWhileMoving)
+                            }) {
+                                Text("Fade: ${if (fadeWhileMoving) "while moving" else "always"}", color = Color.Cyan)
+                            }
                         }
                         Row {
                             TextButton(onClick = { engine.resetHome() }) { Text("Home view", color = Color.Cyan) }
