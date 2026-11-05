@@ -2,6 +2,7 @@
 add_library(splatcore STATIC
     src/cleaning.cpp
     src/coords.cpp
+    src/capture.cpp
     src/coverage.cpp
     src/home_view.cpp
     src/pack.cpp
@@ -28,6 +29,7 @@ endif()
 
 if(POCKETSPLAT_BUILD_TESTS)
     add_executable(splatcore_tests
+        tests/capture_test.cpp
         tests/cleaning_test.cpp
         tests/coords_test.cpp
         tests/coverage_test.cpp

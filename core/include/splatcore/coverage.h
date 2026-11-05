@@ -71,7 +71,7 @@ struct CoverageHeader {
     std::uint32_t grid = kCoverageGrid;
     std::uint64_t positions_hash = 0;
     std::uint32_t camera_count = 0;
-    std::uint32_t reserved = 0;
+    std::uint32_t source = 0;  // CaptureSource (capture.h, ADR-0015); was reserved = 0
 };
 static_assert(sizeof(CoverageHeader) == 32, "CoverageHeader is a 32-byte on-disk structure");
 

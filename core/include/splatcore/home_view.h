@@ -26,11 +26,13 @@ namespace splatcore {
 //    and opened truck on a far overview.
 // Deterministic: the same pack always gives the same view (ties go to the first candidate).
 struct HomeView {
-    float focus[3];    // orbit pivot, RUB world
-    float up[3];       // unit; +y when no plane was found
-    float eye[3];      // camera position, looking at the focus
-    float distance;    // |eye - focus|, > 0
-    bool plane_found;  // false: up is +y
+    float focus[3];              // orbit pivot, RUB world
+    float up[3];                 // unit; +y when no plane was found
+    float eye[3];                // camera position, looking at the focus
+    float distance;              // |eye - focus|, > 0
+    bool plane_found;            // false: up is +y
+    float full_distance = 1.0f;  // 2.3 x the half-detail radius (capped at the box diagonal): the
+                                 // farthest candidate eye; ~1 ring radius on orbit captures (ADR-0012)
 };
 HomeView estimate_home_view(const GpuPack& pack);
 

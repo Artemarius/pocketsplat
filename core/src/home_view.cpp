@@ -327,6 +327,7 @@ HomeView estimate_home_view(const GpuPack& pack) {
         view.eye[c] = best_eye[c];
     }
     view.distance = best_distance;
+    view.full_distance = full_distance;
     return view;
 }
 
