@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import android.view.Choreographer
 import android.view.Surface
 import java.util.concurrent.CountDownLatch
@@ -114,13 +115,13 @@ class RenderEngine {
     /** Backside fade strength: 0 = unchanged, 1 = splats seen from unobserved directions vanish. */
     fun setCoverageStrength(strength: Float) = handler.post {
         fadeStrength = strength
-        applyFade()
+        updateFade()
     }
 
     /** true: the fade shows only while a drag or pinch is under way; false: always. */
     fun setFadeWhileMoving(on: Boolean) = handler.post {
         fadeWhileMoving = on
-        applyFade()
+        updateFade()
     }
 
     /** A drag or pinch started moving the view (true) or the last finger lifted (false). */
@@ -128,7 +129,20 @@ class RenderEngine {
         if (active == gestureActive) return@post
         gestureActive = active
         if (!active) fadeReleaseNanos = System.nanoTime()
-        applyFade()
+        Log.v(TAG, "fade: gesture ${if (active) "moving" else "released"}")
+        updateFade()
+    }
+
+    /**
+     * Applies the fade and keeps frames coming while the release ramp runs. Rendering is on
+     * demand: a finger lifted after the view stopped moving finds no frame pending, and the ramp
+     * (advanced by renderFrame) stalled with the splats still faded until the next touch.
+     */
+    private fun updateFade() {
+        if (applyFade()) {
+            pendingFrames = maxOf(pendingFrames, 1)
+            scheduleFrame()
+        }
     }
 
     private fun fadeLevel(): Float {
@@ -145,6 +159,7 @@ class RenderEngine {
         val target = fadeStrength * level
         if (handle != 0L && target != appliedStrength) {
             SplatEngine.nativeSetCoverageStrength(handle, target)
+            if (target == 0f || target == fadeStrength) Log.v(TAG, "fade: strength %.2f".format(target))
             appliedStrength = target
             requestRender()
         }
@@ -420,6 +435,7 @@ class RenderEngine {
     private companion object {
         const val SETTLE_FRAMES = 3 // frames in flight (2) + 1
         const val FADE_RELEASE_NS = 250_000_000L // backside fade eases out this long after a gesture
+        const val TAG = "PocketSplat"
         const val THERMAL_TICK_MS = 1000L
         const val PACE_SLACK_NS = 4_000_000L // half a 120 Hz vsync period
         const val ORBIT_RAD_PER_PX = 0.005f
