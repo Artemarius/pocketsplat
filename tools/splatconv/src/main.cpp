@@ -12,9 +12,11 @@
 #include <string>
 #include <vector>
 
+#include "splatcore/capture.h"
 #include "splatcore/cleaning.h"
 #include "splatcore/coords.h"
 #include "splatcore/coverage.h"
+#include "splatcore/home_view.h"
 #include "splatcore/pack.h"
 #include "splatcore/ply_io.h"
 #include "splatcore/quality_controller.h"
@@ -89,10 +91,17 @@ void print_usage() {
                  "  splatconv pack --dump-header <file.pspk>\n"
                  "      Print the 64-byte pack header as JSON.\n"
                  "\n"
-                 "  splatconv coverage <scene.pspk|.ply|.spz> <cameras.json> <out.pscov>\n"
-                 "      Per-splat observed-direction mask from the capture cameras (3DGS cameras.json,\n"
-                 "      PLY world) for the renderer's coverage fade (ADR-0013); a sidecar bound to the\n"
-                 "      scene's packed positions. Prints coverage statistics as JSON.\n"
+                 "  splatconv coverage <scene.pspk|.ply|.spz> <camera files...> <out.pscov>\n"
+                 "  splatconv coverage <scene.pspk|.ply|.spz> <out.pscov> --infer room|object\n"
+                 "      Per-splat observed-direction mask for the renderer's coverage fade (ADR-0013,\n"
+                 "      ADR-0015); a sidecar bound to the scene's packed positions. Camera files: a\n"
+                 "      3DGS cameras.json, a transforms.json, or COLMAP cameras + images (.bin or .txt),\n"
+                 "      in the PLY's world; files that see under half the scene are rejected. Without\n"
+                 "      cameras, --infer places virtual cameras for a room (walked through) or an\n"
+                 "      object (orbited). Prints coverage statistics as JSON.\n"
+                 "      --dump-cameras FILE  also write the cameras used as a cameras.json\n"
+                 "      --room-positions N / --room-radius F / --room-clearance N\n"
+                 "      --object-radii a,b / --object-elevations a,b,c   virtual capture tuning\n"
                  "\n"
                  "  splatconv replay <bench.csv> [options]\n"
                  "      Run the quality controller (ADR-0009) over a recorded Android bench CSV and\n"
@@ -205,7 +214,18 @@ struct Options {
     std::optional<bool> step_up_current;
     std::optional<float> frame_guard_clock;
     std::string report_file;
+    std::string infer;  // coverage: room | object (no camera files)
+    splatcore::VirtualCaptureOptions capture;
+    std::string dump_cameras;  // coverage: write the cameras used as a 3DGS cameras.json
 };
+
+std::vector<float> parse_float_list(const std::string& text) {
+    std::vector<float> out;
+    std::stringstream s(text);
+    std::string item;
+    while (std::getline(s, item, ',')) out.push_back(std::stof(item));
+    return out;
+}
 
 bool parse_coords(const std::string& text, CoordSystem& out) {
     if (text == "RDF") {
@@ -327,6 +347,46 @@ bool parse_options(int argc, char** argv, int start, Options& options) {
             auto v = value("--frame-guard-clock");
             if (!v) return false;
             options.frame_guard_clock = std::stof(*v);
+        } else if (arg == "--infer") {
+            auto v = value("--infer");
+            if (!v) return false;
+            if (*v != "room" && *v != "object") {
+                std::fprintf(stderr, "splatconv: --infer must be room or object\n");
+                return false;
+            }
+            options.infer = *v;
+        } else if (arg == "--room-positions") {
+            auto v = value("--room-positions");
+            if (!v) return false;
+            options.capture.room_positions = std::stoi(*v);
+        } else if (arg == "--room-radius") {
+            auto v = value("--room-radius");
+            if (!v) return false;
+            options.capture.room_radius = std::stof(*v);
+        } else if (arg == "--room-clearance") {
+            auto v = value("--room-clearance");
+            if (!v) return false;
+            options.capture.room_clearance = std::stoi(*v);
+        } else if (arg == "--room-enclosure") {
+            auto v = value("--room-enclosure");
+            if (!v) return false;
+            options.capture.room_enclosure = std::stof(*v);
+        } else if (arg == "--grid-half") {
+            auto v = value("--grid-half");
+            if (!v) return false;
+            options.capture.grid_half = std::stof(*v);
+        } else if (arg == "--object-radii") {
+            auto v = value("--object-radii");
+            if (!v) return false;
+            options.capture.object_radii = parse_float_list(*v);
+        } else if (arg == "--object-elevations") {
+            auto v = value("--object-elevations");
+            if (!v) return false;
+            options.capture.object_elevations_deg = parse_float_list(*v);
+        } else if (arg == "--dump-cameras") {
+            auto v = value("--dump-cameras");
+            if (!v) return false;
+            options.dump_cameras = *v;
         } else if (arg == "--report") {
             auto v = value("--report");
             if (!v) return false;
@@ -625,58 +685,103 @@ splatcore::Result<BenchCsv> read_bench_csv(const std::string& path) {
     return splatcore::Result<BenchCsv>::success(std::move(csv));
 }
 
+bool read_file(const std::string& path, std::vector<std::uint8_t>& out) {
+    std::ifstream in(path, std::ios::binary);
+    if (!in) return false;
+    out.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+    return true;
+}
+
+// Writes cameras as a 3DGS cameras.json (PLY world, RDF), for inspection of inferred cameras.
+bool write_cameras_json(const std::string& path, const std::vector<splatcore::CaptureCamera>& cameras) {
+    std::ofstream out(path);
+    if (!out) return false;
+    const float flip[3] = {1.0f, -1.0f, -1.0f};
+    out << "[\n";
+    for (std::size_t i = 0; i < cameras.size(); ++i) {
+        const splatcore::CaptureCamera& c = cameras[i];
+        out << "{\"id\": " << i << ", \"img_name\": \"v" << i << "\", \"width\": " << c.width
+            << ", \"height\": " << c.height << ", \"position\": [" << c.position[0] * flip[0] << ", "
+            << c.position[1] * flip[1] << ", " << c.position[2] * flip[2] << "], \"rotation\": [";
+        for (int r = 0; r < 3; ++r) {
+            out << (r > 0 ? ", " : "") << "[" << c.right[r] * flip[r] << ", " << c.down[r] * flip[r] << ", "
+                << c.forward[r] * flip[r] << "]";
+        }
+        out << "], \"fx\": " << c.fx << ", \"fy\": " << c.fy << "}" << (i + 1 < cameras.size() ? "," : "")
+            << "\n";
+    }
+    out << "]\n";
+    return static_cast<bool>(out.flush());
+}
+
+// coverage <scene> <camera files...> <out.pscov>   or   coverage <scene> <out.pscov> --infer room|object
 int cmd_coverage(const Options& options) {
     const std::string& scene = options.positional[1];
-    const std::string& cameras_path = options.positional[2];
-    const std::string& out = options.positional[3];
+    const std::string& out = options.positional.back();
+    const std::vector<std::string> camera_paths(options.positional.begin() + 2, options.positional.end() - 1);
+    if (camera_paths.empty() == options.infer.empty()) {
+        std::fprintf(stderr, "splatconv: coverage needs camera files or --infer room|object (not both)\n");
+        return 1;
+    }
     splatcore::Result<splatcore::GpuPack> pack = splatcore::load_scene_pack(scene, 0);
     if (!pack) {
         std::fprintf(stderr, "splatconv: %s\n", pack.error().c_str());
         return 1;
     }
-    std::ifstream in(cameras_path, std::ios::binary);
-    if (!in) {
-        std::fprintf(stderr, "splatconv: cannot read '%s'\n", cameras_path.c_str());
-        return 1;
-    }
-    std::stringstream text;
-    text << in.rdbuf();
-    splatcore::Result<std::vector<splatcore::CaptureCamera>> cameras =
-        splatcore::parse_cameras_json(text.str());
-    if (!cameras) {
-        std::fprintf(stderr, "splatconv: %s\n", cameras.error().c_str());
-        return 1;
-    }
-    if (cameras.value().empty()) {
-        std::fprintf(stderr, "splatconv: '%s' holds no cameras\n", cameras_path.c_str());
-        return 1;
-    }
     const auto start = std::chrono::steady_clock::now();
-    const std::vector<std::uint32_t> masks = splatcore::compute_coverage(pack.value(), cameras.value());
+    std::vector<splatcore::CaptureFile> files;
+    for (const std::string& path : camera_paths) {
+        splatcore::CaptureFile f;
+        f.name = fs::path(path).filename().string();
+        if (!read_file(path, f.bytes)) {
+            std::fprintf(stderr, "splatconv: cannot read '%s'\n", path.c_str());
+            return 1;
+        }
+        files.push_back(std::move(f));
+    }
+    const splatcore::CaptureSource source = options.infer.empty()     ? splatcore::CaptureSource::kCameras
+                                            : options.infer == "room" ? splatcore::CaptureSource::kRoom
+                                                                      : splatcore::CaptureSource::kObject;
+    splatcore::Result<splatcore::CoverageSidecar> sidecar =
+        splatcore::make_coverage_sidecar(pack.value(), source, files, options.capture);
+    if (!sidecar) {
+        std::fprintf(stderr, "splatconv: %s\n", sidecar.error().c_str());
+        return 1;
+    }
     const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-
-    splatcore::CoverageHeader header;
-    header.count = pack.value().header.count;
-    header.positions_hash = splatcore::coverage_positions_hash(pack.value());
-    header.camera_count = static_cast<std::uint32_t>(cameras.value().size());
-    const std::vector<std::uint8_t> bytes = splatcore::serialize_coverage(header, masks);
+    if (!options.dump_cameras.empty() && !write_cameras_json(options.dump_cameras, sidecar.value().used)) {
+        std::fprintf(stderr, "splatconv: cannot write '%s'\n", options.dump_cameras.c_str());
+        return 1;
+    }
+    const std::vector<std::uint8_t>& bytes = sidecar.value().bytes;
     std::ofstream file(out, std::ios::binary);
     file.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
     if (!file.flush()) {
         std::fprintf(stderr, "splatconv: cannot write '%s'\n", out.c_str());
         return 1;
     }
+    std::vector<std::uint32_t> masks(pack.value().header.count);
+    std::memcpy(masks.data(), bytes.data() + sizeof(splatcore::CoverageHeader),
+                masks.size() * sizeof(std::uint32_t));
     // Observed cells per splat: 0 = never observed by any camera.
     std::vector<std::size_t> cells(splatcore::kCoverageGrid * splatcore::kCoverageGrid + 1, 0);
     for (std::uint32_t m : masks) ++cells[static_cast<std::size_t>(std::popcount(m))];
     std::string histogram;
     for (std::size_t k = 0; k < cells.size(); ++k)
         histogram += (k > 0 ? ", " : "") + std::to_string(cells[k]);
+    const splatcore::HomeView home = splatcore::estimate_home_view(pack.value());
+    const char* source_name = source == splatcore::CaptureSource::kCameras ? "cameras"
+                              : source == splatcore::CaptureSource::kRoom  ? "room"
+                                                                           : "object";
     std::fprintf(g_json,
-                 "{\"scene\": \"%s\", \"cameras\": %zu, \"count\": %u, \"output\": \"%s\", \"bytes\": %zu, "
-                 "\"seconds\": %.2f, \"never_observed\": %zu, \"cells_histogram\": [%s]}\n",
-                 json_escape(scene).c_str(), cameras.value().size(), header.count, json_escape(out).c_str(),
-                 bytes.size(), seconds, cells[0], histogram.c_str());
+                 "{\"scene\": \"%s\", \"source\": \"%s\", \"interpretation\": \"%s\", \"cameras\": %zu, "
+                 "\"fit\": %.3f, \"count\": %u, \"output\": \"%s\", \"bytes\": %zu, \"seconds\": %.2f, "
+                 "\"never_observed\": %zu, \"cells_histogram\": [%s], \"home_focus\": [%.6g, %.6g, %.6g], "
+                 "\"home_up\": [%.6g, %.6g, %.6g], \"home_full_distance\": %.6g}\n",
+                 json_escape(scene).c_str(), source_name, json_escape(sidecar.value().interpretation).c_str(),
+                 sidecar.value().cameras, sidecar.value().fit, pack.value().header.count,
+                 json_escape(out).c_str(), bytes.size(), seconds, cells[0], histogram.c_str(), home.focus[0],
+                 home.focus[1], home.focus[2], home.up[0], home.up[1], home.up[2], home.full_distance);
     return 0;
 }
 
@@ -865,7 +970,8 @@ int main(int argc, char** argv) {
         return cmd_pack_dump_header(options.positional[1]);
     }
     if (command == "pack" && options.positional.size() == 3) return cmd_pack(options);
-    if (command == "coverage" && options.positional.size() == 4) return cmd_coverage(options);
+    if (command == "coverage" && options.positional.size() >= 3 && options.positional.size() <= 6)
+        return cmd_coverage(options);
     if (command == "replay" && options.positional.size() == 2) return cmd_replay(options);
     print_usage();
     return 1;
