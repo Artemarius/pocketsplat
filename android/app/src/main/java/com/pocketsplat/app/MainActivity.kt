@@ -638,8 +638,8 @@ private fun ViewerScreen(
         // A scene cut to the GPU's limit at open: always on top, overlay or not.
         val partialInfo = sceneInfo
         val partial = partialInfo != null && partialInfo.size >= 19 && partialInfo[18] > partialInfo[0]
-        if (partial && partialInfo != null) {
-            PartialSceneBanner(partialInfo[0].toLong(), partialInfo[18].toLong(), compact = !overlayVisible)
+        if (partial && partialInfo != null && !overlayVisible) {
+            PartialSceneBanner(partialInfo[0].toLong(), partialInfo[18].toLong(), compact = true)
         }
         if (!overlayVisible) {
             Box(
@@ -657,11 +657,14 @@ private fun ViewerScreen(
         Column(
             Modifier
                 .safeDrawingPadding()
-                .padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = if (partial) 96.dp else 12.dp)
+                .padding(12.dp)
                 .verticalScroll(rememberScrollState()) // a long scene list must not push the buttons off-screen
                 .background(Color(0x99000000))
                 .padding(8.dp),
         ) {
+            if (partial && partialInfo != null) {
+                PartialSceneBanner(partialInfo[0].toLong(), partialInfo[18].toLong(), compact = false)
+            }
             val info = sceneInfo
             val frame = stats
             if (info == null) {
@@ -878,10 +881,13 @@ private fun ViewerScreen(
 @Composable
 private fun PartialSceneBanner(shown: Long, total: Long, compact: Boolean) {
     val percent = (100.0 * shown / total).roundToInt()
-    Box(Modifier.fillMaxWidth().safeDrawingPadding().padding(horizontal = 12.dp, vertical = 4.dp)) {
+    // In the overlay panel it is the panel's first item; alone (overlay hidden) it sits at the top.
+    val outer = if (compact) Modifier.fillMaxWidth().safeDrawingPadding().padding(start = 56.dp, end = 12.dp, top = 12.dp)
+    else Modifier.fillMaxWidth().padding(bottom = 4.dp)
+    Box(outer) {
         Text(
             if (compact) "PARTIAL SCENE: $percent % of its splats"
-            else "PARTIAL SCENE: %,d of %,d splats (%d %%), the most important ones. This GPU draws at most %,d - import it again with a budget for the whole scene."
+            else "PARTIAL SCENE: %,d of %,d splats (%d %%), the most important ones. This GPU draws at most %,d: import the scene again with a budget to see all of it."
                 .format(shown, total, percent, shown),
             color = Color(0xFFFF3B30),
             style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
