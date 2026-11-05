@@ -78,15 +78,16 @@ JNIEXPORT jstring JNICALL Java_com_pocketsplat_app_SplatEngine_nativeLastOpenErr
 // [splat count, SH degree, pivot x, y, z, framing diagonal, eye x, y, z, orientation w, x, y, z,
 //  scene up x, y, z, has coverage, coverage source]: the home view (splatcore::estimate_home_view)
 // as a trackball pose, the fitted ground normal a level orbit turns about, 1 when the scene has a
-// coverage sidecar (the fade slider applies), and where it came from (splatcore::CaptureSource:
-// 0 capture cameras, 1 inferred room, 2 inferred object; -1 none).
+// coverage sidecar (the fade slider applies), where it came from (splatcore::CaptureSource:
+// 0 capture cameras, 1 inferred room, 2 inferred object; -1 none), and the scene file's splat
+// count (above the first entry when the GPU limit cut the scene at open).
 JNIEXPORT jfloatArray JNICALL Java_com_pocketsplat_app_SplatEngine_nativeSceneInfo(JNIEnv* env, jobject,
                                                                                    jlong handle) {
     const pocketsplat::AndroidHost* host = host_of(handle);
     const splatcore::HomeView& home = host->home_view();
     float orientation[4];
     host->home_orientation(orientation);
-    const float values[18] = {static_cast<float>(host->splat_count()),
+    const float values[19] = {static_cast<float>(host->splat_count()),
                               static_cast<float>(host->sh_degree()),
                               home.focus[0],
                               home.focus[1],
@@ -103,9 +104,10 @@ JNIEXPORT jfloatArray JNICALL Java_com_pocketsplat_app_SplatEngine_nativeSceneIn
                               home.up[1],
                               home.up[2],
                               host->has_coverage() ? 1.0f : 0.0f,
-                              static_cast<float>(host->coverage_source())};
-    jfloatArray out = env->NewFloatArray(18);
-    env->SetFloatArrayRegion(out, 0, 18, values);
+                              static_cast<float>(host->coverage_source()),
+                              static_cast<float>(host->file_splat_count())};
+    jfloatArray out = env->NewFloatArray(19);
+    env->SetFloatArrayRegion(out, 0, 19, values);
     return out;
 }
 

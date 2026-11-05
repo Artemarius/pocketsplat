@@ -17,7 +17,6 @@
 namespace splatrender {
 namespace {
 
-constexpr std::uint32_t kRecordBytes = 32;
 constexpr std::uint32_t kWorkgroupSize = 256;
 constexpr float kNearClip = 0.2f;  // preprocess near cull, view-space depth
 // The chunk-culled preprocess maps one workgroup to one chunk (shader hardcodes the stride).
@@ -114,7 +113,7 @@ splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack
     if (m_count == 0) return Status::failure("cannot render an empty pack");
     // The per-splat draw records live in one storage buffer bound whole, so its size is capped by
     // the device's descriptor range (Adreno 750: 128 MB / 32 B = 4,194,304 splats).
-    const std::uint64_t max_splats = context.max_storage_buffer_range() / kRecordBytes;
+    const std::uint64_t max_splats = SplatRenderer::max_splats(context);
     if (m_count > max_splats) {
         return Status::failure("the scene has " + std::to_string(m_count) +
                                " splats, this GPU draws at most " + std::to_string(max_splats) +

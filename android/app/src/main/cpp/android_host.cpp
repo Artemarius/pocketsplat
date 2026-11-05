@@ -391,6 +391,47 @@ splatcore::Status AndroidHost::open_scene(const std::string& path) {
         m_splats.destroy();
         m_renderer_ready = false;
     }
+    // Coverage sidecar (ADR-0013): <stem>.pscov next to the scene. A file that does not belong to
+    // this scene is logged and ignored - the scene still opens, without the fade.
+    m_coverage.reset();
+    {
+        const std::string cov_path = path.substr(0, path.find_last_of('.')) + ".pscov";
+        std::ifstream file(cov_path, std::ios::binary);
+        if (file) {
+            const std::vector<std::uint8_t> bytes((std::istreambuf_iterator<char>(file)),
+                                                  std::istreambuf_iterator<char>());
+            splatcore::Result<std::vector<std::uint32_t>> masks =
+                splatcore::parse_coverage(bytes, pack.value());
+            if (masks) {
+                m_coverage = std::move(masks.value());
+                splatcore::CoverageHeader header;
+                std::memcpy(&header, bytes.data(), sizeof(header));  // parse_coverage checked the size
+                m_coverage_source = static_cast<int>(header.source);
+                LOGI("coverage: %s (source %d, %u cameras)", cov_path.c_str(), m_coverage_source,
+                     header.camera_count);
+            } else {
+                LOGE("coverage %s ignored: %s", cov_path.c_str(), masks.error().c_str());
+            }
+        }
+    }
+    // A scene larger than the GPU can draw opens as its most important splats (the import budget's
+    // choice), with the sidecar's masks cut the same way, and the UI shows a warning (S27, owner:
+    // a peek beats a refusal).
+    m_file_splat_count = pack.value().header.count;
+    const std::uint64_t limit = splatrender::SplatRenderer::max_splats(m_context);
+    if (limit > 0 && pack.value().header.count > limit) {
+        std::vector<std::uint32_t> kept;
+        splatcore::GpuPack partial =
+            splatcore::subset_pack(pack.value(), static_cast<std::size_t>(limit), &kept);
+        if (m_coverage) {
+            std::vector<std::uint32_t> masks(kept.size());
+            for (std::size_t k = 0; k < kept.size(); ++k) masks[k] = (*m_coverage)[kept[k]];
+            m_coverage = std::move(masks);
+        }
+        LOGI("scene has %u splats, this GPU draws at most %llu: opening the most important ones",
+             pack.value().header.count, static_cast<unsigned long long>(limit));
+        pack = splatcore::Result<splatcore::GpuPack>::success(std::move(partial));
+    }
     m_framing = splatcore::robust_framing(pack.value());
     m_splat_count = pack.value().header.count;
     m_sh_degree = pack.value().header.sh_degree;
@@ -417,29 +458,6 @@ splatcore::Status AndroidHost::open_scene(const std::string& path) {
          std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - home_start).count(),
          m_home.focus[0], m_home.focus[1], m_home.focus[2], m_home.distance,
          m_home.plane_found ? "yes" : "no");
-    // Coverage sidecar (ADR-0013): <stem>.pscov next to the scene. A file that does not belong to
-    // this scene is logged and ignored - the scene still opens, without the fade.
-    m_coverage.reset();
-    {
-        const std::string cov_path = path.substr(0, path.find_last_of('.')) + ".pscov";
-        std::ifstream file(cov_path, std::ios::binary);
-        if (file) {
-            const std::vector<std::uint8_t> bytes((std::istreambuf_iterator<char>(file)),
-                                                  std::istreambuf_iterator<char>());
-            splatcore::Result<std::vector<std::uint32_t>> masks =
-                splatcore::parse_coverage(bytes, pack.value());
-            if (masks) {
-                m_coverage = std::move(masks.value());
-                splatcore::CoverageHeader header;
-                std::memcpy(&header, bytes.data(), sizeof(header));  // parse_coverage checked the size
-                m_coverage_source = static_cast<int>(header.source);
-                LOGI("coverage: %s (source %d, %u cameras)", cov_path.c_str(), m_coverage_source,
-                     header.camera_count);
-            } else {
-                LOGE("coverage %s ignored: %s", cov_path.c_str(), masks.error().c_str());
-            }
-        }
-    }
     m_pack = std::move(pack.value());
     m_scene_name = path.substr(path.find_last_of('/') + 1);
     LOGI("scene: %s, %u splats, SH %u", path.c_str(), m_splat_count, m_sh_degree);

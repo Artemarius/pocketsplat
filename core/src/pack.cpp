@@ -231,4 +231,94 @@ Result<PackHeader> parse_pack_header(const std::vector<std::uint8_t>& bytes) {
     return R::success(header);
 }
 
+GpuPack subset_pack(const GpuPack& pack, std::size_t max_count, std::vector<std::uint32_t>* kept) {
+    const std::size_t n = pack.header.count;
+    const auto log_scale = [&](std::size_t i, int axis) {
+        const std::uint32_t w = pack.scale_rot[3 * i + (axis == 2 ? 1u : 0u)];
+        const auto bits = static_cast<std::uint16_t>(axis == 1 ? (w >> 16) : (w & 0xFFFFu));
+        return glm::unpackHalf1x16(bits);
+    };
+    std::vector<std::uint32_t> index;
+    if (n <= max_count) {
+        index.resize(n);
+        for (std::size_t i = 0; i < n; ++i) index[i] = static_cast<std::uint32_t>(i);
+        if (kept != nullptr) *kept = std::move(index);
+        return pack;
+    }
+    std::vector<float> imp(n);
+    for (std::size_t i = 0; i < n; ++i) {
+        const float alpha = static_cast<float>(pack.color[i] >> 24) / 255.0f;
+        const float sx = std::exp(log_scale(i, 0)), sy = std::exp(log_scale(i, 1)),
+                    sz = std::exp(log_scale(i, 2));
+        imp[i] = alpha * (sx * sy + sy * sz + sz * sx);
+    }
+    std::vector<float> sorted = imp;
+    std::nth_element(sorted.begin(), sorted.begin() + static_cast<std::ptrdiff_t>(max_count - 1),
+                     sorted.end(), std::greater<float>());
+    const float threshold = sorted[max_count - 1];
+    std::vector<char> keep(n, 0);
+    std::size_t count = 0;
+    for (std::size_t i = 0; i < n && count < max_count; ++i) {  // strictly above first
+        if (imp[i] > threshold) keep[i] = 1, ++count;
+    }
+    for (std::size_t i = 0; i < n && count < max_count; ++i) {  // fill ties in pack order
+        if (keep[i] == 0 && imp[i] == threshold) keep[i] = 1, ++count;
+    }
+    index.reserve(count);
+    for (std::size_t i = 0; i < n; ++i) {
+        if (keep[i] != 0) index.push_back(static_cast<std::uint32_t>(i));
+    }
+
+    GpuPack out;
+    out.header = pack.header;
+    out.header.count = static_cast<std::uint32_t>(index.size());
+    const bool sh1 = !pack.sh1.empty();
+    out.positions.resize(3 * index.size());
+    out.scale_rot.resize(3 * index.size());
+    out.color.resize(index.size());
+    if (sh1) out.sh1.resize(3 * index.size());
+    for (int c = 0; c < 3; ++c) {
+        out.header.aabb_min[c] = std::numeric_limits<float>::max();
+        out.header.aabb_max[c] = std::numeric_limits<float>::lowest();
+    }
+    for (std::size_t k = 0; k < index.size(); ++k) {
+        const std::size_t i = index[k];
+        for (std::size_t c = 0; c < 3; ++c) {
+            out.positions[3 * k + c] = pack.positions[3 * i + c];
+            out.scale_rot[3 * k + c] = pack.scale_rot[3 * i + c];
+            if (sh1) out.sh1[3 * k + c] = pack.sh1[3 * i + c];
+            out.header.aabb_min[c] = std::min(out.header.aabb_min[c], out.positions[3 * k + c]);
+            out.header.aabb_max[c] = std::max(out.header.aabb_max[c], out.positions[3 * k + c]);
+        }
+        out.color[k] = pack.color[i];
+    }
+    // Chunk cull bounds as build_pack: center +/- 3 x the largest scale, and the importance max.
+    out.chunks.resize(static_cast<std::size_t>(kChunkFloats) * out.chunk_count());
+    for (std::size_t chunk = 0; chunk < out.chunk_count(); ++chunk) {
+        const std::size_t begin = chunk * kPackChunkSize;
+        const std::size_t end = std::min(index.size(), begin + kPackChunkSize);
+        float mn[3], mx[3];
+        std::fill_n(mn, 3, std::numeric_limits<float>::max());
+        std::fill_n(mx, 3, std::numeric_limits<float>::lowest());
+        float importance_max = 0.0f;
+        for (std::size_t k = begin; k < end; ++k) {
+            const std::size_t i = index[k];
+            const float r = 3.0f * std::exp(std::max({log_scale(i, 0), log_scale(i, 1), log_scale(i, 2)}));
+            for (std::size_t c = 0; c < 3; ++c) {
+                mn[c] = std::min(mn[c], out.positions[3 * k + c] - r);
+                mx[c] = std::max(mx[c], out.positions[3 * k + c] + r);
+            }
+            importance_max = std::max(importance_max, imp[i]);
+        }
+        float* dst = out.chunks.data() + kChunkFloats * chunk;
+        for (int c = 0; c < 3; ++c) {
+            dst[c] = mn[c];
+            dst[3 + c] = mx[c];
+        }
+        dst[6] = importance_max;
+    }
+    if (kept != nullptr) *kept = std::move(index);
+    return out;
+}
+
 }  // namespace splatcore

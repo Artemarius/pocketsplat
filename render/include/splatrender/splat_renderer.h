@@ -47,6 +47,13 @@ public:
 
     // `coverage`: optional per-splat observed-direction masks (splatcore/coverage.h, pack order,
     // one per splat) for the coverage fade; without them set_coverage_strength has no effect.
+    // Most splats this device can draw: the per-splat draw records (32 B each) live in one storage
+    // buffer bound whole, capped by maxStorageBufferRange (Adreno 750: 128 MB -> 4,194,304).
+    static std::uint64_t max_splats(const Context& context) {
+        return context.max_storage_buffer_range() / kRecordBytes;
+    }
+    static constexpr std::uint32_t kRecordBytes = 32;
+
     splatcore::Status init(Context& context, const splatcore::GpuPack& pack, VkFormat color_format,
                            const std::vector<std::uint32_t>* coverage = nullptr);
     void destroy();

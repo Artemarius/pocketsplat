@@ -149,6 +149,8 @@ public:
     bool has_scene() const { return m_pack.has_value() || m_renderer_ready; }
     const splatcore::SceneFraming& framing() const { return m_framing; }
     std::uint32_t splat_count() const { return m_splat_count; }
+    // Splats in the scene file; above splat_count() when the GPU limit cut the scene at open.
+    std::uint32_t file_splat_count() const { return m_file_splat_count; }
     std::uint32_t sh_degree() const { return m_sh_degree; }
 
     // Readable from any thread (HUD polling).
@@ -201,6 +203,7 @@ private:
     std::string m_scene_name;  // file name of the open scene (trace header)
     splatcore::SceneFraming m_framing{{0.0f, 0.0f, 0.0f}, 1.0f};
     std::uint32_t m_splat_count = 0;
+    std::uint32_t m_file_splat_count = 0;
     std::uint32_t m_sh_degree = 0;
 
     // Orbit camera state (RUB world, matching the desktop host).

@@ -176,5 +176,43 @@ TEST(Pack, ParseHeaderRoundTripAndValidation) {
     EXPECT_FALSE(parse_pack_header(std::vector<std::uint8_t>(10)).ok());
 }
 
+TEST(PackSubset, KeepsTheMostImportantInPackOrderAndRebuildsChunks) {
+    SplatCloud cloud;
+    cloud.resize(1000, 0);
+    for (std::size_t i = 0; i < 1000; ++i) {
+        cloud.positions[3 * i] = static_cast<float>(i);  // along x, in order
+        for (int k = 0; k < 3; ++k) cloud.log_scales[3 * i + static_cast<std::size_t>(k)] = std::log(0.01f);
+        cloud.rotations[4 * i] = 1.0f;
+        // Every third splat is ten times larger: those 334 are the most important.
+        if (i % 3 == 0) {
+            for (int k = 0; k < 3; ++k)
+                cloud.log_scales[3 * i + static_cast<std::size_t>(k)] = std::log(0.1f);
+        }
+        cloud.opacities[i] = 2.0f;
+    }
+    const GpuPack pack = build_pack(cloud).value();
+    std::vector<std::uint32_t> kept;
+    const GpuPack sub = subset_pack(pack, 334, &kept);
+    ASSERT_EQ(sub.header.count, 334u);
+    ASSERT_EQ(kept.size(), 334u);
+    for (std::size_t k = 0; k < kept.size(); ++k) {
+        EXPECT_EQ(kept[k] % 3, 0u);
+        if (k > 0) EXPECT_GT(kept[k], kept[k - 1]);  // pack order
+        EXPECT_EQ(sub.positions[3 * k], pack.positions[3 * kept[k]]);
+        EXPECT_EQ(sub.color[k], pack.color[kept[k]]);
+    }
+    EXPECT_EQ(sub.chunk_count(), 2u);
+    // Chunk bounds cover every kept splat's 3-sigma extent.
+    for (std::size_t k = 0; k < sub.header.count; ++k) {
+        const float* chunk = sub.chunks.data() + kChunkFloats * (k / kPackChunkSize);
+        EXPECT_LE(chunk[0], sub.positions[3 * k] - 0.29f);
+        EXPECT_GE(chunk[3], sub.positions[3 * k] + 0.29f);
+    }
+    // Within the limit: unchanged.
+    const GpuPack same = subset_pack(pack, 5000, &kept);
+    EXPECT_EQ(same.header.count, 1000u);
+    EXPECT_EQ(kept.size(), 1000u);
+}
+
 }  // namespace
 }  // namespace splatcore

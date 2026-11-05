@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.padding
@@ -634,6 +635,12 @@ private fun ViewerScreen(
             LicencesScreen(context) { showLicences = false }
             return@Box
         }
+        // A scene cut to the GPU's limit at open: always on top, overlay or not.
+        val partialInfo = sceneInfo
+        val partial = partialInfo != null && partialInfo.size >= 19 && partialInfo[18] > partialInfo[0]
+        if (partial && partialInfo != null) {
+            PartialSceneBanner(partialInfo[0].toLong(), partialInfo[18].toLong(), compact = !overlayVisible)
+        }
         if (!overlayVisible) {
             Box(
                 Modifier
@@ -650,7 +657,7 @@ private fun ViewerScreen(
         Column(
             Modifier
                 .safeDrawingPadding()
-                .padding(12.dp)
+                .padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = if (partial) 96.dp else 12.dp)
                 .verticalScroll(rememberScrollState()) // a long scene list must not push the buttons off-screen
                 .background(Color(0x99000000))
                 .padding(8.dp),
@@ -861,6 +868,25 @@ private fun ViewerScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * Warning for a scene opened with fewer splats than its file holds (the GPU's limit, S27): large red
+ * letters at the top of the screen; one line when the overlay is hidden.
+ */
+@Composable
+private fun PartialSceneBanner(shown: Long, total: Long, compact: Boolean) {
+    val percent = (100.0 * shown / total).roundToInt()
+    Box(Modifier.fillMaxWidth().safeDrawingPadding().padding(horizontal = 12.dp, vertical = 4.dp)) {
+        Text(
+            if (compact) "PARTIAL SCENE: $percent % of its splats"
+            else "PARTIAL SCENE: %,d of %,d splats (%d %%), the most important ones. This GPU draws at most %,d - import it again with a budget for the whole scene."
+                .format(shown, total, percent, shown),
+            color = Color(0xFFFF3B30),
+            style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
+            modifier = Modifier.background(Color(0xCC000000)).padding(8.dp),
+        )
     }
 }
 
