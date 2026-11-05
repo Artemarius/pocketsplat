@@ -162,6 +162,7 @@ public:
         std::atomic<float> draw_ms{0.0f};
         std::atomic<std::uint32_t> visible{0};
         std::atomic<std::uint32_t> visible_chunks{0};
+        std::atomic<std::uint32_t> clipped{0};  // visible splats not drawn (visible capacity)
         std::atomic<std::uint64_t> frames{0};
         std::atomic<float> min_contribution{0.0f};  // threshold the last frame rendered with
         std::atomic<std::int32_t> rung{-1};         // interactive controller rung, -1 = off
@@ -222,6 +223,7 @@ private:
     struct BenchRow {
         float t_s, cpu_ms, gpu_ms, cull_ms, preprocess_ms, sort_ms, draw_ms;
         std::uint32_t visible, visible_chunks;
+        std::uint32_t clipped;  // visible splats past the renderer's visible capacity (not drawn)
         std::uint8_t compute_ran, thermal_status;
         float headroom;               // current headroom at the last reading
         std::int32_t gpu_mhz;         // kgsl clock at the last 1 Hz sample, -1 when unreadable

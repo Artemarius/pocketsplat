@@ -641,6 +641,9 @@ private fun ViewerScreen(
         if (partial && partialInfo != null && !overlayVisible) {
             PartialSceneBanner(partialInfo[0].toLong(), partialInfo[18].toLong(), compact = true)
         }
+        // More splats in view than the GPU's draw records hold: the excess is not drawn (ADR-0016).
+        val clippedNow = stats?.let { if (it.size >= 11) it[10].toLong() else 0L } ?: 0L
+        if (clippedNow > 0 && !overlayVisible && !partial) ClippedBanner(clippedNow, compact = true)
         if (!overlayVisible) {
             Box(
                 Modifier
@@ -665,6 +668,7 @@ private fun ViewerScreen(
             if (partial && partialInfo != null) {
                 PartialSceneBanner(partialInfo[0].toLong(), partialInfo[18].toLong(), compact = false)
             }
+            if (clippedNow > 0) ClippedBanner(clippedNow, compact = false)
             val info = sceneInfo
             val frame = stats
             if (info == null) {
@@ -889,6 +893,26 @@ private fun PartialSceneBanner(shown: Long, total: Long, compact: Boolean) {
             if (compact) "PARTIAL SCENE: $percent % of its splats"
             else "PARTIAL SCENE: %,d of %,d splats (%d %%), the most important ones. This GPU draws at most %,d: import the scene again with a budget to see all of it."
                 .format(shown, total, percent, shown),
+            color = Color(0xFFFF3B30),
+            style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
+            modifier = Modifier.background(Color(0xCC000000)).padding(8.dp),
+        )
+    }
+}
+
+/**
+ * Warning for a frame with more splats in view than the GPU's draw records hold (ADR-0016): the
+ * excess is not drawn, an arbitrary part of the view; one line when the overlay is hidden.
+ */
+@Composable
+private fun ClippedBanner(clipped: Long, compact: Boolean) {
+    val outer = if (compact) Modifier.fillMaxWidth().safeDrawingPadding().padding(start = 56.dp, end = 12.dp, top = 12.dp)
+    else Modifier.fillMaxWidth().padding(bottom = 4.dp)
+    Box(outer) {
+        Text(
+            if (compact) "CLIPPED: %,d splats in view not drawn".format(clipped)
+            else "CLIPPED: %,d splats in this view are not drawn: more are in view than this GPU draws at once. Move closer, or import the scene again with a budget."
+                .format(clipped),
             color = Color(0xFFFF3B30),
             style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
             modifier = Modifier.background(Color(0xCC000000)).padding(8.dp),

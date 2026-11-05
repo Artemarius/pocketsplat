@@ -281,6 +281,7 @@ bool AndroidHost::interactive_update(std::chrono::steady_clock::time_point now, 
         row.draw_ms = frame ? static_cast<float>(m_timer.segment_ms(3)) : nan;
         row.visible = frame ? m_splats.last_visible_count() : 0;
         row.visible_chunks = frame ? m_splats.last_visible_chunks() : 0;
+        row.clipped = frame ? m_splats.last_clipped_count() : 0;
         row.compute_ran = frame && m_last_compute_ran ? 1 : 0;
         row.thermal_status = m_thermal_status;
         row.headroom = m_thermal_headroom;
@@ -692,6 +693,7 @@ void AndroidHost::render() {
     m_stats.draw_ms.store(static_cast<float>(m_timer.segment_ms(3)), std::memory_order_relaxed);
     m_stats.visible.store(m_splats.last_visible_count(), std::memory_order_relaxed);
     m_stats.visible_chunks.store(m_splats.last_visible_chunks(), std::memory_order_relaxed);
+    m_stats.clipped.store(m_splats.last_clipped_count(), std::memory_order_relaxed);
     m_stats.frames.fetch_add(1, std::memory_order_relaxed);
 
     if (m_bench_active) {
@@ -793,6 +795,7 @@ void AndroidHost::bench_record_frame() {
     row.draw_ms = static_cast<float>(m_timer.segment_ms(3));
     row.visible = m_splats.last_visible_count();
     row.visible_chunks = m_splats.last_visible_chunks();
+    row.clipped = m_splats.last_clipped_count();
     row.compute_ran = 1;  // the orbit moves every frame, so the compute chain never skips
     row.thermal_status = m_thermal_status;
     row.headroom = m_thermal_headroom;
@@ -857,7 +860,7 @@ void AndroidHost::write_csv_columns(std::ostream& csv) {
            "the controller counted, nan after an idle gap)\n"
         << "frame,t_s,cpu_ms,gpu_ms,cull_ms,preprocess_ms,sort_ms,draw_ms,visible,visible_chunks,"
            "compute_ran,thermal_status,thermal_headroom,gpu_mhz,min_contribution,rung,reason,"
-           "thermal_forecast,thermal_sample,drawn\n";
+           "thermal_forecast,thermal_sample,drawn,clipped\n";
 }
 
 void AndroidHost::write_csv_rows(std::ostream& csv, const std::vector<BenchRow>& rows,
@@ -866,12 +869,12 @@ void AndroidHost::write_csv_rows(std::ostream& csv, const std::vector<BenchRow>&
     for (std::size_t i = 0; i < rows.size(); ++i) {
         const BenchRow& row = rows[i];
         std::snprintf(line, sizeof(line),
-                      "%zu,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%u,%u,%u,%u,%.3f,%d,%g,%d,%u,%.3f,%u,%u\n",
+                      "%zu,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%u,%u,%u,%u,%.3f,%d,%g,%d,%u,%.3f,%u,%u,%u\n",
                       first_index + i, row.t_s, row.cpu_ms, row.gpu_ms, row.cull_ms, row.preprocess_ms,
                       row.sort_ms, row.draw_ms, row.visible, row.visible_chunks, row.compute_ran,
                       row.thermal_status, row.headroom, row.gpu_mhz,
                       static_cast<double>(row.min_contribution), row.rung, row.reason, row.forecast,
-                      row.thermal_sample, row.drawn);
+                      row.thermal_sample, row.drawn, row.clipped);
         csv << line;
     }
 }
