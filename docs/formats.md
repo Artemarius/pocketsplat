@@ -91,15 +91,18 @@ caches cannot silently render with unsafe cull bounds — re-run `splatconv pack
 
 ### Coverage sidecar (`.pscov`, ADR-0013, implemented in `splatcore/coverage.h|cpp`)
 
-Optional per-splat observed-direction masks for the coverage fade, written by `splatconv coverage
-<scene> <cameras.json> <out.pscov>` and read by both hosts from `<scene stem>.pscov` next to the
-scene. A separate file so packs stay unchanged and the fade stays optional (most PLYs ship
-without cameras).
+Optional per-splat observed-direction masks for the coverage ("backside") fade, written by
+`splatconv coverage` or the app (import, or later from the viewer) and read by both hosts from
+`<scene stem>.pscov` next to the scene. A separate file so packs stay unchanged and the fade
+stays optional. The masks come from the capture cameras when the scene ships them, else from
+virtual cameras for a scene type the user picks (ADR-0015).
 
 * **Header** (32 B, little-endian): `magic` u32 = `"PSCV"`, `version` u32 = 1, `count` u32 (the
   pack's splat count), `grid` u32 = 5, `positions_hash` u64 (FNV-1a 64 over the packed `pos`
   floats: binds the file to the splat order and positions, independent of the SH degree the
-  scene was loaded at), `camera_count` u32, `reserved` u32 = 0.
+  scene was loaded at), `camera_count` u32 (real or virtual), `source` u32 (was `reserved` = 0
+  before ADR-0015, so older files read as source 0): 0 = capture cameras, 1 = virtual cameras for
+  a room, 2 = virtual cameras for an orbited object. Readers that predate it ignore it.
 * **Masks** (`count` × u32, pack order): bit `c` set = the splat was observed from octahedral cell
   `c` of the direction splat → camera. Cell of a direction `d`: `p = d / |d|₁`; for `p.z < 0` fold
   `(x, y) = ((1 − |p.y|)·sgn p.x, (1 − |p.x|)·sgn p.y)` with sgn 0 = +1; then
@@ -107,7 +110,12 @@ without cameras).
 * A loader rejects a file whose count, size, grid or positions hash does not match the scene.
 * Observed (`compute_coverage`): the splat centre projects inside the camera image, in front of
   it, and not behind the camera's 1/8-resolution depth buffer of opaque (α ≥ 0.5) splat centres
-  (3 % tolerance). Cameras come from a 3DGS `cameras.json` (PLY world, RDF; converted to RUB).
+  (3 % tolerance). Cameras (`splatcore/capture.h`), all in the PLY's world (RDF, converted to RUB
+  like the splats): a 3DGS `cameras.json`; a nerfstudio / instant-ngp / Brush `transforms.json`
+  (OpenGL camera-to-world; tried as given, with its `applied_transform` undone, and with a
+  `dataparser_transforms.json` applied - the one whose cameras see the scene wins); or a COLMAP
+  sparse model (`cameras` + `images`, `.bin` or `.txt`; distortion ignored). Camera files whose
+  cameras see under 90 % of the scene's opaque splats are rejected (real captures: 99.9-100 %).
 
 ## 4. Per-frame transient records (renderer-owned)
 

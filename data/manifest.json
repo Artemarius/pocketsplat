@@ -340,5 +340,14 @@
         "sh_degree": 0,
         "license": "INRIA Gaussian-Splatting License: non-commercial research/evaluation only - local benchmarking, never commit or redistribute",
         "sha256": "set of 13 files, sorted by name, hashed as name+bytes: f0073348e7244172932df75d853ace389b28fa1739d66da044694c676ebeba99"
+    },
+    {
+        "name": "inria-colmap-sparse",
+        "file": "raw/public/colmap/<scene>/sparse/0/{cameras,images,points3D}.bin + project.ini",
+        "source": "INRIA 3DGS input data tandt_db.zip (repo-sam.inria.fr/fungraph/3d-gaussian-splatting/datasets/input/tandt_db.zip), only the sparse/0 COLMAP models of drjohnson, playroom, train, truck (images not kept). Used to validate the COLMAP camera reader against cameras.json (ADR-0015)",
+        "splats": 0,
+        "sh_degree": 0,
+        "license": "Tanks and Temples / Deep Blending data as redistributed by INRIA for 3DGS research - local benchmarking only, never commit or redistribute",
+        "sha256": "set of 16 files, sorted by relative path, hashed as path+bytes: fae830f410a953560d8ce078fa0cec4c543f39a8b4569dbba8f2ddf2586d5a98"
     }
 ]

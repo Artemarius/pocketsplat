@@ -42,10 +42,12 @@ Android app (NDK). **Training is not part of this repo.**
 
 ```
 core/            splatcore — portable C++20, zero GPU deps. PLY/SPZ IO, cleaning, SH truncation,
-                 Morton ordering, chunk AABBs, GPU-pack builder, stats, quality-controller policy (ADR-0009).
+                 Morton ordering, chunk AABBs, GPU-pack builder, stats, quality-controller policy (ADR-0009),
+                 capture-camera readers and virtual capture for the backside fade (ADR-0015).
                  GoogleTest unit tests in core/tests.
 tools/splatconv/ Desktop CLI over splatcore: inspect | convert | clean | pack | coverage (per-splat
-                 observed-direction sidecar from a 3DGS cameras.json, ADR-0013) | replay (quality
+                 observed-direction sidecar from cameras.json / transforms.json / COLMAP, or from
+                 virtual cameras for a room or an object, ADR-0013/0015) | replay (quality
                  controller over a recorded bench CSV). Exit code ≠ 0 on any failure.
 render/          splatrender — Vulkan 1.3 renderer library (volk + VMA + vk-bootstrap + thin own wrappers).
                  render/shaders/*.comp|.vert|.frag → SPIR-V via CMake.
@@ -132,6 +134,9 @@ Environment facts learned the hard way:
   never on the S24U), and in the S22 run fell back ~1.2 °C each time it cooled to ~38.9 °C. Read
   such steps as the sensor model, not heat: on the S25U no step down lands before LIGHT, and the
   S22 controller cycle was these steps (`docs/benchmarks/README.md`, negative results).
+* The NDK's clang builds `splatcore` with `-Wall -Wextra -Wpedantic -Werror` and rejects what MSVC
+  lets through (an unused function in an anonymous namespace): build the APK, not only the
+  desktop targets, before committing a `core/` change.
 * SuperSplat's default camera (85° FOV, full-bbox distance) is ~35–45 % cheaper per frame than our
   bench pose: cost comparisons against it use `bench_web.py --pose ours`.
 
