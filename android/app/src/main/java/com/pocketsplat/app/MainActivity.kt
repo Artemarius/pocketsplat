@@ -659,6 +659,8 @@ private fun ViewerScreen(
             val frame = stats
             if (info == null) {
                 Text("PocketSplat", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                // Above the scene list: below it a long list pushes the reason off-screen.
+                if (openFailed) Text("Open failed - ${openError ?: "see logcat."}", color = Color.Red)
                 val candidate = importCandidate
                 if (staging || importRunning) {
                     Text(importStatus ?: "working…", color = Color.Yellow)
@@ -750,7 +752,6 @@ private fun ViewerScreen(
                     TextButton(onClick = { showLicences = true }) {
                         Text("About & licences", color = Color.Cyan)
                     }
-                    if (openFailed) Text("Open failed - ${openError ?: "see logcat."}", color = Color.Red)
                     importStatus?.let { Text(it, color = Color.Yellow) }
                     benchMessage?.let { Text(it, color = Color.Yellow) }
                 }
