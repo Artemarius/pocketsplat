@@ -11,6 +11,8 @@
 //          push.min_contribution > 0, splats whose integrated screen contribution is below it
 //          are culled before they take a sort slot. With push.coverage_strength > 0 each
 //          splat's opacity is first scaled by the coverage fade (coverage[], ADR-0013).
+//          visible_count counts every visible splat; only slots < push.capacity are written
+//          (records, keys and values hold the visible capacity, not the scene - ADR-0016).
 // Sync:    caller clears the counter, then barriers chunk cull -> preprocess ->
 //          prepare_indirect -> sort -> draw. Slot order within equal depths is
 //          non-deterministic (atomic compaction); the sort re-establishes draw order.
@@ -55,6 +57,7 @@ layout(push_constant) uniform Push {
     float coverage_strength;  // opacity an unmatched splat loses (host: 1 - (1 - s)^2); 0 = off
     float coverage_cos_full;  // cos of the angle within which an observed cell matches fully
     float coverage_cos_zero;  // cos of the angle beyond which it does not match at all
+    uint capacity;            // record / key slots (visible capacity); later appends only count
 } push;
 
 const float kShC1 = 0.4886025119029199;  // sqrt(3 / (4*pi))
@@ -220,6 +223,9 @@ void main() {
     }
 
     uint slot = atomicAdd(visible_count, 1u);
+    // Past the visible capacity the splat is counted (the host reports the excess as clipped)
+    // but has no record or key slot; the prepare pass clamps the sort and draw count.
+    if (slot >= push.capacity) return;
     vec2 center_px = (ndc.xy * 0.5 + 0.5) * focal_viewport.zw;
     // Oriented-quad record: no conic — the fragment kernel runs on interpolated sigma-units
     // quad coordinates, which stays exact for any Sigma2D conditioning (the per-fragment conic

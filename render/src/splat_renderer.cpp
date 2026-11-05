@@ -43,6 +43,7 @@ struct PreprocessPush {
     float coverage_strength;  // 0 = no coverage fade
     float coverage_cos_full;
     float coverage_cos_zero;
+    std::uint32_t capacity;  // record / key slots: appends at or beyond it are counted, not written
 };
 
 struct ChunkCullPush {
@@ -55,6 +56,7 @@ struct PreparePush {
     std::uint32_t elements_per_block;
     std::uint32_t draw_mode;
     std::uint32_t quads_per_batch;
+    std::uint32_t capacity;  // the sort and draw count is min(visible, capacity)
 };
 
 struct DrawPush {
@@ -97,7 +99,8 @@ void memory_barrier(VkCommandBuffer cmd, VkPipelineStageFlags2 src_stage, VkAcce
 }  // namespace
 
 splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack& pack, VkFormat color_format,
-                                      const std::vector<std::uint32_t>* coverage) {
+                                      const std::vector<std::uint32_t>* coverage,
+                                      std::uint32_t visible_capacity) {
     using splatcore::Status;
     m_context = &context;
     if (coverage != nullptr && coverage->size() != pack.header.count) {
@@ -111,14 +114,17 @@ splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack
     m_sh_degree = pack.header.sh_degree;
     m_sh1_scale = pack.header.sh1_scale;
     if (m_count == 0) return Status::failure("cannot render an empty pack");
-    // The per-splat draw records live in one storage buffer bound whole, so its size is capped by
-    // the device's descriptor range (Adreno 750: 128 MB / 32 B = 4,194,304 splats).
+    // Each per-splat array lives in one storage buffer bound whole, so the widest (12 B per splat)
+    // caps the scene by the device's descriptor range (Adreno 750: 128 MB -> 11,184,810 splats);
+    // the 32 B draw records hold only a frame's visible splats, up to the visible capacity.
     const std::uint64_t max_splats = SplatRenderer::max_splats(context);
     if (m_count > max_splats) {
         return Status::failure("the scene has " + std::to_string(m_count) +
                                " splats, this GPU draws at most " + std::to_string(max_splats) +
                                " (maxStorageBufferRange): import it again with a smaller budget");
     }
+    m_capacity = static_cast<std::uint32_t>(std::min<std::uint64_t>(m_count, max_visible(context)));
+    if (visible_capacity > 0) m_capacity = std::min(m_capacity, visible_capacity);
     if (pack.header.chunk_size != splatcore::kPackChunkSize) {
         return Status::failure("pack chunk size does not match the renderer's workgroup mapping");
     }
@@ -152,13 +158,13 @@ splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack
         s = create_device_buffer(context, data, size, storage, m_coverage);
     }
     if (s.ok()) {
-        s = m_records.init(context.allocator(), VkDeviceSize{m_count} * kRecordBytes, storage);
+        s = m_records.init(context.allocator(), VkDeviceSize{m_capacity} * kRecordBytes, storage);
     }
     if (s.ok()) {
-        s = m_keys.init(context.allocator(), VkDeviceSize{m_count} * sizeof(std::uint32_t), storage);
+        s = m_keys.init(context.allocator(), VkDeviceSize{m_capacity} * sizeof(std::uint32_t), storage);
     }
     if (s.ok()) {
-        s = m_values.init(context.allocator(), VkDeviceSize{m_count} * sizeof(std::uint32_t), storage);
+        s = m_values.init(context.allocator(), VkDeviceSize{m_capacity} * sizeof(std::uint32_t), storage);
     }
     if (s.ok()) {
         s = create_device_buffer(context, pack.chunks.data(), pack.chunks.size() * sizeof(float), storage,
@@ -220,7 +226,7 @@ splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack
             context.allocator(), kPickBytes, VK_BUFFER_USAGE_TRANSFER_DST_BIT,
             VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT);
     }
-    if (s.ok()) s = m_sort.init(context, m_count);
+    if (s.ok()) s = m_sort.init(context, m_capacity);
     if (!s.ok()) return s;
 
     // One layout shared by the chunk-cull and preprocess pipelines; each shader declares only the
@@ -319,8 +325,9 @@ splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack
         splatcore::Result<VkDescriptorSet> set = m_pool.allocate(m_pick_layout.handle());
         if (!set) return Status::failure(set.error());
         m_pick_set = set.value();
+        // The pick reads the sorted count (sort args: min(visible, capacity)), not the raw counter.
         const VkBuffer pick_buffers[] = {m_records.handle(), m_keys.handle(), m_values.handle(),
-                                         m_counter.handle(), m_pick.handle()};
+                                         m_sort.args_buffer().handle(), m_pick.handle()};
         for (std::uint32_t b = 0; b < 5; ++b) {
             write_buffer_descriptor(context.device(), m_pick_set, b, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                                     pick_buffers[b]);
@@ -508,7 +515,8 @@ bool SplatRenderer::record_compute(VkCommandBuffer cmd, std::uint32_t slot, GpuT
         scaled_min_contribution,
         m_has_coverage ? 1.0f - (1.0f - m_coverage_strength) * (1.0f - m_coverage_strength) : 0.0f,
         m_coverage_cos_full,
-        m_coverage_cos_zero};
+        m_coverage_cos_zero,
+        m_capacity};
     vkCmdPushConstants(cmd, m_preprocess.layout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(push), &push);
     if (m_chunk_cull) {
         vkCmdDispatchIndirect(cmd, m_cull_dispatch.handle(), 0);
@@ -532,7 +540,7 @@ bool SplatRenderer::record_compute(VkCommandBuffer cmd, std::uint32_t slot, GpuT
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare.layout(), 0, 1, &m_prepare_set, 0,
                             nullptr);
     const PreparePush prepare_push{kSortElementsPerBlock, static_cast<std::uint32_t>(m_draw_mode),
-                                   kQuadsPerBatch};
+                                   kQuadsPerBatch, m_capacity};
     vkCmdPushConstants(cmd, m_prepare.layout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(prepare_push),
                        &prepare_push);
     vkCmdDispatch(cmd, 1, 1, 1);
@@ -561,8 +569,9 @@ splatcore::Status SplatRenderer::set_draw_probe(DrawProbe probe) {
     if (probe == DrawProbe::kSortedCopy && m_sorted_records.handle() == VK_NULL_HANDLE) {
         // First use: the draw-ordered record buffer and the two sets that bind it.
         const VkDevice device = m_context->device();
-        splatcore::Status s = m_sorted_records.init(
-            m_context->allocator(), VkDeviceSize{m_count} * kRecordBytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        splatcore::Status s =
+            m_sorted_records.init(m_context->allocator(), VkDeviceSize{m_capacity} * kRecordBytes,
+                                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
         if (!s.ok()) return s;
         splatcore::Result<VkDescriptorSet> copy_set = m_pool.allocate(m_copy_layout.handle());
         splatcore::Result<VkDescriptorSet> draw_set = m_pool.allocate(m_draw_layout.handle());
@@ -635,7 +644,7 @@ void SplatRenderer::record_pick(VkCommandBuffer cmd, std::uint32_t slot) {
                         m_log_depth_inv_range,
                         kPickCapacity};
     vkCmdPushConstants(cmd, m_pick_pipe.layout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(push), &push);
-    vkCmdDispatch(cmd, (m_count + kWorkgroupSize - 1) / kWorkgroupSize, 1, 1);
+    vkCmdDispatch(cmd, (m_capacity + kWorkgroupSize - 1) / kWorkgroupSize, 1, 1);  // draw positions
     memory_barrier(cmd, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
                    VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_2_TRANSFER_READ_BIT);
     const VkBufferCopy region{0, 0, kPickBytes};

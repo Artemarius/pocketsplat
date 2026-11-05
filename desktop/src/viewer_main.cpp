@@ -475,8 +475,8 @@ int main(int argc, char** argv) {
     Trackball camera;
     SceneLoader loader;
     const fs::path cache_dir = platform::import_cache_dir();
-    // Largest scene this GPU can hold: the draw records live in one storage buffer bound whole.
-    const std::size_t max_splats = context.max_storage_buffer_range() / 32u;
+    // Largest scene this GPU can hold: each per-splat array lives in one storage buffer bound whole.
+    const std::size_t max_splats = static_cast<std::size_t>(splatrender::SplatRenderer::max_splats(context));
     bool has_scene = false;
     std::string scene_name, scene_note, load_error;
     bool show_hud = true;
@@ -685,8 +685,15 @@ int main(int argc, char** argv) {
             ImGui::Begin(kAppTitle, nullptr, ImGuiWindowFlags_AlwaysAutoResize);
             if (has_scene) {
                 ImGui::Text("%s", scene_name.c_str());
+                const std::uint32_t clipped = splats.last_clipped_count();
                 ImGui::Text("%s splats (SH %u), %s drawn", with_thousands(splats.splat_count()).c_str(),
-                            splats.sh_degree(), with_thousands(splats.last_visible_count()).c_str());
+                            splats.sh_degree(),
+                            with_thousands(splats.last_visible_count() - clipped).c_str());
+                if (clipped > 0) {
+                    ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.3f, 1.0f),
+                                       "%s more in view not drawn (this GPU's limit)",
+                                       with_thousands(clipped).c_str());
+                }
                 if (!scene_note.empty()) ImGui::TextDisabled("%s", scene_note.c_str());
             } else if (!loader.running()) {
                 ImGui::TextWrapped("Drop a .ply, .spz or .pspk file on this window, or press O to open one.");

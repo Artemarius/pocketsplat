@@ -2,7 +2,8 @@
 // Pass: depth pick (recorded only on the frame after SplatRenderer::request_pick)
 // Inputs:  records (the preprocess's draw records), keys/values from this frame's sort with the
 //          sorted keys kept (values[j] = record of draw position j, keys[j] its depth key),
-//          counter (visible_count), push constants: the pixel and the key encoding.
+//          sort args (the drawn count, min(visible, capacity)), push constants: the pixel and the
+//          key encoding.
 // Outputs: pick_count (atomic) and one (depth, alpha) pair per visible splat whose kernel covers
 //          the pixel with alpha >= 1/255 - the fragment shader's alpha from the same record - for
 //          the first push.capacity of them; the host composites the pairs front to back.
@@ -14,7 +15,7 @@ layout(local_size_x_id = 0, local_size_x = 256) in;
 layout(std430, set = 0, binding = 0) readonly buffer Records { uint records[]; };
 layout(std430, set = 0, binding = 1) readonly buffer Keys { uint keys[]; };
 layout(std430, set = 0, binding = 2) readonly buffer Values { uint values[]; };
-layout(std430, set = 0, binding = 3) readonly buffer Counter { uint visible_count; uint visible_chunks; };
+layout(std430, set = 0, binding = 3) readonly buffer SortArgs { uint visible_count; uint num_blocks; };
 layout(std430, set = 0, binding = 4) buffer Pick {
     uint pick_count;
     uint pick_pad;

@@ -2,6 +2,7 @@
 
 #include <volk.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <vector>
 
@@ -45,17 +46,29 @@ public:
     SplatRenderer(const SplatRenderer&) = delete;
     SplatRenderer& operator=(const SplatRenderer&) = delete;
 
-    // `coverage`: optional per-splat observed-direction masks (splatcore/coverage.h, pack order,
-    // one per splat) for the coverage fade; without them set_coverage_strength has no effect.
-    // Most splats this device can draw: the per-splat draw records (32 B each) live in one storage
-    // buffer bound whole, capped by maxStorageBufferRange (Adreno 750: 128 MB -> 4,194,304).
+    // Size limits. Every per-splat array lives in one storage buffer bound whole, so each is capped
+    // by maxStorageBufferRange (Adreno 750: 128 MB). The widest per-splat input arrays (positions,
+    // scale_rot, SH1) take 12 B per splat: the most splats a scene may have (750: 11,184,810).
+    // The 32 B draw records, the sort keys/values and the sort's scratch hold only the splats
+    // visible in a frame, up to the visible capacity: min(splat count, range / 32) (750:
+    // 4,194,304). A frame with more visible splats draws the first `capacity` the preprocess
+    // appends (an arbitrary subset) and reports the rest in last_clipped_count (ADR-0016).
+    static constexpr std::uint32_t kRecordBytes = 32;
+    static constexpr std::uint32_t kMaxBytesPerSplat = 12;  // widest per-splat input array
     static std::uint64_t max_splats(const Context& context) {
+        return std::min<std::uint64_t>(context.max_storage_buffer_range() / kMaxBytesPerSplat, kMaxCount);
+    }
+    static std::uint64_t max_visible(const Context& context) {
         return context.max_storage_buffer_range() / kRecordBytes;
     }
-    static constexpr std::uint32_t kRecordBytes = 32;
 
+    // `coverage`: optional per-splat observed-direction masks (splatcore/coverage.h, pack order,
+    // one per splat) for the coverage fade; without them set_coverage_strength has no effect.
+    // `visible_capacity`: 0 = min(splat count, max_visible); a smaller value forces the clip path
+    // (testing and benching only).
     splatcore::Status init(Context& context, const splatcore::GpuPack& pack, VkFormat color_format,
-                           const std::vector<std::uint32_t>* coverage = nullptr);
+                           const std::vector<std::uint32_t>* coverage = nullptr,
+                           std::uint32_t visible_capacity = 0);
     void destroy();
 
     // 32 (exact float depth order) or 16 (2 sort passes, log depth quantized over the frame's
@@ -133,7 +146,7 @@ public:
     // draws the right image: a compute pass after the sort copies the records into draw order
     // (splat_sorted_copy.comp, timed inside the sort segment), and the draw reads them at its own
     // position - the same blend order as kNone without the per-vertex order[] gather. It holds a
-    // second record buffer (splat count x 32 B), allocated by the first set_draw_probe that asks
+    // second record buffer (visible capacity x 32 B), allocated by the first set_draw_probe that asks
     // for it and kept until destroy.
     enum class DrawProbe : std::uint32_t {
         kNone = 0,
@@ -162,11 +175,16 @@ public:
     void record_draw(VkCommandBuffer cmd, std::uint32_t slot);  // inside dynamic rendering
 
     std::uint32_t splat_count() const { return m_count; }
+    std::uint32_t visible_capacity() const { return m_capacity; }
     std::uint32_t chunk_count() const { return m_chunk_count; }
     std::uint32_t sh_degree() const { return m_sh_degree; }
     // Visible counts of a recently completed frame (trail by the frames in flight); HUD only.
     std::uint32_t last_visible_count() const { return m_last_visible; }
     std::uint32_t last_visible_chunks() const { return m_last_visible_chunks; }
+    // Visible splats of that frame beyond the visible capacity: passed the culls, not drawn.
+    std::uint32_t last_clipped_count() const {
+        return m_last_visible > m_capacity ? m_last_visible - m_capacity : 0;
+    }
 
     // Depth pick: the world point under a pixel, as drawn (a double-tap pivot). request_pick marks
     // the next frame's compute chain dirty; that frame keeps the sorted keys and a pick pass
@@ -180,7 +198,9 @@ public:
 
 private:
     Context* m_context = nullptr;
+    static constexpr std::uint64_t kMaxCount = 0x7fffffffu;  // splat indices and counts are uint32
     std::uint32_t m_count = 0;
+    std::uint32_t m_capacity = 0;  // draw records / sort elements: visible splats drawn per frame
     std::uint32_t m_chunk_count = 0;
     std::uint32_t m_sh_degree = 0;
     float m_sh1_scale = 0.0f;
@@ -201,7 +221,7 @@ private:
 
     Buffer m_positions, m_scale_rot, m_color, m_sh1, m_records;
     Buffer m_coverage;                 // per-splat masks, or a 4-byte dummy
-    Buffer m_keys, m_values;           // sort key/index pairs for visible splats
+    Buffer m_keys, m_values;           // sort key/index pairs for visible splats (m_capacity each)
     Buffer m_chunks;                   // pack chunk cull AABBs + importance_max (7 floats each)
     Buffer m_chunk_list;               // visible chunk indices, written by the chunk cull
     Buffer m_cull_dispatch;            // VkDispatchIndirectCommand for the preprocess

@@ -1,6 +1,7 @@
 #version 460
 // Pass: prepare indirect arguments (single invocation)
-// Inputs:  visible_count from the compacting preprocess.
+// Inputs:  visible_count from the compacting preprocess (it counts splats past the visible
+//          capacity too, without writing them); push.capacity, the record / key slots.
 // Outputs: sort_args {count, num_blocks} (read by all radix passes, and by the draw's vertex shader
 //          in indexed-batch mode), sort_dispatch (indirect dispatch for upsweep/downsweep),
 //          draw_cmd for the renderer's draw mode (SplatRenderer::DrawMode):
@@ -23,10 +24,11 @@ layout(push_constant) uniform Push {
     uint elements_per_block;
     uint draw_mode;
     uint quads_per_batch;
+    uint capacity;
 } push;
 
 void main() {
-    uint count = visible_count;
+    uint count = min(visible_count, push.capacity);
     uint blocks = (count + push.elements_per_block - 1u) / push.elements_per_block;
     sort_count = count;
     num_blocks = blocks;
