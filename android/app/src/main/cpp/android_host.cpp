@@ -184,7 +184,11 @@ splatcore::Status AndroidHost::init() {
     if (s.ok()) s = m_timer.init(m_context);
     if (!s.ok()) return s;
     m_ring_ready = true;
-    LOGI("Vulkan ready: %s", m_context.device_name());
+    // Size limits come from this device's Vulkan limits at run time (ADR-0016), never a table.
+    LOGI("Vulkan ready: %s, maxStorageBufferRange %u B -> scene limit %llu splats, visible capacity %llu",
+         m_context.device_name(), m_context.max_storage_buffer_range(),
+         static_cast<unsigned long long>(splatrender::SplatRenderer::max_splats(m_context)),
+         static_cast<unsigned long long>(splatrender::SplatRenderer::max_visible(m_context)));
 
     // Controller inputs found at run time: the platform's LIGHT threshold, else ADR-0009's
     // (40 C - 15) / 30 for the Samsung skin sensor, and the highest kgsl clock.
@@ -490,8 +494,9 @@ void AndroidHost::set_coverage_strength(float strength) {
 void AndroidHost::write_trace_scene() {
     flush_trace();  // the line goes after the rows recorded before it
     m_trace << "# scene=" << m_scene_name << ", splats=" << m_splats.splat_count()
-            << ", sh=" << m_splats.sh_degree() << ", resolution=" << m_swapchain.extent().width << "x"
-            << m_swapchain.extent().height << "\n";
+            << ", sh=" << m_splats.sh_degree() << ", visible_capacity=" << m_splats.visible_capacity()
+            << ", storage_buffer_range=" << m_context.max_storage_buffer_range()
+            << ", resolution=" << m_swapchain.extent().width << "x" << m_swapchain.extent().height << "\n";
 }
 
 void AndroidHost::release_surface() {
@@ -910,8 +915,10 @@ std::string AndroidHost::stop_bench() {
     csv << "# pocketsplat-android bench\n"
         << "# device=" << m_context.device_name() << ", " << m_bench_config.meta << "\n"
         << "# scene=" << m_bench_config.scene_name << ", splats=" << m_splats.splat_count()
-        << ", sh=" << m_splats.sh_degree() << ", resolution=" << m_swapchain.extent().width << "x"
-        << m_swapchain.extent().height << ", key_bits=" << m_bench_config.key_bits
+        << ", sh=" << m_splats.sh_degree() << ", visible_capacity=" << m_splats.visible_capacity()
+        << ", storage_buffer_range=" << m_context.max_storage_buffer_range()
+        << ", resolution=" << m_swapchain.extent().width << "x" << m_swapchain.extent().height
+        << ", key_bits=" << m_bench_config.key_bits
         << ", min_contribution=" << m_bench_config.min_contribution
         << ", chunk_cull=" << (m_splats.chunk_cull() ? "on" : "off") << ", present_mode=" << present_mode_used
         << ", target_fps=" << m_bench_config.target_fps

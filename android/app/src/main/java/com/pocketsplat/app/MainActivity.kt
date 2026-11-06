@@ -902,7 +902,8 @@ private fun PartialSceneBanner(shown: Long, total: Long, compact: Boolean) {
 
 /**
  * Warning for a frame with more splats in view than the GPU's draw records hold (ADR-0016): the
- * excess is not drawn, an arbitrary part of the view; one line when the overlay is hidden.
+ * excess is not drawn, an arbitrary part of the view; one line when the overlay is hidden. Yellow:
+ * it depends on the view and goes away closer in (red is the partial scene, cut at open).
  */
 @Composable
 private fun ClippedBanner(clipped: Long, compact: Boolean) {
@@ -913,7 +914,7 @@ private fun ClippedBanner(clipped: Long, compact: Boolean) {
             if (compact) "CLIPPED: %,d splats in view not drawn".format(clipped)
             else "CLIPPED: %,d splats in this view are not drawn: more are in view than this GPU draws at once. Move closer, or import the scene again with a budget."
                 .format(clipped),
-            color = Color(0xFFFF3B30),
+            color = Color(0xFFFFCC00),
             style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
             modifier = Modifier.background(Color(0xCC000000)).padding(8.dp),
         )
