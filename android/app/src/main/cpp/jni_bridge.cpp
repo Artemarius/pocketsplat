@@ -147,8 +147,8 @@ JNIEXPORT jfloatArray JNICALL Java_com_pocketsplat_app_SplatEngine_nativeTakePic
     return result == splatrender::SplatRenderer::PickResult::kMiss ? env->NewFloatArray(0) : nullptr;
 }
 
-JNIEXPORT void JNICALL Java_com_pocketsplat_app_SplatEngine_nativeRender(JNIEnv*, jobject, jlong handle) {
-    host_of(handle)->render();
+JNIEXPORT jboolean JNICALL Java_com_pocketsplat_app_SplatEngine_nativeRender(JNIEnv*, jobject, jlong handle) {
+    return host_of(handle)->render() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL Java_com_pocketsplat_app_SplatEngine_nativeSetAdaptive(JNIEnv*, jobject, jlong handle,
@@ -327,11 +327,12 @@ JNIEXPORT void JNICALL Java_com_pocketsplat_app_SplatEngine_nativeImportCancel(J
 }
 
 // [gpu ms, cull ms, preprocess ms, prepare+sort ms, draw ms, visible, visible chunks, frames,
-//  contribution threshold px, adaptive-quality rung (-1 = off), visible splats not drawn (clipped)]
+//  contribution threshold px, adaptive-quality rung (-1 = off), visible splats not drawn (clipped),
+//  clip guard floor px (0 = inactive)]
 JNIEXPORT jfloatArray JNICALL Java_com_pocketsplat_app_SplatEngine_nativeGetStats(JNIEnv* env, jobject,
                                                                                   jlong handle) {
     const pocketsplat::AndroidHost::Stats& stats = host_of(handle)->stats();
-    const float values[11] = {stats.gpu_ms.load(std::memory_order_relaxed),
+    const float values[12] = {stats.gpu_ms.load(std::memory_order_relaxed),
                               stats.cull_ms.load(std::memory_order_relaxed),
                               stats.preprocess_ms.load(std::memory_order_relaxed),
                               stats.sort_ms.load(std::memory_order_relaxed),
@@ -341,9 +342,10 @@ JNIEXPORT jfloatArray JNICALL Java_com_pocketsplat_app_SplatEngine_nativeGetStat
                               static_cast<float>(stats.frames.load(std::memory_order_relaxed)),
                               stats.min_contribution.load(std::memory_order_relaxed),
                               static_cast<float>(stats.rung.load(std::memory_order_relaxed)),
-                              static_cast<float>(stats.clipped.load(std::memory_order_relaxed))};
-    jfloatArray out = env->NewFloatArray(11);
-    env->SetFloatArrayRegion(out, 0, 11, values);
+                              static_cast<float>(stats.clipped.load(std::memory_order_relaxed)),
+                              stats.clip_floor.load(std::memory_order_relaxed)};
+    jfloatArray out = env->NewFloatArray(12);
+    env->SetFloatArrayRegion(out, 0, 12, values);
     return out;
 }
 

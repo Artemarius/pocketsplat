@@ -42,7 +42,7 @@ object SplatEngine {
     /** null = no result yet (keep drawing) or none requested; [x, y, z] = the world point hit; [] = miss. */
     external fun nativeTakePick(handle: Long): FloatArray?
 
-    external fun nativeRender(handle: Long)
+    external fun nativeRender(handle: Long): Boolean
 
     /** Thermal-adaptive quality controller in interactive use (ADR-0009). */
     external fun nativeSetAdaptive(handle: Long, on: Boolean)

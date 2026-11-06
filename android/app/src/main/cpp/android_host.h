@@ -79,7 +79,9 @@ public:
     // being drawn), then kHit with the world point or kMiss once.
     void request_pick(float u, float v);
     splatrender::SplatRenderer::PickResult take_pick(float world[3]);
-    void render();  // one frame; no-op without a surface (clears without a scene)
+    // One frame; no-op without a surface (clears without a scene). True when the renderer wants
+    // another frame on its own (the clip guard settling), so an idle on-demand loop keeps going.
+    bool render();
 
     // Interactive quality controller (ADR-0009), fed after every rendered frame and by
     // thermal_tick(), which the render thread calls about once a second whether or not it draws:
@@ -163,6 +165,7 @@ public:
         std::atomic<std::uint32_t> visible{0};
         std::atomic<std::uint32_t> visible_chunks{0};
         std::atomic<std::uint32_t> clipped{0};  // visible splats not drawn (visible capacity)
+        std::atomic<float> clip_floor{0.0f};    // clip guard floor in reference pixels, 0 = off
         std::atomic<std::uint64_t> frames{0};
         std::atomic<float> min_contribution{0.0f};  // threshold the last frame rendered with
         std::atomic<std::int32_t> rung{-1};         // interactive controller rung, -1 = off
@@ -224,6 +227,7 @@ private:
         float t_s, cpu_ms, gpu_ms, cull_ms, preprocess_ms, sort_ms, draw_ms;
         std::uint32_t visible, visible_chunks;
         std::uint32_t clipped;  // visible splats past the renderer's visible capacity (not drawn)
+        float clip_floor;       // the clip guard's contribution floor this frame (0 = inactive)
         std::uint8_t compute_ran, thermal_status;
         float headroom;               // current headroom at the last reading
         std::int32_t gpu_mhz;         // kgsl clock at the last 1 Hz sample, -1 when unreadable

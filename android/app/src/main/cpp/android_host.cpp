@@ -286,6 +286,7 @@ bool AndroidHost::interactive_update(std::chrono::steady_clock::time_point now, 
         row.visible = frame ? m_splats.last_visible_count() : 0;
         row.visible_chunks = frame ? m_splats.last_visible_chunks() : 0;
         row.clipped = frame ? m_splats.last_clipped_count() : 0;
+        row.clip_floor = frame ? m_splats.clip_floor() : 0.0f;
         row.compute_ran = frame && m_last_compute_ran ? 1 : 0;
         row.thermal_status = m_thermal_status;
         row.headroom = m_thermal_headroom;
@@ -568,8 +569,8 @@ splatrender::SplatRenderer::PickResult AndroidHost::take_pick(float world[3]) {
     return result;
 }
 
-void AndroidHost::render() {
-    if (!m_swapchain_ready) return;
+bool AndroidHost::render() {
+    if (!m_swapchain_ready) return false;
     if (m_bench_active && m_bench_config.target_fps > 0.0f) bench_pace();
     // Deterministic full orbit every 600 frames - the desktop --bench rate, so per-frame GPU
     // work is comparable across devices regardless of achieved fps.
@@ -580,23 +581,23 @@ void AndroidHost::render() {
     if (m_needs_recreate) {
         const auto width = static_cast<std::uint32_t>(ANativeWindow_getWidth(m_window));
         const auto height = static_cast<std::uint32_t>(ANativeWindow_getHeight(m_window));
-        if (width == 0 || height == 0) return;
-        if (!m_swapchain.recreate(width, height).ok()) return;
+        if (width == 0 || height == 0) return false;
+        if (!m_swapchain.recreate(width, height).ok()) return false;
         m_needs_recreate = false;
         LOGI("swapchain recreated %ux%u, %s", m_swapchain.extent().width, m_swapchain.extent().height,
              transform_name(m_swapchain.pre_transform()));
     }
 
     VkCommandBuffer cmd = m_ring.begin();
-    if (cmd == VK_NULL_HANDLE) return;
+    if (cmd == VK_NULL_HANDLE) return false;
     std::uint32_t image_index = 0;
     const VkResult acquire = m_swapchain.acquire(m_ring.image_available(), &image_index);
     if (acquire == VK_ERROR_OUT_OF_DATE_KHR) {
         m_needs_recreate = true;
         vkEndCommandBuffer(cmd);  // abandon this frame's recording
-        return;
+        return false;
     }
-    if (acquire != VK_SUCCESS && acquire != VK_SUBOPTIMAL_KHR) return;
+    if (acquire != VK_SUCCESS && acquire != VK_SUBOPTIMAL_KHR) return false;
 
     const float width = static_cast<float>(m_swapchain.extent().width);
     const float height = static_cast<float>(m_swapchain.extent().height);
@@ -686,7 +687,7 @@ void AndroidHost::render() {
                   VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT, 0);
     m_timer.end_frame(cmd, m_ring.slot());
 
-    if (!m_ring.submit(m_swapchain.render_finished(image_index)).ok()) return;
+    if (!m_ring.submit(m_swapchain.render_finished(image_index)).ok()) return false;
     const VkResult present = m_swapchain.present(m_context.queue(), image_index);
     if (present == VK_ERROR_OUT_OF_DATE_KHR || present == VK_SUBOPTIMAL_KHR) m_needs_recreate = true;
 
@@ -699,6 +700,7 @@ void AndroidHost::render() {
     m_stats.visible.store(m_splats.last_visible_count(), std::memory_order_relaxed);
     m_stats.visible_chunks.store(m_splats.last_visible_chunks(), std::memory_order_relaxed);
     m_stats.clipped.store(m_splats.last_clipped_count(), std::memory_order_relaxed);
+    m_stats.clip_floor.store(m_splats.clip_floor(), std::memory_order_relaxed);
     m_stats.frames.fetch_add(1, std::memory_order_relaxed);
 
     if (m_bench_active) {
@@ -708,6 +710,7 @@ void AndroidHost::render() {
     }
     m_stats.min_contribution.store(m_splats.min_contribution(), std::memory_order_relaxed);
     m_stats.rung.store(m_adaptive && !m_bench_active ? m_adaptive->rung() : -1, std::memory_order_relaxed);
+    return m_renderer_ready && m_splats.wants_frame();
 }
 
 splatcore::Status AndroidHost::start_bench(const BenchConfig& config) {
@@ -801,6 +804,7 @@ void AndroidHost::bench_record_frame() {
     row.visible = m_splats.last_visible_count();
     row.visible_chunks = m_splats.last_visible_chunks();
     row.clipped = m_splats.last_clipped_count();
+    row.clip_floor = m_splats.clip_floor();
     row.compute_ran = 1;  // the orbit moves every frame, so the compute chain never skips
     row.thermal_status = m_thermal_status;
     row.headroom = m_thermal_headroom;
@@ -865,7 +869,7 @@ void AndroidHost::write_csv_columns(std::ostream& csv) {
            "the controller counted, nan after an idle gap)\n"
         << "frame,t_s,cpu_ms,gpu_ms,cull_ms,preprocess_ms,sort_ms,draw_ms,visible,visible_chunks,"
            "compute_ran,thermal_status,thermal_headroom,gpu_mhz,min_contribution,rung,reason,"
-           "thermal_forecast,thermal_sample,drawn,clipped\n";
+           "thermal_forecast,thermal_sample,drawn,clipped,clip_floor\n";
 }
 
 void AndroidHost::write_csv_rows(std::ostream& csv, const std::vector<BenchRow>& rows,
@@ -873,13 +877,13 @@ void AndroidHost::write_csv_rows(std::ostream& csv, const std::vector<BenchRow>&
     char line[320];
     for (std::size_t i = 0; i < rows.size(); ++i) {
         const BenchRow& row = rows[i];
-        std::snprintf(line, sizeof(line),
-                      "%zu,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%u,%u,%u,%u,%.3f,%d,%g,%d,%u,%.3f,%u,%u,%u\n",
-                      first_index + i, row.t_s, row.cpu_ms, row.gpu_ms, row.cull_ms, row.preprocess_ms,
-                      row.sort_ms, row.draw_ms, row.visible, row.visible_chunks, row.compute_ran,
-                      row.thermal_status, row.headroom, row.gpu_mhz,
-                      static_cast<double>(row.min_contribution), row.rung, row.reason, row.forecast,
-                      row.thermal_sample, row.drawn, row.clipped);
+        std::snprintf(
+            line, sizeof(line),
+            "%zu,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%u,%u,%u,%u,%.3f,%d,%g,%d,%u,%.3f,%u,%u,%u,%g\n",
+            first_index + i, row.t_s, row.cpu_ms, row.gpu_ms, row.cull_ms, row.preprocess_ms, row.sort_ms,
+            row.draw_ms, row.visible, row.visible_chunks, row.compute_ran, row.thermal_status, row.headroom,
+            row.gpu_mhz, static_cast<double>(row.min_contribution), row.rung, row.reason, row.forecast,
+            row.thermal_sample, row.drawn, row.clipped, static_cast<double>(row.clip_floor));
         csv << line;
     }
 }

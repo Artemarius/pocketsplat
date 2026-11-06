@@ -423,8 +423,9 @@ class RenderEngine {
             pendingFrames = SETTLE_FRAMES // the vsync-on swapchain gets fresh frames, then idles
         }
         if (applyFade()) pendingFrames = maxOf(pendingFrames, 1) // the release ramp needs frames
-        SplatEngine.nativeRender(handle)
+        val wantsMore = SplatEngine.nativeRender(handle) // the clip guard settling (ADR-0016)
         if (pendingFrames > 0) pendingFrames--
+        if (wantsMore) pendingFrames = maxOf(pendingFrames, 1)
         if (pickPending) {
             val hit = SplatEngine.nativeTakePick(handle)
             if (hit == null) {
