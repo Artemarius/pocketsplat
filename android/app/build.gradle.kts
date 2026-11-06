@@ -156,6 +156,9 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
             if (hasReleaseKey) signingConfig = signingConfigs.getByName("release")
+            // -PdebuggableRelease: a release-signed build that `install -r` puts over the release
+            // app (scenes kept) and that run-as can enter (bench scripts). Never for publishing.
+            isDebuggable = project.hasProperty("debuggableRelease")
         }
     }
     compileOptions {

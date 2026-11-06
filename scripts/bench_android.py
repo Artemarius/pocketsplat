@@ -234,9 +234,12 @@ def bench_scene(scene: str, args, build: str) -> bool:
     tag = f"{args.device}-{build}-{stem}{suffix}"
     device_csv = f"files/bench/bench-{stem}-{args.key_bits}bit.csv"
 
+    # The app opens scenes from its internal files/scenes and its external files dir (where adb
+    # can push without run-as); bench_scene names a file in either.
     listing = shell(f"run-as {PACKAGE} ls files/scenes", serial=serial).split()
+    listing += shell(f"ls /sdcard/Android/data/{PACKAGE}/files/scenes 2>/dev/null; true", serial=serial).split()
     if scene not in listing:
-        print(f"ERROR: {scene} not in files/scenes (found: {', '.join(listing) or 'nothing'})",
+        print(f"ERROR: {scene} not in the app's scene folders (found: {', '.join(listing) or 'nothing'})",
               file=sys.stderr)
         return False
 
