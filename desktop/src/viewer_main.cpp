@@ -690,9 +690,13 @@ int main(int argc, char** argv) {
                             splats.sh_degree(),
                             with_thousands(splats.last_visible_count() - clipped).c_str());
                 if (clipped > 0) {
-                    ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.3f, 1.0f),
+                    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f),
                                        "%s more in view not drawn (this GPU's limit)",
                                        with_thousands(clipped).c_str());
+                } else if (splats.clip_floor() > 0.0f) {
+                    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f),
+                                       "Large view: splats under %.1f px hidden (this GPU's limit)",
+                                       splats.clip_floor());
                 }
                 if (!scene_note.empty()) ImGui::TextDisabled("%s", scene_note.c_str());
             } else if (!loader.running()) {
@@ -756,6 +760,8 @@ int main(int argc, char** argv) {
             break;
         }
         if (g_input.pending_frames > 0) --g_input.pending_frames;
+        // The clip guard moved its floor: it needs computed frames to settle, even when still.
+        if (has_scene && splats.wants_frame()) g_input.pending_frames = std::max(g_input.pending_frames, 1);
     }
 
     context.wait_idle();

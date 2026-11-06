@@ -110,6 +110,11 @@ splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack
     m_coverage_strength = 0.0f;
     set_coverage_angles(kDefaultCoverageFullDeg, kDefaultCoverageZeroDeg);
     m_count = pack.header.count;
+    m_clip_floor = 0.0f;
+    m_clip_floor_calm = 0;
+    m_clip_floor_pending = false;
+    m_clip_floor_raised_from = 0;
+    m_clip_floor_ratio = kClipFloorDefaultRatio;
     m_chunk_count = static_cast<std::uint32_t>(pack.chunk_count());
     m_sh_degree = pack.header.sh_degree;
     m_sh1_scale = pack.header.sh1_scale;
@@ -450,8 +455,40 @@ void SplatRenderer::prepare_frame(std::uint32_t slot, const SplatCameraParams& c
         m_last_visible = counts[0];
         m_last_visible_chunks = counts[1];
         m_readback_pending[slot] = false;
+        update_clip_floor(m_slot_floor[slot], counts[0]);
     }
     if (m_pick_slot == static_cast<int>(slot)) resolve_pick(slot);  // that submission has completed
+}
+
+void SplatRenderer::update_clip_floor(float frame_floor, std::uint32_t visible) {
+    // Counts computed at an older floor say nothing about the current one (frames in flight).
+    if (!m_clip_floor_enabled || frame_floor != m_clip_floor) return;
+    if (m_clip_floor_pending && m_clip_floor_raised_from > 0) {
+        // First count at a raised floor: how much the raise removed predicts what lowering adds.
+        m_clip_floor_ratio = std::max(
+            1.0f, static_cast<float>(m_clip_floor_raised_from) / static_cast<float>(std::max(visible, 1u)));
+        m_clip_floor_raised_from = 0;
+    }
+    m_clip_floor_pending = false;
+    if (visible > m_capacity) {
+        const float factor = visible - m_capacity > m_capacity / 4 ? 4.0f : 2.0f;
+        m_clip_floor = std::min(std::max(kClipFloorStart, effective_min_contribution() * factor), 1.0e4f);
+        m_clip_floor_raised_from = visible;
+        m_clip_floor_calm = 0;
+        m_clip_floor_pending = true;
+        m_compute_dirty = true;
+    } else if (m_clip_floor > 0.0f &&
+               static_cast<float>(visible) * m_clip_floor_ratio < 0.9f * static_cast<float>(m_capacity)) {
+        if (++m_clip_floor_calm >= kClipFloorCalmFrames) {
+            m_clip_floor /= 1.5f;
+            if (m_clip_floor < kClipFloorStart || m_clip_floor <= m_min_contribution) m_clip_floor = 0.0f;
+            m_clip_floor_calm = 0;
+            m_clip_floor_pending = true;
+            m_compute_dirty = true;
+        }
+    } else {
+        m_clip_floor_calm = 0;
+    }
 }
 
 bool SplatRenderer::record_compute(VkCommandBuffer cmd, std::uint32_t slot, GpuTimer* timer) {
@@ -484,7 +521,8 @@ bool SplatRenderer::record_compute(VkCommandBuffer cmd, std::uint32_t slot, GpuT
                    VK_ACCESS_2_SHADER_STORAGE_READ_BIT | VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT);
 
     const float scaled_min_contribution =
-        m_min_contribution * m_last_viewport[0] * m_last_viewport[1] / kContributionReferencePixels;
+        effective_min_contribution() * m_last_viewport[0] * m_last_viewport[1] / kContributionReferencePixels;
+    m_slot_floor[slot] = m_clip_floor;
     if (m_chunk_cull) {
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_chunk_cull_pipe.handle());
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_chunk_cull_pipe.layout(), 0, 1,

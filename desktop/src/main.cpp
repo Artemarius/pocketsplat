@@ -59,6 +59,7 @@ struct Args {
     int key_bits = 32;              // depth sort key width (16 = faster, quantized)
     float min_contribution = 0.0f;  // contribution cull threshold in pixels (0 = off)
     std::uint32_t visible_cap = 0;  // --visible-cap: force a smaller visible capacity (clip testing)
+    bool clip_floor = true;         // --no-clip-floor: clip without the contribution floor (A/B)
     splatrender::SplatRenderer::DrawMode draw_mode = splatrender::SplatRenderer::kDefaultDrawMode;
     splatrender::SplatRenderer::DrawProbe draw_probe = splatrender::SplatRenderer::DrawProbe::kNone;
     float dist_scale = 1.0f;                  // camera distance multiplier (<1 = zoomed in)
@@ -116,6 +117,8 @@ bool parse_args(int argc, char** argv, Args& args) {
             args.sh = std::atoi(argv[++i]);
         } else if (arg == "--key-bits" && i + 1 < argc) {
             args.key_bits = std::atoi(argv[++i]);
+        } else if (arg == "--no-clip-floor") {
+            args.clip_floor = false;
         } else if (arg == "--visible-cap" && i + 1 < argc) {
             args.visible_cap = static_cast<std::uint32_t>(std::strtoul(argv[++i], nullptr, 10));
         } else if (arg == "--min-contribution" && i + 1 < argc) {
@@ -224,7 +227,7 @@ bool parse_args(int argc, char** argv, Args& args) {
                 "       [--draw-probe none|seq|tiny|clip|noblend|nofrag|copy]\n"
                 "       [--home-view] [--look-from x,y,z --look-at x,y,z [--up x,y,z]] [--pick x,y]\n"
                 "       [--coverage file.pscov | --no-coverage] [--coverage-strength S]\n"
-                "       [--coverage-angles full,zero] [--visible-cap N]\n");
+                "       [--coverage-angles full,zero] [--visible-cap N] [--no-clip-floor]\n");
             return false;
         }
     }
@@ -378,6 +381,7 @@ struct BenchRow {
     double cpu_ms = 0.0, gpu_ms = 0.0;
     double cull_ms = 0.0, preprocess_ms = 0.0, sort_ms = 0.0, draw_ms = 0.0;
     std::uint32_t visible = 0, visible_chunks = 0, clipped = 0;
+    float clip_floor = 0.0f;
     bool compute_ran = false;
 };
 
@@ -549,6 +553,7 @@ int main(int argc, char** argv) {
             splats.set_chunk_cull(args.chunk_cull);
             splats.set_chunk_contribution_cull(args.chunk_contribution);
             splats.set_min_contribution(args.min_contribution);
+            splats.set_clip_floor_enabled(args.clip_floor);
             splats.set_draw_mode(args.draw_mode);
             if (s.ok()) s = splats.set_draw_probe(args.draw_probe);
         }
@@ -774,9 +779,13 @@ int main(int argc, char** argv) {
                             splats.splat_count(), splats.sh_degree(), splats.last_visible_count(),
                             splats.key_bits(), splats.min_contribution());
                 if (splats.last_clipped_count() > 0) {
-                    ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.3f, 1.0f),
+                    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f),
                                        "CLIPPED %u visible splats (capacity %u)", splats.last_clipped_count(),
                                        splats.visible_capacity());
+                }
+                if (splats.clip_floor() > 0.0f) {
+                    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f),
+                                       "clip guard: contribution floor %.2f px", splats.clip_floor());
                 }
                 ImGui::Text("chunks %u, visible %u (cull %s), compute %s", splats.chunk_count(),
                             splats.last_visible_chunks(), splats.chunk_cull() ? "on" : "off",
@@ -868,6 +877,7 @@ int main(int argc, char** argv) {
             row.visible = splats.last_visible_count();
             row.visible_chunks = splats.last_visible_chunks();
             row.clipped = splats.last_clipped_count();
+            row.clip_floor = splats.clip_floor();
             row.compute_ran = compute_ran;
             rows.push_back(row);
         }
@@ -918,13 +928,13 @@ int main(int argc, char** argv) {
                 << "\n"
                 << "# gpu columns trail the frame index by 2 frames in flight\n"
                 << "frame,cpu_ms,gpu_ms,cull_ms,preprocess_ms,sort_ms,draw_ms,visible,visible_chunks,"
-                   "compute_ran,clipped\n";
+                   "compute_ran,clipped,clip_floor\n";
             char line[256];
             for (const BenchRow& row : rows) {
-                std::snprintf(line, sizeof(line), "%llu,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%u,%u,%d,%u\n",
+                std::snprintf(line, sizeof(line), "%llu,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%u,%u,%d,%u,%g\n",
                               static_cast<unsigned long long>(row.frame), row.cpu_ms, row.gpu_ms, row.cull_ms,
                               row.preprocess_ms, row.sort_ms, row.draw_ms, row.visible, row.visible_chunks,
-                              row.compute_ran ? 1 : 0, row.clipped);
+                              row.compute_ran ? 1 : 0, row.clipped, static_cast<double>(row.clip_floor));
                 csv << line;
             }
             std::printf("bench csv written: %s (%zu rows)\n", args.csv.c_str(), rows.size());

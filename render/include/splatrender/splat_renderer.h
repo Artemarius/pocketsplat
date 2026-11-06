@@ -90,6 +90,29 @@ public:
     }
     float min_contribution() const { return m_min_contribution; }
 
+    // Clip guard (ADR-0016): while frames hold more visible splats than the visible capacity, a
+    // floor under the contribution threshold rises (0.1 px, then x2, or x4 past 125 % of the
+    // capacity), so the smallest contributions are dropped instead of whatever chunks append
+    // last. It falls by 1/1.5 (to 0 below 0.1 px) after kClipFloorCalmFrames computed frames in
+    // which the count, grown by what the last raise removed (raise-time count / count after it),
+    // stays under 90 % of the capacity - a fixed margin oscillated: 0.1 px halves a large view,
+    // so dropping back to 0 overflowed again. Only frames computed at the current floor count.
+    // The threshold used is max(min_contribution, floor). On by default; off for A/B runs.
+    void set_clip_floor_enabled(bool enabled) {
+        m_clip_floor_enabled = enabled;
+        if (!enabled && m_clip_floor > 0.0f) {
+            m_clip_floor = 0.0f;
+            m_compute_dirty = true;
+        }
+    }
+    float clip_floor() const { return m_clip_floor; }  // reference pixels, 0 = inactive
+    float effective_min_contribution() const { return std::max(m_min_contribution, m_clip_floor); }
+    // The clip guard changed the floor and needs another computed frame to see its effect: an
+    // on-demand host keeps drawing while this is true (the view may have stopped).
+    bool wants_frame() const { return m_clip_floor_pending; }
+    static constexpr float kClipFloorStart = 0.1f;
+    static constexpr std::uint32_t kClipFloorCalmFrames = 30;
+
     // Coverage fade (ADR-0013): a splat seen from a direction away from every direction the
     // capture cameras observed it from is drawn more transparent: alpha x (1 - r x (1 - match)),
     // match = smoothstep over the angle to the nearest observed cell (1 within `full_deg`, 0
@@ -208,6 +231,15 @@ private:
     float m_log_depth_min = 0.0f, m_log_depth_inv_range = 1.0f;
     int m_key_bits = 32;
     float m_min_contribution = 0.0f;
+    bool m_clip_floor_enabled = true;
+    float m_clip_floor = 0.0f;                   // clip guard floor, reference pixels
+    float m_slot_floor[kFramesInFlight] = {};    // floor each slot's snapshot was computed with
+    std::uint32_t m_clip_floor_calm = 0;         // computed frames in a row that could lower it
+    bool m_clip_floor_pending = false;           // floor changed, its first readback not yet in
+    std::uint32_t m_clip_floor_raised_from = 0;  // visible count that triggered the last raise
+    static constexpr float kClipFloorDefaultRatio = 1.0f / 0.6f;
+    float m_clip_floor_ratio = kClipFloorDefaultRatio;  // visible growth expected from one step down
+    void update_clip_floor(float frame_floor, std::uint32_t visible);
     bool m_has_coverage = false;
     float m_coverage_strength = 0.0f;
     float m_coverage_cos_full = 0.0f, m_coverage_cos_zero = 0.0f;  // set in init
