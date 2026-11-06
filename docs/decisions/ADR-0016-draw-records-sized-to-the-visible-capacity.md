@@ -1,7 +1,8 @@
 # ADR-0016 — Draw records sized to a visible capacity, with a contribution floor when a view overflows it
 
-**Status**: proposed (2026-11-06, S28). Implemented, measured on the desktop and on both phones
-(Evidence). Waiting for the owner's hand-held look at a large scene on the S24U.
+**Status**: accepted (2026-11-06, S28). Implemented, measured on the desktop and on both phones
+(Evidence); the owner reviewed the phone results and the app ("everything is great") and asked
+for the release (v0.3.0).
 
 **Context**: every per-splat array lives in one storage buffer bound whole, so each is capped
 by `maxStorageBufferRange`. The widest was the draw records, 32 B per splat and sized for every

@@ -15,6 +15,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -388,7 +390,8 @@ private fun ViewerScreen(
     var openError by remember { mutableStateOf<String?>(null) }
     var levelOrbit by remember { mutableStateOf(false) }
     var coverageStrength by remember { mutableStateOf(initialCoverageStrength) }
-    var fadeWhileMoving by remember { mutableStateOf(initialFadeWhileMoving) }
+    // Backside fade mode: 0 while moving (default), 1 always, 2 never (strength 0, slider kept).
+    var fadeMode by remember { mutableStateOf(if (initialFadeWhileMoving) 0 else 1) }
     // Hidden overlay = full-screen view: system bars hidden too (an edge swipe shows them for a
     // moment); a small knob in the corner brings both back.
     var overlayVisible by remember { mutableStateOf(true) }
@@ -681,7 +684,7 @@ private fun ViewerScreen(
                 val candidate = importCandidate
                 if (staging || importRunning) {
                     Text(importStatus ?: "working…", color = Color.Yellow)
-                    TextButton(onClick = {
+                    OverlayButton(onClick = {
                         if (staging) stagingJob?.cancel() else SplatEngine.nativeImportCancel()
                     }) { Text("Cancel", color = Color.Red) }
                 } else if (candidate != null) {
@@ -694,12 +697,12 @@ private fun ViewerScreen(
                         Text("Budget: ", modifier = Modifier.padding(top = 12.dp), color = Color.White)
                         listOf(500_000L to "500K", 1_000_000L to "1M", 2_000_000L to "2M", 0L to "all")
                             .forEach { (value, label) ->
-                                TextButton(onClick = { budget = value }) {
+                                OverlayButton(onClick = { budget = value }) {
                                     Text(label, color = if (budget == value) Color.Yellow else Color.Cyan)
                                 }
                             }
                     }
-                    TextButton(onClick = { deepClean = !deepClean }) {
+                    OverlayButton(onClick = { deepClean = !deepClean }) {
                         Text("Deep clean (floater removal): ${if (deepClean) "on" else "off"}",
                             color = Color.Cyan)
                     }
@@ -707,12 +710,12 @@ private fun ViewerScreen(
                     Text("Backside fade (see through what the capture never saw):", color = Color.White)
                     Row {
                         listOf(-1 to "off", 1 to "guess: room", 2 to "guess: object").forEach { (value, label) ->
-                            TextButton(onClick = { backside = value }) {
+                            OverlayButton(onClick = { backside = value }) {
                                 Text(label, color = if (backside == value) Color.Yellow else Color.Cyan)
                             }
                         }
                     }
-                    TextButton(onClick = {
+                    OverlayButton(onClick = {
                         backside = 0
                         cameraTarget = null
                         pickCameras.launch(arrayOf("*/*"))
@@ -727,10 +730,10 @@ private fun ViewerScreen(
                         Text(kBacksideTypeHint, color = Color(0xFFBBBBBB), style = MaterialTheme.typography.bodySmall)
                     }
                     Row {
-                        TextButton(onClick = { startImport(candidate) }) {
+                        OverlayButton(onClick = { startImport(candidate) }) {
                             Text("Import", color = Color.Green)
                         }
-                        TextButton(onClick = {
+                        OverlayButton(onClick = {
                             if (candidate.isSample) markSampleInstalled()
                             if (candidate.deleteAfter) candidate.src.delete()
                             importCandidate = null
@@ -747,7 +750,7 @@ private fun ViewerScreen(
                     } else {
                         Text("Pick a scene:", color = Color.White)
                         sceneList.forEach { file ->
-                            TextButton(onClick = {
+                            OverlayButton(onClick = {
                                 if (file.extension.lowercase() == "pspk") {
                                     openPack(file)
                                 } else {
@@ -763,10 +766,10 @@ private fun ViewerScreen(
                             }) { Text(file.name, color = Color.Cyan) }
                         }
                     }
-                    TextButton(onClick = { openDoc.launch(arrayOf("*/*")) }) {
+                    OverlayButton(onClick = { openDoc.launch(arrayOf("*/*")) }) {
                         Text("Open PLY/SPZ file…", color = Color.Green)
                     }
-                    TextButton(onClick = { showLicences = true }) {
+                    OverlayButton(onClick = { showLicences = true }) {
                         Text("About & licences", color = Color.Cyan)
                     }
                     importStatus?.let { Text(it, color = Color.Yellow) }
@@ -794,10 +797,10 @@ private fun ViewerScreen(
                                 if (rung >= 0) "adaptive quality, rung $rung" else "fixed",
                             color = Color.White,
                         )
-                        TextButton(onClick = { engine.setAdaptiveQuality(rung < 0) }) {
+                        OverlayButton(onClick = { engine.setAdaptiveQuality(rung < 0) }) {
                             Text("Adaptive quality: ${if (rung >= 0) "on" else "off"}", color = Color.Cyan)
                         }
-                        TextButton(onClick = {
+                        OverlayButton(onClick = {
                             levelOrbit = !levelOrbit
                             engine.setLevelOrbit(levelOrbit)
                         }) {
@@ -812,27 +815,38 @@ private fun ViewerScreen(
                             pickCameras.launch(arrayOf("*/*"))
                         }
                         if (source >= 0) {
-                            Text("Backside fade %.2f - %s".format(coverageStrength, backsideLabel(source)), color = Color.White)
+                            Text(
+                                (if (fadeMode == 2) "Backside fade off" else "Backside fade %.2f".format(coverageStrength)) +
+                                    " - " + backsideLabel(source),
+                                color = Color.White,
+                            )
                             Slider(
                                 value = coverageStrength,
                                 onValueChange = {
                                     coverageStrength = it
                                     engine.setCoverageStrength(it)
                                 },
+                                enabled = fadeMode != 2,
                                 modifier = Modifier.width(280.dp),
                             )
-                            TextButton(onClick = {
-                                fadeWhileMoving = !fadeWhileMoving
-                                engine.setFadeWhileMoving(fadeWhileMoving)
-                            }) {
-                                Text("Fade: ${if (fadeWhileMoving) "while moving" else "always"}", color = Color.Cyan)
+                            Row {
+                                Text("Fade: ", modifier = Modifier.padding(top = 12.dp), color = Color.White)
+                                listOf("while moving", "always", "never").forEachIndexed { mode, label ->
+                                    OverlayButton(onClick = {
+                                        fadeMode = mode
+                                        if (mode != 2) engine.setFadeWhileMoving(mode == 0)
+                                        engine.setCoverageStrength(if (mode == 2) 0f else coverageStrength)
+                                    }) {
+                                        Text(label, color = if (fadeMode == mode) Color.Yellow else Color.Cyan)
+                                    }
+                                }
                             }
                             if (isPack && !backsideBusy) {
                                 Row {
-                                    Text("Try another guess: ", modifier = Modifier.padding(top = 12.dp), color = Color.White)
-                                    TextButton(onClick = { guessRoom() }) { Text("room", color = Color.Cyan) }
-                                    TextButton(onClick = { guessObject() }) { Text("object", color = Color.Cyan) }
-                                    TextButton(onClick = { useCameras() }) { Text("cameras…", color = Color.Cyan) }
+                                    Text("Guess again: ", modifier = Modifier.padding(top = 12.dp), color = Color.White)
+                                    OverlayButton(onClick = { guessRoom() }) { Text("room", color = Color.Cyan) }
+                                    OverlayButton(onClick = { guessObject() }) { Text("object", color = Color.Cyan) }
+                                    OverlayButton(onClick = { useCameras() }) { Text("cameras…", color = Color.Cyan) }
                                 }
                             }
                         } else if (isPack && !backsideBusy) {
@@ -841,22 +855,22 @@ private fun ViewerScreen(
                                 "Not set up for this scene. Guess it from how it was captured:",
                                 color = Color(0xFFBBBBBB), style = MaterialTheme.typography.bodySmall,
                             )
-                            TextButton(onClick = { guessRoom() }) {
+                            OverlayButton(onClick = { guessRoom() }) {
                                 Text("Guess: room (walked through)", color = Color.Green)
                             }
-                            TextButton(onClick = { guessObject() }) {
+                            OverlayButton(onClick = { guessObject() }) {
                                 Text("Guess: object (went around it)", color = Color.Green)
                             }
-                            TextButton(onClick = { useCameras() }) {
+                            OverlayButton(onClick = { useCameras() }) {
                                 Text("Use capture camera files…", color = Color.Cyan)
                             }
                         }
                         if (backsideBusy) Text("Backside fade: computing…", color = Color.Yellow)
                         backsideMessage?.let { Text(it, color = Color.Yellow) }
                         Row {
-                            TextButton(onClick = { engine.resetHome() }) { Text("Home view", color = Color.Cyan) }
-                            TextButton(onClick = { overlayVisible = false }) { Text("Hide overlay", color = Color.Cyan) }
-                            TextButton(onClick = { showSceneList() }) { Text("Scenes", color = Color.Cyan) }
+                            OverlayButton(onClick = { engine.resetHome() }) { Text("Home view", color = Color.Cyan) }
+                            OverlayButton(onClick = { overlayVisible = false }) { Text("Hide overlay", color = Color.Cyan) }
+                            OverlayButton(onClick = { showSceneList() }) { Text("Scenes", color = Color.Cyan) }
                         }
                     }
                 }
@@ -867,11 +881,11 @@ private fun ViewerScreen(
                             .format(elapsed / 60, elapsed % 60, benchSeconds / 60, benchSeconds % 60, fpsEstimate),
                         color = Color.Yellow,
                     )
-                    TextButton(onClick = { engine.stopBench() }) { Text("Stop bench", color = Color.Red) }
+                    OverlayButton(onClick = { engine.stopBench() }) { Text("Stop bench", color = Color.Red) }
                 } else {
                     benchMessage?.let { Text(it, color = Color.Yellow) }
                     currentFile?.let { file ->
-                        TextButton(onClick = { runBench(file, 600, 32, 0f, 0f, protocolRes) }) {
+                        OverlayButton(onClick = { runBench(file, 600, 32, 0f, 0f, protocolRes) }) {
                             Text("Benchmark 10 min", color = Color.Cyan)
                         }
                     }
@@ -929,6 +943,20 @@ private fun ClippedBanner(clipped: Long, floorPx: Float, compact: Boolean) {
     }
 }
 
+/**
+ * Every pressable item of the overlay: a text button with a thin outline, so that what can be
+ * changed stands apart from status and info text (owner, S28).
+ */
+@Composable
+private fun OverlayButton(onClick: () -> Unit, content: @Composable RowScope.() -> Unit) {
+    TextButton(
+        onClick = onClick,
+        border = BorderStroke(1.dp, Color(0x88FFFFFF)),
+        modifier = Modifier.padding(end = 4.dp, bottom = 2.dp),
+        content = content,
+    )
+}
+
 /** Version, source link and the licence texts of everything shipped in the APK. */
 @Composable
 private fun LicencesScreen(context: Context, onBack: () -> Unit) {
@@ -942,7 +970,7 @@ private fun LicencesScreen(context: Context, onBack: () -> Unit) {
             .padding(12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onBack) { Text("< Back", color = Color.Cyan) }
+            OverlayButton(onClick = onBack) { Text("< Back", color = Color.Cyan) }
             Text("PocketSplat $version", color = Color.White, style = MaterialTheme.typography.titleMedium)
         }
         Text(

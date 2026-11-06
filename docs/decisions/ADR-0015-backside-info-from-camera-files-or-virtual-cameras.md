@@ -55,7 +55,9 @@ hides content from a view the user has settled on.
      cameras and `backside_files`.
    * **The fade shows while a gesture moves the view, by default** (owner, S27): a drag past
      the touch slop or a pinch turns it on at the slider's strength (default 0.75); after the
-     last finger lifts it eases out over 250 ms. "Fade: while moving / always" switches.
+     last finger lifts it eases out over 250 ms. "Fade: while moving / always / never" switches
+     (S28, owner: one tap to turn a guessed fade off; "never" sends strength 0 and keeps the
+     slider's value for the other two).
      Taps and the double-tap pick never trigger it. Scripted runs that pass
      `coverage_strength` (every bench since ADR-0013) fade always, as before.
 5. `splatconv coverage <scene> <camera files…> <out>` or `… <out> --infer room|object`; both
