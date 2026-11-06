@@ -43,9 +43,10 @@ Four things make a phone different from the desktop GPU that 3DGS renderers are 
 * **Heat.** An uncapped renderer reaches thermal status 2 within 1.5–5 minutes on both phones,
   and whatever a pass costs cold, it costs more ten minutes later.
 
-There are also hard limits. The Adreno 750 allows 128 MB per storage-buffer binding, which caps a
-scene at 4,194,304 splats with 32-byte draw records. Scenes beyond that are budget-pruned on
-import.
+There are also hard limits. The Adreno 750 allows 128 MB per storage-buffer binding. With 32-byte
+draw records for every splat, that capped a scene at 4,194,304 splats. Sizing the records for the
+splats visible in a frame instead (ADR-0016) moved the cap to the 12-byte per-splat arrays, at
+11,184,810 splats.
 
 The frame I ended up with is GPU-driven after the first pass:
 
@@ -300,8 +301,9 @@ Negative results are recorded with the measurement and a diagnosis, 31 of them i
 
 ## 8. Limits, and what's next
 
-* **Scene size:** 4,194,304 splats per scene on the Adreno 750, from the storage-buffer range. The
-  830 renders the full 4.48 M-splat bicycle at 65 fps.
+* **Scene size:** 11,184,810 splats per scene on the Adreno 750, and 4,194,304 drawn per frame,
+  both from its 128 MB storage-buffer range. A wider view raises the contribution cull until it
+  fits (ADR-0016). The 830's range is 2 GB, so memory is its only limit.
 * **Spherical harmonics:** degree 0 and 1 only. This is deliberate: degree 3 would quadruple the
   per-splat colour data on a bandwidth-bound GPU.
 * **GPUs:** measured on two Adreno phones only. Mali and Xclipse are untested. The sort is written

@@ -12,6 +12,10 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
   600 frames) and `…-5s.csv` (5-second aggregate over the full run, the CSV columns below);
   `thermal-<device>-<hash>-<scene>.csv` carries the host-sampled skin/AP temperatures alongside.
 - `cleaning-<scene>.md` — cleaning reports from `scripts/clean_all.py`.
+- `cap-lift-2026-11-06.csv` — scenes over the old 4.19 M cap on both phones (ADR-0016): one row per
+  60 s orbit run with fps, per-pass ms, visible and clipped counts, the clip guard's floor and
+  peak memory. Real scenes are the uncleaned INRIA bicycle and garden (local only); `bicycle-xN` are
+  synthetic tiles (`scripts/tile_scene.py`).
 - `phase3-android.md` — on-device frame-benchmark summary (S24U/S25U), updated as protocol runs land.
 - `public-baseline.md` — like-for-like comparison on public scenes: PocketSplat vs the SuperSplat
   viewer (WebGPU / WebGL2 / sort-free), Spark and splatkit on the same phone, splats and canvas.
@@ -458,6 +462,8 @@ probe repeated within 0.11 M cycles.
 ## Negative results log
 | Date | What was tried | Result | Diagnosis |
 |---|---|---|---|
+| 2026-11-06 | Clip guard lowering its contribution floor whenever the visible count stays under 60 % of the visible capacity for 30 computed frames (S28) | 18 M tiled bicycle orbit at capacity 4,194,304 (desktop): the floor flipped 0 ↔ 0.1 px 26 times in 600 frames; 4.4 % of frames clipped (70.3 % without a floor) | 0.1 px halves a large view's visible count (5.0 M → 2.4 M), so a count under 60 % at 0.1 overflowed again at 0. Lowering now predicts the count after the step from what the last raise removed and needs it under 90 %: 0.7 % clipped frames, 4 changes (ADR-0016) |
+| 2026-11-06 | Clipping a frame's visible splats at the draw-record capacity with nothing else (S28, step 1 of ADR-0016) | Raw bicycle at `--visible-cap 2000000` (desktop): 13.4 dB against the full image, the ground in front of the camera gone; S24U no-cull orbits of 13 M / 18 M tiled scenes clipped 46 % / 99.8 % of frames | A workgroup is a 256-splat chunk, so whole chunks that append last are dropped: arbitrary regions, near ones included. Replaced by the contribution floor (52.0 dB on the same view) |
 | 2026-11-05 | Backside info without cameras, per flat splat (S27): the observed side is the side facing the home view's focus, or facing enclosed free space; then majority votes over planar patches | Facing the focus 0.73–0.93 right per splat (rooms 0.73–0.84), enclosed space 0.49–0.94, patch votes 0.73–0.78; about half of all flat splats were seen from both sides anyway | One wall splat in five on the wrong side is a hole or a speck each. Replaced by virtual cameras fed to the real coverage pass (ADR-0015) |
 | 2026-11-05 | Capture camera positions from the splats (S27): voting along needle splats' long axes; flood fill of the free space from the most open point near the focus | Long axes vs the direction to the nearest camera: median \|cos\| 0.27–0.51 (random 0.50); vote peaks 0.4–2.7 ring radii from the cameras. The fill reached 91–98 % of the grid in room, counter and drjohnson | Needles are not ray-aligned in general (only the streak population of S22 is); 3DGS walls have gaps everywhere at any useful grid size |
 | 2026-11-05 | Splat size as the distance to the cameras (owner's idea, S27): a voxel's fine-splat size predicts its distance to the nearest camera, so votes "a camera is k × size away" locate them | Spearman size vs distance +0.47 to +0.69 on counter, kitchen, bonsai, bicycle, garden; −0.07 to +0.08 on room, drjohnson, playroom. With the true k the votes find room cameras within 0.15–0.42 ring radii; k from the home distance is 2–15× too large in rooms, k chosen by vote agreement 0.12–0.8× | The signal is real on orbits and in rooms given k, but k (training resolution × splat-per-pixel density) is not recoverable from the splats so far. Not used; noted as a lead in ADR-0015 |
