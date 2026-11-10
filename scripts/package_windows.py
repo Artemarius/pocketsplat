@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build and package the Windows viewer as a release zip.
 
-    python scripts/package_windows.py [--build-dir build-release] [--version 0.1.0] [--no-build]
+    python scripts/package_windows.py [--build-dir build-release] [--version 0.3.0] [--no-build]
 
 Configures a separate build with the C++ runtime linked statically (POCKETSPLAT_STATIC_CRT, so no
 Visual C++ redistributable is needed), builds pocketsplat-viewer, checks that the exe imports no
@@ -17,6 +17,7 @@ MSVC runtime DLL, and writes dist/pocketsplat-viewer-<version>-windows-x64.zip:
 Standard library only.
 """
 import argparse
+import re
 import struct
 import subprocess
 import sys
@@ -127,16 +128,25 @@ def pe_imports(path):
     return names
 
 
+def app_version():
+    """The release version, from the Android app's versionName so both downloads carry the same one."""
+    gradle = (REPO / "android" / "app" / "build.gradle.kts").read_text(encoding="utf-8")
+    m = re.search(r'versionName\s*=\s*"(\d+\.\d+\.\d+)', gradle)
+    if not m:
+        sys.exit("no versionName in android/app/build.gradle.kts: pass --version")
+    return m.group(1)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--build-dir", default="build-release")
-    parser.add_argument("--version", default=None, help="default: 0.1.0-<git short hash>")
+    parser.add_argument("--version", default=None, help="default: the app's versionName (android/app/build.gradle.kts)-<git short hash>")
     parser.add_argument("--out-dir", default="dist")
     parser.add_argument("--no-build", action="store_true", help="package an existing build")
     args = parser.parse_args()
 
     build = (REPO / args.build_dir).resolve()
-    version = args.version or "0.1.0-" + subprocess.run(
+    version = args.version or app_version() + "-" + subprocess.run(
         ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, cwd=REPO, check=True).stdout.strip()
     if not args.no_build:
         run(["cmake", "-S", ".", "-B", build, "-DPOCKETSPLAT_BUILD_DESKTOP=ON", "-DPOCKETSPLAT_BUILD_TESTS=OFF",
