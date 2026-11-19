@@ -145,7 +145,7 @@ def run_phone(args, build: str) -> int:
 def run(args) -> int:
     if args.low_priority:
         lower_priority()
-    build = build_hash()
+    build = args.build or build_hash()
     return run_phone(args, build) if args.adb else run_local(args, build)
 
 
@@ -211,6 +211,8 @@ def main() -> int:
     r.add_argument("--serial")
     r.add_argument("--skin-max", type=float, default=32.0)
     r.add_argument("--cool-timeout", type=int, default=1800)
+    r.add_argument("--build", help="build hash for the CSV (default: git HEAD, -dirty if modified); pin it "
+                   "when a long sweep spans edits to tracked files that do not touch the code")
     r.add_argument("--csv", required=True)
     s = sub.add_parser("summary")
     s.add_argument("csv")
