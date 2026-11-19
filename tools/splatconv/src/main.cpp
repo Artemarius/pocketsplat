@@ -10,6 +10,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "splatcore/capture.h"
@@ -18,6 +19,7 @@
 #include "splatcore/coverage.h"
 #include "splatcore/home_view.h"
 #include "splatcore/pack.h"
+#include "splatcore/palette.h"
 #include "splatcore/ply_io.h"
 #include "splatcore/quality_controller.h"
 #include "splatcore/scene_load.h"
@@ -87,6 +89,12 @@ void print_usage() {
                  "      Build the GPU pack (docs/formats.md §3): Morton reorder (unless\n"
                  "      --no-morton), then the quantized SoA layout with 256-splat chunk AABBs.\n"
                  "      --sh 0|1 and coordinate flags as for convert.\n"
+                 "      --sh1-palette K  EXPERIMENTAL (Phase 8, docs/sh1-palette-research.md): train a\n"
+                 "                       K-entry SH1 palette (Lloyd, K <= 65536), replace every\n"
+                 "                       splat's SH1 by its entry and write an ordinary pack; the\n"
+                 "                       JSON line gains the palette statistics.\n"
+                 "      --palette-epochs N  Lloyd update steps (default 25)\n"
+                 "      --palette-seed S    initialisation seed (default 1)\n"
                  "\n"
                  "  splatconv pack --dump-header <file.pspk>\n"
                  "      Print the 64-byte pack header as JSON.\n"
@@ -205,6 +213,9 @@ struct Options {
     bool no_needle_clamp = false;
     bool no_morton = false;
     bool dump_header = false;
+    std::uint32_t sh1_palette = 0;  // pack: palette size, 0 = direct SH1
+    std::uint32_t palette_epochs = 25;
+    std::uint64_t palette_seed = 1;
     std::optional<float> target_fps;  // replay overrides of the CSV header
     std::optional<float> light;
     std::optional<int> max_mhz;
@@ -270,6 +281,21 @@ bool parse_options(int argc, char** argv, int start, Options& options) {
             if (*options.sh != 0 && *options.sh != 1) {
                 std::fprintf(stderr, "splatconv: --sh must be 0 or 1\n");
                 return false;
+            }
+        } else if (arg == "--sh1-palette" || arg == "--palette-epochs" || arg == "--palette-seed") {
+            auto v = value(arg.c_str());
+            if (!v) return false;
+            const unsigned long long n = std::stoull(*v);
+            if (arg == "--sh1-palette") {
+                if (n == 0 || n > splatcore::kMaxPaletteSize) {
+                    std::fprintf(stderr, "splatconv: --sh1-palette must be 1..65536\n");
+                    return false;
+                }
+                options.sh1_palette = static_cast<std::uint32_t>(n);
+            } else if (arg == "--palette-epochs") {
+                options.palette_epochs = static_cast<std::uint32_t>(n);
+            } else {
+                options.palette_seed = n;
             }
         } else if (arg == "--alpha") {
             auto v = value("--alpha");
@@ -607,6 +633,38 @@ int cmd_pack(const Options& options) {
         return 1;
     }
     if (!options.no_morton) splatcore::reorder_morton(cloud, splatcore::robust_aabb(cloud));
+    std::string palette_json;
+    if (options.sh1_palette != 0) {
+        if (cloud.sh_degree != 1) {
+            std::fprintf(stderr, "splatconv: --sh1-palette needs an SH degree 1 scene (got %d)\n",
+                         cloud.sh_degree);
+            return 1;
+        }
+        splatcore::PaletteParams params;
+        params.k = options.sh1_palette;
+        params.epochs = options.palette_epochs;
+        params.seed = options.palette_seed;
+        splatcore::Result<splatcore::Sh1Palette> palette = splatcore::train_sh1_palette(cloud, params);
+        if (!palette) {
+            std::fprintf(stderr, "splatconv: %s\n", palette.error().c_str());
+            return 1;
+        }
+        const splatcore::Status applied = splatcore::apply_sh1_palette(cloud, palette.value());
+        if (!applied) {
+            std::fprintf(stderr, "splatconv: %s\n", applied.error().c_str());
+            return 1;
+        }
+        const splatcore::PaletteStats& s = palette.value().stats;
+        char buf[512];
+        std::snprintf(
+            buf, sizeof(buf),
+            ", \"palette\": {\"trainer\": \"lloyd\", \"k\": %u, \"epochs\": %u, \"epochs_run\": %u, "
+            "\"seed\": %llu, \"threads\": %u, \"mse\": %.6g, \"dead\": %u, \"used_entropy_bits\": %.6g, "
+            "\"wall_ms\": %.1f}",
+            palette.value().size(), params.epochs, s.epochs_run, static_cast<unsigned long long>(params.seed),
+            std::max(1u, std::thread::hardware_concurrency()), s.mse, s.dead, s.used_entropy, s.wall_ms);
+        palette_json = buf;
+    }
     splatcore::Result<splatcore::GpuPack> pack = splatcore::build_pack(cloud);
     if (!pack) {
         std::fprintf(stderr, "splatconv: %s\n", pack.error().c_str());
@@ -621,9 +679,10 @@ int cmd_pack(const Options& options) {
     }
     std::fprintf(g_json,
                  "{\"input\": \"%s\", \"output\": \"%s\", \"count\": %u, \"sh_degree\": %u, "
-                 "\"chunks\": %zu, \"bytes\": %zu}\n",
+                 "\"chunks\": %zu, \"bytes\": %zu%s}\n",
                  json_escape(in).c_str(), json_escape(out).c_str(), pack.value().header.count,
-                 pack.value().header.sh_degree, pack.value().chunk_count(), bytes.size());
+                 pack.value().header.sh_degree, pack.value().chunk_count(), bytes.size(),
+                 palette_json.c_str());
     return 0;
 }
 
