@@ -10,8 +10,8 @@ every phone run).
   dump     scene (PLY/SPZ, prepared as `splatconv pack` does) -> <work>/<name>.sh1
   run      palettebench over every .sh1 locally (--low-priority: idle priority, inherited by
            palettebench) or on a phone (--adb: pushes palettebench and the .sh1 files to
-           /data/local/tmp, waits for a cool phone before each scene and k, records thermal status
-           and skin temperature before and after)
+           /data/local/tmp unless already there, waits for a cool phone before each scene and k,
+           records thermal status and skin temperature before and after; --cleanup at the end)
   summary  per scene and k, seed means against the Lloyd-25 loss: loss ratio, pairs ratio, and
            the fewest e-means epochs at or below the Lloyd-25 loss
 
@@ -110,23 +110,31 @@ def run_local(args, build: str) -> int:
 
 
 def run_phone(args, build: str) -> int:
-    from bench_android import adb, shell, thermal, wait_cool  # adb helpers (CLAUDE.md §5 notes)
+    from bench_android import adb, device_state, shell, thermal, wait_cool  # adb helpers (CLAUDE.md §5)
 
     serial = args.serial
+
+    def push_if_changed(local: str, remote: str) -> None:
+        size = shell(f"stat -c %s {remote} 2>/dev/null || echo -1", serial=serial).strip()
+        if size != str(Path(local).stat().st_size):
+            adb("push", local, remote, serial=serial, timeout=900)
+
+    print(f"device: {device_state(serial)}", flush=True)
     shell(f"mkdir -p {PHONE_DIR}", serial=serial)
-    adb("push", args.palettebench, f"{PHONE_DIR}/palettebench", serial=serial, timeout=600)
+    push_if_changed(args.palettebench, f"{PHONE_DIR}/palettebench")
     shell(f"chmod 755 {PHONE_DIR}/palettebench", serial=serial)
     csv_path = Path(args.csv)
     for sh1 in scenes_in(Path(args.work), args.only):
         remote = f"{PHONE_DIR}/{sh1.name}"
-        adb("push", str(sh1), remote, serial=serial, timeout=600)
+        push_if_changed(str(sh1), remote)
         for k in args.k.split(","):
             wait_cool(serial, args.skin_max, args.cool_timeout)
             before = thermal(serial)
             phone_args = bench_args(args)
             phone_args[phone_args.index("--k") + 1] = k
             started = time.monotonic()
-            out = shell(" ".join([f"{PHONE_DIR}/palettebench", remote, *phone_args, "2>/dev/null"]), serial=serial)
+            command = " ".join([f"{PHONE_DIR}/palettebench", remote, *phone_args, "2>/dev/null"])
+            out = adb("shell", command, serial=serial, timeout=args.run_timeout)
             after = thermal(serial)
             fields, rows = parse_bench_csv(out)
             if not rows:
@@ -138,7 +146,8 @@ def run_phone(args, build: str) -> int:
             append_rows(csv_path, rows, fields + EXTRA_FIELDS)
             print(f"{sh1.stem:>16} k {k:>6}: {len(rows)} runs in {time.monotonic() - started:7.1f} s, thermal "
                   f"{before[0]} -> {after[0]}, skin {before[1]:.1f} -> {after[1]:.1f} C", flush=True)
-        shell(f"rm -f {remote}", serial=serial)
+    if args.cleanup:
+        shell(f"rm -rf {PHONE_DIR}", serial=serial)
     return 0
 
 
@@ -211,6 +220,9 @@ def main() -> int:
     r.add_argument("--serial")
     r.add_argument("--skin-max", type=float, default=32.0)
     r.add_argument("--cool-timeout", type=int, default=1800)
+    r.add_argument("--run-timeout", type=int, default=3600, help="seconds for one palettebench call on the phone")
+    r.add_argument("--cleanup", action="store_true", help="remove the phone's work directory at the end (files "
+                   "already there with the right size are not pushed again)")
     r.add_argument("--build", help="build hash for the CSV (default: git HEAD, -dirty if modified); pin it "
                    "when a long sweep spans edits to tracked files that do not touch the code")
     r.add_argument("--csv", required=True)
