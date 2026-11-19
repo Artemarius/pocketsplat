@@ -6,6 +6,7 @@ add_library(splatcore STATIC
     src/coverage.cpp
     src/home_view.cpp
     src/pack.cpp
+    src/palette.cpp
     src/ply_reader.cpp
     src/ply_writer.cpp
     src/quality_controller.cpp
@@ -35,6 +36,7 @@ if(POCKETSPLAT_BUILD_TESTS)
         tests/coverage_test.cpp
         tests/home_view_test.cpp
         tests/pack_test.cpp
+        tests/palette_test.cpp
         tests/ply_io_test.cpp
         tests/quality_controller_test.cpp
         tests/scene_import_test.cpp
