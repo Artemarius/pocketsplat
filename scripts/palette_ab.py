@@ -56,6 +56,8 @@ def lower_priority() -> None:
         import ctypes
         idle_priority_class = 0x40
         kernel32 = ctypes.windll.kernel32
+        kernel32.GetCurrentProcess.restype = ctypes.c_void_p  # a 64-bit pseudo-handle
+        kernel32.SetPriorityClass.argtypes = [ctypes.c_void_p, ctypes.c_uint32]
         if not kernel32.SetPriorityClass(kernel32.GetCurrentProcess(), idle_priority_class):
             print("warning: could not lower the process priority", file=sys.stderr)
     else:
