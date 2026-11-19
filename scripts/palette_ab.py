@@ -12,7 +12,10 @@ share of pixels moved by more than 2 LSB. `direct@repeat` re-renders the referen
 renderer's own run-to-run noise floor (equal-key blending order).
 
 Packs and their splatconv JSON are kept in --work, so an interrupted run resumes without
-retraining. Training wall time comes from splatconv's own timer (one process, all threads).
+retraining. Training wall time comes from splatconv's own timer (one process, --threads threads;
+the CSV records the count). --low-priority runs this script and everything it starts at idle
+priority (Windows: the priority class is inherited; elsewhere: nice 19), so a long sweep yields
+to interactive work; wall times then also depend on what else runs.
 
 Usage:
   python scripts/palette_ab.py --exe build/desktop/Release/pocketsplat-desktop.exe \\
@@ -26,6 +29,7 @@ stdlib + numpy only.
 import argparse
 import csv
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -44,6 +48,18 @@ def build_hash() -> str:
     dirty = subprocess.run(["git", "-C", str(repo), "status", "--porcelain", "--untracked-files=no"],
                            capture_output=True, text=True, check=True).stdout.strip()
     return head + ("-dirty" if dirty else "")
+
+
+def lower_priority() -> None:
+    """Idle priority for this process and, by inheritance, every process it starts."""
+    if sys.platform == "win32":
+        import ctypes
+        idle_priority_class = 0x40
+        kernel32 = ctypes.windll.kernel32
+        if not kernel32.SetPriorityClass(kernel32.GetCurrentProcess(), idle_priority_class):
+            print("warning: could not lower the process priority", file=sys.stderr)
+    else:
+        os.nice(19)
 
 
 def pack(splatconv: str, src: str, out: Path, extra: list[str]) -> dict:
@@ -67,19 +83,23 @@ def main() -> int:
     parser.add_argument("--k", type=int, nargs="+", default=[1024, 4096, 16384, 65536])
     parser.add_argument("--epochs", type=int, default=25)
     parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--threads", type=int, default=0, help="palette training threads (0 = all)")
+    parser.add_argument("--low-priority", action="store_true", help="run everything at idle priority")
     parser.add_argument("--width", type=int, default=864)
     parser.add_argument("--height", type=int, default=1872)
     parser.add_argument("--work", default="bench-out/palette", help="packs, JSON and optional PNGs")
     parser.add_argument("--png", action="store_true", help="also write per-pose PNGs to --work/png")
     parser.add_argument("--csv", required=True)
     args = parser.parse_args()
+    if args.low_priority:
+        lower_priority()
     exe = str(Path(args.exe).resolve())
     splatconv = str(Path(args.splatconv).resolve())
     work = Path(args.work)
     work.mkdir(parents=True, exist_ok=True)
     build = build_hash()
 
-    fields = ["build", "scene", "count", "variant", "k", "epochs", "epochs_run", "seed", "train_wall_s", "mse",
+    fields = ["build", "scene", "count", "variant", "k", "epochs", "epochs_run", "seed", "threads", "train_wall_s", "mse",
               "dead", "used_entropy_bits", "pack_bytes", "psnr_min_db", "psnr_mean_db", "moved_px_max_pct",
               "resolution", "poses", "render_flags"]
     rows = []
@@ -95,7 +115,8 @@ def main() -> int:
             for k in args.k:
                 out = work / f"{name}.k{k}.e{args.epochs}.s{args.seed}.pspk"
                 info = pack(splatconv, src, out, ["--sh1-palette", str(k), "--palette-epochs", str(args.epochs),
-                                                  "--palette-seed", str(args.seed)])
+                                                  "--palette-seed", str(args.seed),
+                                                  "--palette-threads", str(args.threads)])
                 variants.append((f"k{k}", out, info))
                 print(f"{name:>16} k {k:>6}: trained in {info['palette']['wall_ms'] / 1000:7.1f} s, "
                       f"mse {info['palette']['mse']:.3g}, dead {info['palette']['dead']}", flush=True)
@@ -121,7 +142,7 @@ def main() -> int:
                 pal = info.get("palette", {})
                 row = {"build": build, "scene": name, "count": info["count"], "variant": variant,
                        "k": pal.get("k", ""), "epochs": pal.get("epochs", ""), "epochs_run": pal.get("epochs_run", ""),
-                       "seed": pal.get("seed", ""),
+                       "seed": pal.get("seed", ""), "threads": pal.get("threads", ""),
                        "train_wall_s": f"{pal['wall_ms'] / 1000:.2f}" if pal else "",
                        "mse": f"{pal['mse']:.6g}" if pal else "", "dead": pal.get("dead", ""),
                        "used_entropy_bits": f"{pal['used_entropy_bits']:.4f}" if pal else "",

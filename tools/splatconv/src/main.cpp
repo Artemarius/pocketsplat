@@ -95,6 +95,8 @@ void print_usage() {
                  "                       JSON line gains the palette statistics.\n"
                  "      --palette-epochs N  Lloyd update steps (default 25)\n"
                  "      --palette-seed S    initialisation seed (default 1)\n"
+                 "      --palette-threads N  training threads (default 0 = all; the palette depends\n"
+                 "                       on N only through summation order)\n"
                  "\n"
                  "  splatconv pack --dump-header <file.pspk>\n"
                  "      Print the 64-byte pack header as JSON.\n"
@@ -216,7 +218,8 @@ struct Options {
     std::uint32_t sh1_palette = 0;  // pack: palette size, 0 = direct SH1
     std::uint32_t palette_epochs = 25;
     std::uint64_t palette_seed = 1;
-    std::optional<float> target_fps;  // replay overrides of the CSV header
+    std::uint32_t palette_threads = 0;  // 0 = all hardware threads
+    std::optional<float> target_fps;    // replay overrides of the CSV header
     std::optional<float> light;
     std::optional<int> max_mhz;
     std::optional<std::pair<int, int>> frame_guard;  // bad windows / span
@@ -282,7 +285,8 @@ bool parse_options(int argc, char** argv, int start, Options& options) {
                 std::fprintf(stderr, "splatconv: --sh must be 0 or 1\n");
                 return false;
             }
-        } else if (arg == "--sh1-palette" || arg == "--palette-epochs" || arg == "--palette-seed") {
+        } else if (arg == "--sh1-palette" || arg == "--palette-epochs" || arg == "--palette-seed" ||
+                   arg == "--palette-threads") {
             auto v = value(arg.c_str());
             if (!v) return false;
             const unsigned long long n = std::stoull(*v);
@@ -294,6 +298,8 @@ bool parse_options(int argc, char** argv, int start, Options& options) {
                 options.sh1_palette = static_cast<std::uint32_t>(n);
             } else if (arg == "--palette-epochs") {
                 options.palette_epochs = static_cast<std::uint32_t>(n);
+            } else if (arg == "--palette-threads") {
+                options.palette_threads = static_cast<std::uint32_t>(n);
             } else {
                 options.palette_seed = n;
             }
@@ -644,6 +650,7 @@ int cmd_pack(const Options& options) {
         params.k = options.sh1_palette;
         params.epochs = options.palette_epochs;
         params.seed = options.palette_seed;
+        params.threads = options.palette_threads;
         splatcore::Result<splatcore::Sh1Palette> palette = splatcore::train_sh1_palette(cloud, params);
         if (!palette) {
             std::fprintf(stderr, "splatconv: %s\n", palette.error().c_str());
@@ -662,7 +669,8 @@ int cmd_pack(const Options& options) {
             "\"seed\": %llu, \"threads\": %u, \"mse\": %.6g, \"dead\": %u, \"used_entropy_bits\": %.6g, "
             "\"wall_ms\": %.1f}",
             palette.value().size(), params.epochs, s.epochs_run, static_cast<unsigned long long>(params.seed),
-            std::max(1u, std::thread::hardware_concurrency()), s.mse, s.dead, s.used_entropy, s.wall_ms);
+            params.threads != 0 ? params.threads : std::max(1u, std::thread::hardware_concurrency()), s.mse,
+            s.dead, s.used_entropy, s.wall_ms);
         palette_json = buf;
     }
     splatcore::Result<splatcore::GpuPack> pack = splatcore::build_pack(cloud);
