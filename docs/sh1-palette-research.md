@@ -1,6 +1,7 @@
 # SH 1 palette research: view-dependent colour at the SH 0 footprint
 
-Status: plan, nothing measured yet (written 2026-11-19 against dev `212b91b`, v0.3.0). This note follows
+Status: **gate A passed** (2026-11-19, S29, §6); phases B and C open. Written 2026-11-19 against
+`212b91b` (v0.3.0); measured at `c6f0a7f`. Where the implementation departs from §2, §6 says so. This note follows
 the pattern of `coverage-mask-research.md`: the question, the design, the protocol, then results and
 negative results as they are measured. Numbers enter this file only from committed CSVs.
 
@@ -175,8 +176,71 @@ assignment pass if CPU training at import turns out too slow on the phones.
 
 ## 6. Results
 
-None yet.
+### Gate A: image quality (desktop, 2026-11-19)
+
+Source: `benchmarks/palette-quality-c6f0a7f-2026-11-19.csv` (`scripts/palette_ab.py`). PSNR in dB,
+minimum over the six `quality_ab.py` poses (mean in brackets), against the direct SH 1 pack at
+864 × 1872, 32-bit keys, no contribution cull. Lloyd 25 epochs, seed 1, one seed per cell.
+
+| Scene | Splats | SH 0 | k 1,024 | k 4,096 | k 16,384 | k 65,536 | Noise floor |
+|---|---|---|---|---|---|---|---|
+| museum1.sh1 | 314,457 | 33.8 (35.6) | 46.2 (48.6) | 47.6 (50.0) | 48.8 (51.2) | 50.2 (52.6) | 92.0 |
+| hornedlizard | 764,985 | 35.3 (37.4) | 48.8 (49.6) | 51.3 (52.2) | 52.8 (53.6) | 54.6 (55.9) | 101.2 |
+| beetle | 1,681,983 | 29.7 (36.5) | 46.1 (48.9) | 47.5 (50.1) | 49.9 (51.8) | 51.2 (53.1) | 75.1 |
+| giraffes_statue | 2,880,821 | 29.6 (35.1) | 40.6 (45.6) | 42.6 (47.4) | 46.9 (49.2) | 46.3 (50.1) | 78.4 |
+| truck (INRIA) | 1,653,927 | 38.0 (40.2) | 50.8 (51.8) | 51.8 (53.2) | 53.1 (54.4) | 54.2 (55.6) | 89.2 |
+| stump (INRIA) | 4,049,567 | 38.7 (40.3) | 51.6 (52.5) | 52.7 (53.8) | 53.8 (54.8) | 54.6 (55.7) | 83.8 |
+
+Training wall time, Lloyd 25 epochs (seconds; threads in brackets; upper bounds, see below):
+
+| Scene | k 1,024 | k 4,096 | k 16,384 | k 65,536 |
+|---|---|---|---|---|
+| museum1.sh1 | 2.6 (12) | 9.1 (12) | 41 (12) | 98 (12, 14 epochs) |
+| hornedlizard | 5.3 (12) | 21 (12) | 96 (12) | 420 (12) |
+| beetle | 12 (12) | 50 (12) | 226 (12) | 917 (12) |
+| giraffes_statue | 20 (12) | 84 (12) | 704 (4) | 3,181 (4) |
+| truck | 12 (12) | 49 (12) | 236 (12) | 889 (12) |
+| stump | 39 (4) | 167 (4) | 731 (4) | 3,054 (4) |
+
+Verdict against gate A:
+
+* SH 0 is below the 40 dB bar on every scene (minimum 29.6–38.7 dB). SH 1 matters most on
+  giraffes_statue, beetle and museum1; truck and stump sit at the bar on average (40.2–40.3 dB mean)
+  and fall below it at their worst poses.
+* The smallest palette tried, 1,024 entries (12 KB), reaches 40 dB on all six scenes. giraffes_statue
+  has the thinnest margin: 40.6 dB at 1,024, 42.6 at 4,096, 46.9 at 16,384. The rest are at 46.1 dB or
+  more at 1,024. Gate A passes at every k ≤ 16,384.
+* Each ×4 in entries gains 0.8–2.5 dB at the worst pose. giraffes_statue is the exception: +2.0 and
+  +4.3 dB, then −0.6 dB from 16,384 to 65,536 (one seed; its mean rises by 0.9 dB).
+* The question moves to training cost. Even on the laptop, plain Lloyd at k 4,096 adds 9–167 s per
+  scene; the phone's import time comes in Phase C. Phase B (trainers, training cap) is where the
+  work is.
+
+Deviations from §2 and facts found on the way:
+
+* **Kernel.** The assignment kernel is explicit SSE2 on x86-64, not auto-vectorized code (negative
+  result below). It sums the dot product as a tree in the same order as the portable loop, which
+  arm64 uses until a NEON kernel can be tested on a phone (Phase C). Throughput: count × k ×
+  (epochs + 1) pairs at 3.0–3.9 G pairs/s on 12 threads and 1.5–2.8 on 4. The laptop CPU ran at
+  ~2.6 GHz. The 12-thread runs shared the CPU with another project's jobs; the 4-thread runs were at
+  idle priority.
+* **Lloyd details** (`splatcore/palette.cpp`): there is no split after the last update, so the
+  returned palette is always cluster means. Lloyd stops early when no label changes. The labels are
+  a final assignment of every splat against the trained palette.
+* **Distinct vectors.** SPZ-imported scenes carry far fewer distinct SH1 vectors: hornedlizard has
+  106,045 distinct snorm8 vectors among 764,985 splats, so 25,896 of 65,536 entries stay unused.
+  museum1, truck and giraffes_statue have 85–100 % distinct.
+* **Scale.** `sh1_scale` of a palette pack is the max-abs over the palette, never larger than the
+  direct pack's. Snapping to centroids shrinks extremes, so snorm8 steps get finer.
+* **Format, for Phase C.** `subset_pack` copies `sh1` per kept splat today. In palette mode it has
+  to keep the palette whole instead (§2.1 assumed this happens by itself). `pack_test` pins
+  `scale_rot` word 2 to zero for its test splat. The palette saves memory but does not raise the
+  Adreno 750's 11.18 M splat limit, since `positions` and `scale_rot` are 12 B per splat too.
 
 ## 7. Negative results
 
-None yet.
+* **An auto-vectorized assignment kernel under MSVC** (2026-11-19): one scoring loop over a
+  512-centroid tile plus a lane-blocked minimum ran at 0.59 G pairs/s on one thread (~6.5 cycles
+  per pair) and 3.2 G pairs/s on 12, although the vectorizer report confirmed both loops vectorized
+  (SSE2). Explicit SSE2 runs at 0.77 and 3.6. Details are in the negative results log of
+  `benchmarks/README.md`.
