@@ -140,6 +140,12 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
   exact reference at six fixed poses, share of pixels that moved > 2 LSB, and the visible-splat
   count over the bench orbit (device-independent, so the sort cost on a phone follows from
   `docs/sorting.md` §6).
+- `palette-quality-<hash>-<date>.csv` — SH 1 palette, Phase 8 gate A (`scripts/palette_ab.py`,
+  `docs/sh1-palette-research.md`): per scene the direct SH 1 pack (reference), the SH 0 pack and
+  packs whose SH1 is snapped to a Lloyd palette of k entries, rendered by the desktop host at
+  864×1872 at the six `quality_ab.py` poses; PSNR min/mean and the share of pixels moved > 2 LSB
+  against the reference, `direct@repeat` = the renderer's noise floor; per palette the training
+  wall time, thread count, epochs run, MSE in SH1 space, unused entries and label entropy.
 
 ## CSV columns (frame benchmarks)
 `device, build_hash, scene, splats_total, splats_visible, sh_degree, internal_w, internal_h, key_bits,
@@ -459,9 +465,33 @@ probe repeated within 0.11 M cycles.
 * RTX 3060 for contrast (desktop bench orbit, same scene and size): draw 1.52 ms, `tiny`/`clip`
   0.36 ms, `noblend` 1.24 ms, `nofrag` 1.05 ms. There the fragments dominate.
 
+## SH 1 palette — gate A, desktop image A/B (2026-11-19, Phase 8)
+
+`palette-quality-c6f0a7f-2026-11-19.csv`: six scenes at their cleaned counts (museum1.sh1 cleaned
+as the app imports it, hornedlizard as imported from its SPZ, the full bench clouds of truck, beetle,
+giraffes_statue and stump), Lloyd 25 epochs, seed 1, 32-bit keys, no contribution cull, RTX 3060
+renders, i5-11400H training. PSNR is the minimum over the six poses against the direct SH 1 pack.
+
+* **SH 0 is below 40 dB on every scene** (29.6–38.7 dB; means 35.1–40.3): SH 1 matters most on
+  beetle, giraffes_statue and museum1 (29.6–33.8 dB).
+* **A 1,024-entry palette (12 KB) reaches 40 dB on every scene**: 40.6 dB on giraffes_statue,
+  46.1–51.6 dB elsewhere. 4,096 entries: 42.6 / 47.5–52.7 dB; 16,384: 46.9 / 48.8–53.8 dB; 65,536:
+  46.3 / 50.2–54.6 dB (giraffes_statue's worst pose is 0.6 dB lower at 65,536 than at 16,384; its
+  mean rises). Every reference re-render scores 75–101 dB, so these differences are not noise.
+* Training is the cost: Lloyd at 25 epochs takes 9–167 s at k 4,096 and 41–731 s at k 16,384 across
+  0.31–4.05 M splats. That is count × k × (epochs + 1) assignment pairs at 3.0–3.9 G pairs/s on 12
+  threads and 1.5–2.8 on 4. The 12-thread rows ran beside another project's jobs and the 4-thread
+  rows at idle priority, so the times are upper bounds, not a clean kernel benchmark. museum1 at
+  k 65,536 stopped after 14 epochs (no label changed; 4.8 splats per entry).
+* Unused entries appear only where the palette approaches the number of distinct SH1 vectors:
+  hornedlizard, imported from SPZ, has 106,045 distinct snorm8 SH1 vectors among 764,985 splats
+  (25,896 of 65,536 entries unused); museum1, truck and giraffes_statue have 85–100 % distinct, and
+  no PLY-sourced scene leaves more than 196 entries unused at 65,536.
+
 ## Negative results log
 | Date | What was tried | Result | Diagnosis |
 |---|---|---|---|
+| 2026-11-19 | SH1 palette assignment kernel written to auto-vectorize (`docs/sh1-palette-research.md` §2.2): one scoring loop over a 512-centroid tile, then a lane-blocked minimum, MSVC `/O2` (scratch microbenchmark, 200 K random points, k 4,096, i5-11400H at ~2.6 GHz) | 0.59 G pairs/s on one thread (~6.5 cycles per pair), 3.2 on 12; the vectorizer report confirmed both loops vectorized (SSE2) | x64 MSVC targets SSE2 without FMA, and the separate score and minimum passes plus a nine-add chain left ~2 iterations in flight. Explicit SSE2 with per-lane best value and index, a tree-summed dot product and two vectors per step: 0.77 on one thread, 3.6 on 12, close to the SSE2 µop limit at that clock. arm64 keeps the portable loop until a NEON kernel can be tested on a phone (Phase C) |
 | 2026-11-06 | Clip guard lowering its contribution floor whenever the visible count stays under 60 % of the visible capacity for 30 computed frames (S28) | 18 M tiled bicycle orbit at capacity 4,194,304 (desktop): the floor flipped 0 ↔ 0.1 px 26 times in 600 frames; 4.4 % of frames clipped (70.3 % without a floor) | 0.1 px halves a large view's visible count (5.0 M → 2.4 M), so a count under 60 % at 0.1 overflowed again at 0. Lowering now predicts the count after the step from what the last raise removed and needs it under 90 %: 0.7 % clipped frames, 4 changes (ADR-0016) |
 | 2026-11-06 | Clipping a frame's visible splats at the draw-record capacity with nothing else (S28, step 1 of ADR-0016) | Raw bicycle at `--visible-cap 2000000` (desktop): 13.4 dB against the full image, the ground in front of the camera gone; S24U no-cull orbits of 13 M / 18 M tiled scenes clipped 46 % / 99.8 % of frames | A workgroup is a 256-splat chunk, so whole chunks that append last are dropped: arbitrary regions, near ones included. Replaced by the contribution floor (52.0 dB on the same view) |
 | 2026-11-05 | Backside info without cameras, per flat splat (S27): the observed side is the side facing the home view's focus, or facing enclosed free space; then majority votes over planar patches | Facing the focus 0.73–0.93 right per splat (rooms 0.73–0.84), enclosed space 0.49–0.94, patch votes 0.73–0.78; about half of all flat splats were seen from both sides anyway | One wall splat in five on the wrong side is a hole or a speck each. Replaced by virtual cameras fed to the real coverage pass (ADR-0015) |
