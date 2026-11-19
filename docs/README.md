@@ -18,6 +18,7 @@ a new document.
 | `cleaning.md` | Cleaning ops, defaults, ordering, reporting rules | Contributors |
 | `sorting.md` | Why the mobile sort is hard, our sort design, rejected alternatives | Contributors |
 | `coverage-mask-research.md` | Per-splat observed-direction mask: prototype from the capture cameras, hole policies, why the hole is inherent; S27: what the splats alone say about the capture (probes, virtual cameras, camera-file formats) | Contributors |
+| `sh1-palette-research.md` | SH 1 palette (Phase 8): a 16-bit index per splat into a trained palette of SH1 vectors; design, trainers, protocol, gates, results and negative results | Contributors |
 | `phase0-webgpu-baseline.md` | Phase 0 measurement protocol (WebGPU baseline on the S24U) | Contributors |
 | `decisions/ADR-NNNN-*.md` | One accepted architectural decision each: context, options, decision, consequences | Contributors |
 | `benchmarks/README.md` | Benchmark file index, CSV column schema, measurement protocol, **negative results log** | Contributors + public evidence |
@@ -48,7 +49,7 @@ a new document.
   once they exist as committed CSVs under `benchmarks/`.
 * **One topic, one home**: formats live in `formats.md`, not scattered in code comments; the code
   comment points at the doc section, not the other way round.
-* **ADR numbering** is monotonic (`ADR-0016` is next); status is `proposed` (design written and
+* **ADR numbering** is monotonic (`ADR-0017` is next); status is `proposed` (design written and
   measured, not yet implemented or reviewed — may still change), `accepted`, or `superseded by
   ADR-NNNN`. Small reversible choices don't need an ADR — anything that would surprise a
   contributor six months later does.
