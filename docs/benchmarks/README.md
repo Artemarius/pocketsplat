@@ -478,7 +478,8 @@ renders, i5-11400H training. PSNR is the minimum over the six poses against the 
   46.1–51.6 dB elsewhere. 4,096 entries: 42.6 / 47.5–52.7 dB; 16,384: 46.9 / 48.8–53.8 dB; 65,536:
   46.3 / 50.2–54.6 dB (giraffes_statue's worst pose is 0.6 dB lower at 65,536 than at 16,384; its
   mean rises). Every reference re-render scores 75–101 dB, so these differences are not noise.
-* Training is the cost: Lloyd at 25 epochs takes 9–167 s at k 4,096 and 41–731 s at k 16,384 across
+* Training is the cost. The laptop times below are indicative only; per CLAUDE.md §7, timings that
+  decide anything come from the S24 Ultra. Lloyd at 25 epochs takes 9–167 s at k 4,096 and 41–731 s at k 16,384 across
   0.31–4.05 M splats. That is count × k × (epochs + 1) assignment pairs at 3.0–3.9 G pairs/s on 12
   threads and 1.5–2.8 on 4. The 12-thread rows ran beside another project's jobs and the 4-thread
   rows at idle priority, so the times are upper bounds, not a clean kernel benchmark. museum1 at

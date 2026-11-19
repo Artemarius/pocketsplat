@@ -141,7 +141,11 @@ Palette sizes: 1,024, 4,096, 16,384, 65,536. Five seeds each.
 
 Trainer comparison (Phase B): Lloyd at 10 and 25 epochs, Lloyd with a bound-based acceleration,
 e-means at 3 and 5 epochs, each with and without a training cap. Reported: MSE in SH1 space, dead
-codes, used-code entropy, wall time, and wall time to reach the Lloyd-25 loss.
+codes, used-code entropy, wall time, and wall time to reach the Lloyd-25 loss. Losses, dead codes and
+entropy can come from the desktop, since they don't depend on the machine. **Wall times come from
+the S24 Ultra** (CLAUDE.md §7; the owner approves each run): a headless trainer bench pushed to
+`/data/local/tmp` like `sortbench`, fixed thread count, phone cool and unplugged, with clock and
+thermal status logged.
 
 Cost on the phone (Phase C): added import time on the S24 Ultra and S25 Ultra per scene and budget,
 against the current import time of the same scene; preprocess-pass GPU time and frame rate, palette
@@ -191,7 +195,9 @@ minimum over the six `quality_ab.py` poses (mean in brackets), against the direc
 | truck (INRIA) | 1,653,927 | 38.0 (40.2) | 50.8 (51.8) | 51.8 (53.2) | 53.1 (54.4) | 54.2 (55.6) | 89.2 |
 | stump (INRIA) | 4,049,567 | 38.7 (40.3) | 51.6 (52.5) | 52.7 (53.8) | 53.8 (54.8) | 54.6 (55.7) | 83.8 |
 
-Training wall time, Lloyd 25 epochs (seconds; threads in brackets; upper bounds, see below):
+Training wall time, Lloyd 25 epochs, on the shared dev laptop (seconds; threads in brackets).
+**Indicative only, not used for any decision**: the laptop ran other projects' jobs during the
+sweep. Timings that count come from the S24 Ultra (§4).
 
 | Scene | k 1,024 | k 4,096 | k 16,384 | k 65,536 |
 |---|---|---|---|---|
@@ -212,9 +218,9 @@ Verdict against gate A:
   more at 1,024. Gate A passes at every k ≤ 16,384.
 * Each ×4 in entries gains 0.8–2.5 dB at the worst pose. giraffes_statue is the exception: +2.0 and
   +4.3 dB, then −0.6 dB from 16,384 to 65,536 (one seed; its mean rises by 0.9 dB).
-* The question moves to training cost. Even on the laptop, plain Lloyd at k 4,096 adds 9–167 s per
-  scene; the phone's import time comes in Phase C. Phase B (trainers, training cap) is where the
-  work is.
+* The question moves to training cost. Plain Lloyd is n · k · 9 multiply-adds per epoch: 3.7e10 for
+  a 1 M import at k 4,096, 9.2e11 over 25 epochs. On the laptop it took 9–167 s per scene (indicative only).
+  Phase B (trainers, training cap) is where the work is; it gets its timings from the S24 Ultra.
 
 Deviations from §2 and facts found on the way:
 

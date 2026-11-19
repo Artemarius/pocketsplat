@@ -170,6 +170,10 @@ Environment facts learned the hard way:
 * Device benchmarks are recorded, not remembered: `scripts/bench_android.py` → CSV → committed under
   `docs/benchmarks/` with device, build hash, scene, resolution, splat count, per-pass GPU time,
   thermal status. Negative results (things that were slower) are documented in `docs/benchmarks/README.md`.
+* Timings that decide anything (CPU or GPU, including import and training time) come from the
+  S24 Ultra, never the dev laptop. The laptop is shared with other projects' jobs and runs at
+  unpinned clocks. Its wall times may appear only as labelled, indicative numbers. The phones are
+  shared too: ask the owner before every phone run.
 
 ## 8. Workflow for a session
 
