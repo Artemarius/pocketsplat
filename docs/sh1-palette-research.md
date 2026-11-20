@@ -1,7 +1,7 @@
 # SH 1 palette research: view-dependent colour at the SH 0 footprint
 
-Status: **gate A passed** (2026-11-19, S29, §6); **phase B: desktop table complete** (S30, §3.1, §6),
-phone wall times in progress; phase C open. Written 2026-11-19 against `212b91b` (v0.3.0); gate A
+Status: **gate A passed** (2026-11-19, S29, §6); **gate B complete** (2026-11-20, S30, §3.1, §6:
+e-means, 3 epochs); phase C open. Written 2026-11-19 against `212b91b` (v0.3.0); gate A
 measured at `c6f0a7f`, phase B at `1cdd4cc`. Where the implementation departs from §2, §6 says so;
 for e-means, §3.1. This note follows
 the pattern of `coverage-mask-research.md`: the question, the design, the protocol, then results and
@@ -333,26 +333,28 @@ e-means-3 palettes at k 4,096 render at 41.8 dB min / 47.0 mean on giraffes_stat
 the worst pose is 0.8 dB lower although the SH1-space loss is 1 % lower: the loss ranks palettes,
 but it does not fix the worst-pose PSNR to a fraction of a dB.
 
-### Phase B: wall times on the S25 Ultra (2026-11-20, second phone)
+### Phase B: wall times on the phones (2026-11-20)
 
-Source: `benchmarks/palette-trainers-s25u-e87cf48-2026-11-20.csv`. palettebench (arm64, the portable
-scalar kernel: no NEON yet), 8 threads, k 4,096, seed 1. Phone unplugged on Wi-Fi adb, DND and
-heads-up notifications off, and every run started from skin ≤ 32 °C. **Per CLAUDE.md §7 these are
-the second-phone column, not the deciding numbers**: the S24 Ultra run is still to come. Total =
-training plus the final assignment of every splat.
+Sources: `benchmarks/palette-trainers-s24u-e87cf48-2026-11-20.csv` (**S24 Ultra: the deciding
+numbers**, CLAUDE.md §7) and `benchmarks/palette-trainers-s25u-e87cf48-2026-11-20.csv` (S25 Ultra,
+second phone). The same palettebench binary (arm64, the portable scalar kernel: no NEON yet), 8 threads,
+k 4,096, seed 1. Phones unplugged on Wi-Fi adb, heads-up notifications off, and every run started
+from skin ≤ 32 °C. Do Not Disturb was on for the S25U run and for the first six S24U runs; after
+that the owner ruled it out for good. Training and total time in seconds; total = training plus the
+final assignment of every splat. Both phones produced identical losses and dead counts.
 
-| Scene | Run | Training s | Total s | Loss vs Lloyd-25 | Dead |
-|---|---|---|---|---|---|
-| hornedlizard (765 K) | Lloyd-25 | 56.2 | 59.0 | 1.000 | 243 |
-| | Hamerly-25 | 46.1 | 48.2 | 1.000 | 243 |
-| | Lloyd-3 | 5.3 | 7.3 | 1.082 | 409 |
-| | e-means-3 | 6.7 | 8.7 | 0.879 | 5 |
-| | e-means-5 | 11.7 | 14.2 | 0.880 | 2 |
-| | e-means-3, cap 64 | 2.5 | 4.3 | 0.914 | 26 |
-| stump (4.05 M) | Lloyd-3 | 36.7 | 50.0 | 1.117 | 0 |
-| | e-means-3 | 42.6 | 55.6 | 0.990 | 0 |
-| | e-means-5 | 74.5 | 88.9 | 0.983 | 0 |
-| | e-means-3, cap 64 | 2.5 | 16.4 | 1.081 | 0 |
+| Scene | Run | S24U training | S24U total | S25U training | S25U total | Loss vs Lloyd-25 | Dead |
+|---|---|---|---|---|---|---|---|
+| hornedlizard (765 K) | Lloyd-25 | 83.6 | 87.3 | 56.2 | 59.0 | 1.000 | 243 |
+| | Hamerly-25 | 66.5 | 70.1 | 46.1 | 48.2 | 1.000 | 243 |
+| | Lloyd-3 | 7.9 | 10.8 | 5.3 | 7.3 | 1.082 | 409 |
+| | e-means-3 | 12.5 | 15.4 | 6.7 | 8.7 | 0.879 | 5 |
+| | e-means-5 | 17.8 | 20.7 | 11.7 | 14.2 | 0.880 | 2 |
+| | e-means-3, cap 64 | 4.8 | 7.7 | 2.5 | 4.3 | 0.914 | 26 |
+| stump (4.05 M) | Lloyd-3 | 51.5 | 70.6 | 36.7 | 50.0 | 1.117 | 0 |
+| | e-means-3 | 57.5 | 76.3 | 42.6 | 55.6 | 0.990 | 0 |
+| | e-means-5 | 95.1 | 114.4 | 74.5 | 88.9 | 0.983 | 0 |
+| | e-means-3, cap 64 | 5.0 | 20.9 | 2.5 | 16.4 | 1.081 | 0 |
 
 Loss is the phone's own MSE relative to Lloyd-25 with seed 1: the phone's run for hornedlizard, the
 desktop's for stump, where Lloyd-25 was not run on the phone. Phone and desktop runs are not bit-identical.
@@ -361,22 +363,27 @@ arm64 clang contracts multiply-adds into FMAs (`-ffp-contract=on` by default), s
 differently. Each platform is deterministic on its own. Phase C must not assume identical palettes
 across platforms: a test that pins a palette needs `-ffp-contract=off` or a tolerance.
 
-* **On the bundled-sample-sized scene, e-means-3 trains a better palette in 8.7 s than Lloyd-25 does
-  in 59 s** (6.8×). Hamerly-25 takes 48 s, 18 % less than Lloyd-25 for 29 % fewer pairs.
-* The kernel runs at 1.2–1.4 G pairs/s on 8 threads, so every trainer is bound by n·k·passes. For
-  an "all" import of 4 M splats, the final assignment alone takes 13–14 s, and e-means-3 takes
-  56 s in total. The cap removes the training (2.5 s) but not that pass. A NEON kernel (Phase C) is
-  the next lever.
-* At equal pairs, e-means' training costs 16–26 % more time than Lloyd's on this phone (6.7 vs
-  5.3 s, 42.6 vs 36.7 s). On the laptop the difference was within noise. Suspects: the per-batch
-  barrier with an equal static split over the phone's two core types, which Lloyd pays once per
-  epoch instead of once per batch. Not investigated yet.
-* Thermal status stayed 0, except LIGHT at the end of stump's Lloyd-3. The S25U skin readings stepped
-  by up to 8 °C within a run, which is the sensor behaviour noted in CLAUDE.md, not the load.
+* **On the bundled-sample-sized scene, e-means-3 trains a better palette than Lloyd-25 in a sixth of
+  the time**: 15.4 s against 87.3 s on the S24U (5.7×), 8.7 s against 59.0 s on the S25U. Hamerly-25
+  is 18–20 % faster than Lloyd-25 on the two phones, for 29 % fewer pairs.
+* The scalar kernel runs at 0.8–0.95 G pairs/s on the S24U and 1.2–1.4 on the S25U, on 8 threads.
+  Every trainer is bound by n·k·passes. For an "all" import of 4 M splats, the final assignment
+  alone takes 16–19 s on the S24U, and e-means-3 takes 76 s in total. The cap removes the training
+  (5 s) but not that pass. A NEON kernel (Phase C) is the next lever.
+* At equal pairs, e-means' training takes 12–58 % longer than Lloyd's on the S24U (12.5 vs 7.9 s on
+  hornedlizard, 57.5 vs 51.5 s on stump), and 16–26 % longer on the S25U. On the laptop the
+  difference was within noise. Suspect: e-means waits at a barrier after every mini-batch, and the
+  equal static split makes each batch wait for its slowest core. The S24U's two little A520
+  cores make that worse than the S25U's six equal performance cores. Lloyd pays the same wait once per epoch.
+  A dynamic work split is the fix to try in Phase C.
+* Thermal status stayed 0 on the S24U, with skin up to 39.4 °C after the long runs. On the S25U it
+  reached LIGHT once, at the end of stump's Lloyd-3; its skin readings stepped by up to 8 °C within
+  a run, which is the sensor behaviour noted in CLAUDE.md, not the load.
 
-Verdict for the import, pending the S24 Ultra's wall times: **e-means, 3 epochs, k 4,096, no cap**
-for the default 1 M budget. For "all" imports a cap, or a NEON kernel, decides whether the added
-import time is acceptable (Phase C).
+**Gate B: complete (2026-11-20).** Verdict for the import: **e-means, 3 epochs, k 4,096, no cap** for
+the default 1 M budget. It is the best palette at a sixth of Lloyd-25's time: about 15 s on the
+S24U for the bundled sample, with today's scalar kernel. For "all" imports, a NEON kernel and the
+cap decide whether the added time is acceptable (Phase C, against today's import time).
 
 ## 7. Negative results
 

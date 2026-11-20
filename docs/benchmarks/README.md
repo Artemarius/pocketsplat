@@ -510,12 +510,14 @@ idle priority. Hamerly rows give Lloyd's losses (identical iterations). Details 
 * Hamerly's bounds save 6–30 % of Lloyd's distance work (negative results log).
 * A 64-per-entry training cap cuts e-means-3's training work to 0.8–4 % of Lloyd-25 and costs
   6–8 % loss on the four larger PLY scenes.
-* S25 Ultra (`palette-trainers-s25u-e87cf48-2026-11-20.csv`, second phone; the deciding S24 Ultra
-  run is pending; portable scalar kernel, 8 threads, k 4,096): on hornedlizard (765 K), e-means-3
-  takes 8.7 s in total against 59.0 s for Lloyd-25 and 48.2 s for Hamerly-25, with 12 % lower loss.
-  On stump (4.05 M), e-means-3 takes 55.6 s, of which the final assignment of every splat is ~13 s;
-  with a 64-per-entry cap, 16.4 s. The kernel runs at 1.2–1.4 G pairs/s. At equal pairs, e-means'
-  training is 16–26 % slower than Lloyd's on the phone (per-batch barrier suspected).
+* Phones (`palette-trainers-s24u-e87cf48-2026-11-20.csv`, deciding; `palette-trainers-s25u-…`,
+  second phone; portable scalar kernel, 8 threads, k 4,096): on hornedlizard (765 K), e-means-3 takes
+  15.4 s in total on the S24 Ultra, against 87.3 s for Lloyd-25 and 70.1 s for Hamerly-25, with 12 %
+  lower loss (S25 Ultra: 8.7 / 59.0 / 48.2 s). On stump (4.05 M), e-means-3 takes 76.3 s on the S24U,
+  of which the final assignment of every splat is ~19 s; with a 64-per-entry cap, 20.9 s. The kernel
+  runs at 0.8–0.95 G pairs/s on the S24U and 1.2–1.4 on the S25U. At equal pairs, e-means' training
+  takes 12–58 % longer than Lloyd's on the phones (a barrier per mini-batch with a static split over
+  unequal cores is suspected). Both phones give identical losses.
 
 ## Negative results log
 | Date | What was tried | Result | Diagnosis |
