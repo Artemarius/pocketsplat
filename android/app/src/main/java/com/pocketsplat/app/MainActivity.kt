@@ -186,14 +186,18 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private fun importStageLabel(stage: Int): String = when (stage) {
+private fun importStageLabel(stage: Int, share: Float): String = when (stage) {
     0 -> "reading scene…"
     1 -> "cleaning…"
     2 -> "removing floaters (SOR)…"
     3 -> "packing…"
     4 -> "writing pack…"
+    5 -> if (share >= 0f) "training SH palette… ${(share * 100f).toInt()} %" else "training SH palette…"
     else -> "importing…"
 }
+
+/** SH1 palette size for imports when the palette option is on (Phase 8 gate B: k 4,096). */
+private const val kSh1PaletteEntries = 4096
 
 private fun sanitizeName(name: String): String = name.replace(Regex("[^A-Za-z0-9._-]"), "_")
 
@@ -408,6 +412,8 @@ private fun ViewerScreen(
     var importRunning by remember { mutableStateOf(false) } // native import in flight
     var importStatus by remember { mutableStateOf<String?>(null) }
     var deepClean by remember { mutableStateOf(false) }
+    // SH1 palette at import (Phase 8, experimental until its ADR): off by default.
+    var shPalette by remember { mutableStateOf(false) }
     var budget by remember { mutableLongStateOf(1_000_000L) }
     var stagingJob by remember { mutableStateOf<Job?>(null) }
     var showLicences by remember { mutableStateOf(false) }
@@ -502,13 +508,14 @@ private fun ViewerScreen(
             val poll = launch {
                 while (true) {
                     val stage = SplatEngine.nativeImportStage()
-                    if (stage >= 0) importStatus = importStageLabel(stage)
+                    if (stage >= 0) importStatus = importStageLabel(stage, SplatEngine.nativeImportShare())
                     delay(250)
                 }
             }
             val error = withContext(Dispatchers.IO) {
                 SplatEngine.nativeImportScene(
                     candidate.src.absolutePath, dst.absolutePath, 1, deepClean, budget,
+                    if (shPalette && candidate.shDegree >= 1) kSh1PaletteEntries else 0,
                 )
             }
             poll.cancel()
@@ -705,6 +712,12 @@ private fun ViewerScreen(
                     OverlayButton(onClick = { deepClean = !deepClean }) {
                         Text("Deep clean (floater removal): ${if (deepClean) "on" else "off"}",
                             color = Color.Cyan)
+                    }
+                    if (candidate.shDegree >= 1) {
+                        OverlayButton(onClick = { shPalette = !shPalette }) {
+                            Text("SH palette (smaller, experimental): ${if (shPalette) "on" else "off"}",
+                                color = Color.Cyan)
+                        }
                     }
                     // Backside info: lets the fade hide what the capture never saw from the viewer's side.
                     Text("Backside fade (see through what the capture never saw):", color = Color.White)

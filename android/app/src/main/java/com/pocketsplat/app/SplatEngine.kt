@@ -92,13 +92,18 @@ object SplatEngine {
      * Runs the whole import pipeline (read, clean, pack, write) synchronously — call from a
      * background coroutine only. Returns "" on success, the error message otherwise
      * ("import cancelled" after [nativeImportCancel]). maxSplats <= 0 keeps every splat.
+     * sh1Palette > 0 trains an SH1 palette of that many entries for an SH 1 scene (28 B per splat
+     * instead of 40); 0 keeps direct SH1.
      */
     external fun nativeImportScene(
-        src: String, dst: String, shTarget: Int, deepClean: Boolean, maxSplats: Long,
+        src: String, dst: String, shTarget: Int, deepClean: Boolean, maxSplats: Long, sh1Palette: Int,
     ): String
 
-    /** Stage of the running import (0 read, 1 clean, 2 SOR, 3 pack, 4 write); -1 = idle. */
+    /** Stage of the running import (0 read, 1 clean, 2 SOR, 3 pack, 4 write, 5 SH palette); -1 = idle. */
     external fun nativeImportStage(): Int
+
+    /** Share of the SH palette stage done, 0..1; -1 outside that stage. */
+    external fun nativeImportShare(): Float
 
     /** Asks the running import to stop at its next stage boundary. */
     external fun nativeImportCancel()

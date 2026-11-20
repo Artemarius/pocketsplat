@@ -201,6 +201,7 @@ public:
     std::uint32_t visible_capacity() const { return m_capacity; }
     std::uint32_t chunk_count() const { return m_chunk_count; }
     std::uint32_t sh_degree() const { return m_sh_degree; }
+    std::uint32_t sh1_palette() const { return m_sh1_palette; }  // palette entries; 0 = direct SH1
     // Visible counts of a recently completed frame (trail by the frames in flight); HUD only.
     std::uint32_t last_visible_count() const { return m_last_visible; }
     std::uint32_t last_visible_chunks() const { return m_last_visible_chunks; }
@@ -227,7 +228,7 @@ private:
     std::uint32_t m_chunk_count = 0;
     std::uint32_t m_sh_degree = 0;
     float m_sh1_scale = 0.0f;
-    bool m_sh1_palette = false;  // pack v3 SH1 palette (sh1 holds the entries, not one per splat)
+    std::uint32_t m_sh1_palette = 0;  // pack v3 SH1 palette entries in sh1; 0 = one entry per splat
     float m_aabb_min[3] = {}, m_aabb_max[3] = {};  // pack bounds: per-frame depth range of the keys
     float m_log_depth_min = 0.0f, m_log_depth_inv_range = 1.0f;
     int m_key_bits = 32;

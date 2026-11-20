@@ -38,7 +38,8 @@ void log_failure(const char* what, const splatcore::Status& status) {
 
 // Import runs synchronously on whatever background thread Kotlin calls it from (never the render
 // thread); the UI polls the stage and requests cancellation through these. One import at a time.
-std::atomic<int> g_import_stage{-1};  // ImportStage as int, -1 = no import running
+std::atomic<int> g_import_stage{-1};       // ImportStage as int, -1 = no import running
+std::atomic<float> g_import_share{-1.0f};  // share of the palette stage done, -1 = not in it
 std::atomic<bool> g_import_cancel{false};
 std::atomic<bool> g_import_active{false};
 std::string g_open_error;  // last nativeOpenScene failure, render thread only
@@ -230,9 +231,11 @@ JNIEXPORT jlongArray JNICALL Java_com_pocketsplat_app_SplatEngine_nativeProbeSce
 
 // Full import pipeline (splatcore::import_scene), synchronous on the calling thread. Returns ""
 // on success (the cleaning report goes to logcat) or the error message; "import cancelled" after
-// nativeImportCancel. max_splats <= 0 disables the budget prune.
+// nativeImportCancel. max_splats <= 0 disables the budget prune. sh1_palette > 0 trains an SH1
+// palette of that many entries for an SH 1 scene (pack v3, Phase 8); 0 = direct SH1.
 JNIEXPORT jstring JNICALL Java_com_pocketsplat_app_SplatEngine_nativeImportScene(
-    JNIEnv* env, jobject, jstring src, jstring dst, jint sh_target, jboolean deep_clean, jlong max_splats) {
+    JNIEnv* env, jobject, jstring src, jstring dst, jint sh_target, jboolean deep_clean, jlong max_splats,
+    jint sh1_palette) {
     bool expected = false;
     if (!g_import_active.compare_exchange_strong(expected, true)) {
         return env->NewStringUTF("an import is already running");
@@ -246,9 +249,15 @@ JNIEXPORT jstring JNICALL Java_com_pocketsplat_app_SplatEngine_nativeImportScene
         g_import_stage.store(static_cast<int>(stage));
         return !g_import_cancel.load();
     };
+    options.sh1_palette = sh1_palette > 0 ? static_cast<std::uint32_t>(sh1_palette) : 0u;
+    options.palette_progress = [](double share) {
+        g_import_share.store(static_cast<float>(share));
+        return !g_import_cancel.load();
+    };
     const splatcore::Result<splatcore::ImportReport> report =
         splatcore::import_scene(to_string(env, src), to_string(env, dst), options);
     g_import_stage.store(-1);
+    g_import_share.store(-1.0f);
     g_import_active.store(false);
     if (!report.ok()) {
         __android_log_print(ANDROID_LOG_ERROR, "PocketSplat", "import: %s", report.error().c_str());
@@ -261,6 +270,14 @@ JNIEXPORT jstring JNICALL Java_com_pocketsplat_app_SplatEngine_nativeImportScene
     __android_log_print(ANDROID_LOG_INFO, "PocketSplat", "import done: %llu -> %u splats, SH %d",
                         static_cast<unsigned long long>(report.value().input_count), report.value().count,
                         report.value().sh_degree);
+    if (report.value().palette_count != 0) {
+        const splatcore::PaletteStats& p = report.value().palette;
+        __android_log_print(
+            ANDROID_LOG_INFO, "PocketSplat",
+            "import palette: %u entries, e-means %u epochs, mse %.6g, dead %u, train %.0f ms, "
+            "train + assign %.0f ms",
+            report.value().palette_count, p.epochs_run, p.mse, p.dead, p.train_ms, p.wall_ms);
+    }
     return env->NewStringUTF("");
 }
 
@@ -316,9 +333,14 @@ JNIEXPORT jstring JNICALL Java_com_pocketsplat_app_SplatEngine_nativeComputeCove
 }
 
 // Stage of the running import as an ImportStage ordinal (0 read, 1 clean, 2 SOR, 3 pack,
-// 4 write), or -1 when no import is running. Safe from any thread.
+// 4 write, 5 SH1 palette), or -1 when no import is running. Safe from any thread.
 JNIEXPORT jint JNICALL Java_com_pocketsplat_app_SplatEngine_nativeImportStage(JNIEnv*, jobject) {
     return g_import_stage.load();
+}
+
+// Share of the palette stage done (0..1), or -1 outside it. Safe from any thread.
+JNIEXPORT jfloat JNICALL Java_com_pocketsplat_app_SplatEngine_nativeImportShare(JNIEnv*, jobject) {
+    return g_import_share.load();
 }
 
 // Asks the running import to stop at its next stage boundary (the long ops themselves finish).

@@ -917,8 +917,9 @@ int main(int argc, char** argv) {
             csv << "# pocketsplat-desktop bench\n"
                 << "# device=" << context.device_name() << ", scene=" << basename_of(args.scene)
                 << ", splats=" << splats.splat_count() << ", sh=" << splats.sh_degree()
-                << ", resolution=" << target_extent.width << "x" << target_extent.height
-                << ", key_bits=" << splats.key_bits() << ", min_contribution=" << splats.min_contribution()
+                << ", sh1_palette=" << splats.sh1_palette() << ", resolution=" << target_extent.width << "x"
+                << target_extent.height << ", key_bits=" << splats.key_bits()
+                << ", min_contribution=" << splats.min_contribution()
                 << ", chunk_cull=" << (splats.chunk_cull() ? "on" : "off")
                 << ", draw_mode=" << static_cast<std::uint32_t>(splats.draw_mode())
                 << ", draw_probe=" << static_cast<std::uint32_t>(splats.draw_probe()) << ", vsync="

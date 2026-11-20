@@ -495,7 +495,8 @@ void AndroidHost::set_coverage_strength(float strength) {
 void AndroidHost::write_trace_scene() {
     flush_trace();  // the line goes after the rows recorded before it
     m_trace << "# scene=" << m_scene_name << ", splats=" << m_splats.splat_count()
-            << ", sh=" << m_splats.sh_degree() << ", visible_capacity=" << m_splats.visible_capacity()
+            << ", sh=" << m_splats.sh_degree() << ", sh1_palette=" << m_splats.sh1_palette()
+            << ", visible_capacity=" << m_splats.visible_capacity()
             << ", storage_buffer_range=" << m_context.max_storage_buffer_range()
             << ", resolution=" << m_swapchain.extent().width << "x" << m_swapchain.extent().height << "\n";
 }
@@ -919,7 +920,8 @@ std::string AndroidHost::stop_bench() {
     csv << "# pocketsplat-android bench\n"
         << "# device=" << m_context.device_name() << ", " << m_bench_config.meta << "\n"
         << "# scene=" << m_bench_config.scene_name << ", splats=" << m_splats.splat_count()
-        << ", sh=" << m_splats.sh_degree() << ", visible_capacity=" << m_splats.visible_capacity()
+        << ", sh=" << m_splats.sh_degree() << ", sh1_palette=" << m_splats.sh1_palette()
+        << ", visible_capacity=" << m_splats.visible_capacity()
         << ", storage_buffer_range=" << m_context.max_storage_buffer_range()
         << ", resolution=" << m_swapchain.extent().width << "x" << m_swapchain.extent().height
         << ", key_bits=" << m_bench_config.key_bits
