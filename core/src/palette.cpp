@@ -435,6 +435,13 @@ struct Training {
     std::mt19937_64* rng = nullptr;
     std::vector<float>* centroids = nullptr;  // kSh1Dims * k
     PaletteStats* stats = nullptr;
+    const std::function<bool(double)>* progress = nullptr;  // PaletteParams::progress
+    double work_total = 1.0;  // points: epochs x m training, then every splat once
+
+    // Reports `points_done` of work_total; false = the caller asked to stop.
+    bool report(double points_done) const {
+        return progress == nullptr || !*progress || (*progress)(std::min(1.0, points_done / work_total));
+    }
 
     const float* point(std::size_t i) const { return train + static_cast<std::size_t>(kSh1Dims) * i; }
     float* centroid(std::uint32_t j) const {
@@ -524,7 +531,8 @@ private:
 };
 
 // Lloyd: assign every training point, then move each centroid to the mean of its points.
-void train_lloyd(const Training& tr) {
+// Returns false when cancelled through tr.report (as do the other trainers).
+bool train_lloyd(const Training& tr) {
     WorkerPool& pool = *tr.pool;
     LloydUpdate update(pool.threads(), tr.k);
     std::vector<std::uint16_t> labels(tr.m, 0);
@@ -532,6 +540,7 @@ void train_lloyd(const Training& tr) {
     SoaCentroids soa;
     bool split_last = false;
     for (std::uint32_t epoch = 0; epoch < tr.epochs; ++epoch) {
+        if (!tr.report(double(epoch) * double(tr.m))) return false;
         fill_soa(soa, tr.centroids->data(), tr.k);
         pool.ranges(tr.m, [&](std::uint32_t t, std::size_t begin, std::size_t end) {
             update.clear(t);
@@ -557,6 +566,7 @@ void train_lloyd(const Training& tr) {
         split_last = update.apply(tr, epoch + 1 < tr.epochs);
         tr.stats->epochs_run = epoch + 1;
     }
+    return true;
 }
 
 // Hamerly's bounds (SDM 2010) on the Lloyd iteration. Per point: an upper bound u on the distance
@@ -567,7 +577,7 @@ void train_lloyd(const Training& tr) {
 // a skipped point is one the kernel would have given the same label. Rescans use the same kernel
 // (top-2 variant, same comparisons for the best), and the update step is LloydUpdate over the same
 // ranges in the same order: labels and centroids equal kLloyd's bit for bit.
-void train_hamerly(const Training& tr) {
+bool train_hamerly(const Training& tr) {
     constexpr float kSlack = 1e-5f;        // relative to |x|^2 + max |c|^2; >5x the kernel's error bound
     constexpr float kGrow = 1.0f + 1e-6f;  // rounds upper bounds and drifts up
     constexpr float kShrink = 1.0f - 1e-6f;
@@ -583,6 +593,7 @@ void train_hamerly(const Training& tr) {
     SoaCentroids soa;
     bool split_last = false;
     for (std::uint32_t epoch = 0; epoch < tr.epochs; ++epoch) {
+        if (!tr.report(double(epoch) * double(tr.m))) return false;
         fill_soa(soa, tr.centroids->data(), k);
         float c_max = 0.0f;  // max |c|^2
         for (std::uint32_t j = 0; j < k; ++j) c_max = std::max(c_max, 2.0f * soa.half_norm[j]);
@@ -678,6 +689,7 @@ void train_hamerly(const Training& tr) {
             }
         });
     }
+    return true;
 }
 
 // e-means (arXiv 2611.09501 v1, Algorithm 1). Per cluster an EMA count N_j and sum S_j; per
@@ -686,7 +698,7 @@ void train_hamerly(const Training& tr) {
 // at the end, each centroid is the mean of its last-epoch assignments (§3.2). Batches come from a
 // fresh shuffle per epoch; the last partial batch of an epoch is kept (counted in M). N and S are
 // doubles (the paper: fp32), so untouched clusters can decay for thousands of steps.
-void train_emeans(const Training& tr, std::uint32_t batch, double alpha0) {
+bool train_emeans(const Training& tr, std::uint32_t batch, double alpha0) {
     constexpr double kFloor = 0.1;         // cosine floor epsilon (Eq. 5)
     constexpr double kInitCount = 1e-10;   // N_j at initialisation
     constexpr double kDeadFraction = 0.1;  // revival threshold: tau = 0.1 x mean N
@@ -774,6 +786,7 @@ void train_emeans(const Training& tr, std::uint32_t batch, double alpha0) {
         }
         const bool last_epoch = epoch + 1 == tr.epochs;
         for (std::size_t b0 = 0; b0 < m; b0 += batch) {
+            if (!tr.report(double(epoch) * double(m) + double(b0))) return false;
             const std::size_t bn = std::min<std::size_t>(batch, m - b0);
             for (std::size_t p = 0; p < bn; ++p)
                 std::copy_n(tr.point(order[b0 + p]), kSh1Dims,
@@ -821,6 +834,7 @@ void train_emeans(const Training& tr, std::uint32_t batch, double alpha0) {
     }
     tr.stats->updates = t;
     tr.stats->epochs_run = tr.epochs;
+    return true;
 }
 
 double emeans_step(double n, double k, double batch, double epochs) {
@@ -937,12 +951,16 @@ Result<Sh1Palette> train_sh1_palette(const float* sh1, std::size_t count, const 
     tr.rng = &rng;
     tr.centroids = &palette.centroids;
     tr.stats = &palette.stats;
+    tr.progress = &params.progress;
+    const double train_work = double(params.epochs) * double(m);
+    tr.work_total = std::max(1.0, train_work + double(n));
+    bool completed = true;
     switch (params.trainer) {
         case PaletteTrainer::kLloyd:
-            train_lloyd(tr);
+            completed = train_lloyd(tr);
             break;
         case PaletteTrainer::kHamerly:
-            train_hamerly(tr);
+            completed = train_hamerly(tr);
             break;
         case PaletteTrainer::kEMeans: {
             if (params.epochs == 0) break;
@@ -956,24 +974,32 @@ Result<Sh1Palette> train_sh1_palette(const float* sh1, std::size_t count, const 
                     : (params.batch != 0 ? emeans_step(double(m), k, batch, params.epochs) : law.alpha0);
             palette.stats.batch = batch;
             palette.stats.alpha0 = alpha0;
-            train_emeans(tr, batch, alpha0);
+            completed = train_emeans(tr, batch, alpha0);
             break;
         }
     }
+    if (!completed) return R::failure(kPaletteCancelled);
     palette.stats.train_ms =
         std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
 
-    // Final assignment of every splat against the trained palette.
+    // Final assignment of every splat against the trained palette, in 16 slices so progress
+    // moves and a cancel lands within a slice (stump on the S24U: ~19 s for this step alone).
     palette.labels.resize(n);
     std::vector<float> sq_dist(n);
     {
         SoaCentroids soa;
         fill_soa(soa, palette.centroids.data(), k);
         WorkerPool final_pool(resolve_threads(params.threads, n));
-        final_pool.dynamic(n, [&](std::size_t begin, std::size_t end) {
-            assign_range(sh1, begin, end, soa, palette.centroids.data(), palette.labels.data() + begin,
-                         sq_dist.data() + begin);
-        });
+        const std::size_t slice = (n + 15) / 16;
+        for (std::size_t s0 = 0; s0 < n; s0 += slice) {
+            if (!tr.report(train_work + double(s0))) return R::failure(kPaletteCancelled);
+            const std::size_t s1 = std::min(n, s0 + slice);
+            final_pool.dynamic(s1 - s0, [&](std::size_t begin, std::size_t end) {
+                assign_range(sh1, s0 + begin, s0 + end, soa, palette.centroids.data(),
+                             palette.labels.data() + s0 + begin, sq_dist.data() + s0 + begin);
+            });
+        }
+        tr.report(tr.work_total);  // 1.0; a cancel this late is too late to save anything
     }
     double err = 0.0;
     std::vector<std::uint64_t> used(k, 0);

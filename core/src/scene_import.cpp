@@ -160,11 +160,28 @@ Result<ImportReport> import_scene(const fs::path& src, const fs::path& dst, cons
 
     if (!step(ImportStage::kPack)) return cancelled();
     report.ops.push_back(reorder_morton(cloud, robust_aabb(cloud)));
-    Result<GpuPack> pack = build_pack(cloud);
+    Result<Sh1Palette> palette = Result<Sh1Palette>::failure("no palette");
+    if (options.sh1_palette != 0 && cloud.sh_degree == 1) {
+        if (!step(ImportStage::kPalette)) return cancelled();
+        PaletteParams params;
+        params.k = options.sh1_palette;
+        params.trainer = options.palette_trainer;
+        params.epochs = options.palette_epochs;
+        params.threads = options.palette_threads;
+        params.progress = options.palette_progress;
+        palette = train_sh1_palette(cloud, params);
+        if (!palette) {
+            if (palette.error() == kPaletteCancelled) return cancelled();
+            return R::failure(palette.error());
+        }
+        report.palette = palette.value().stats;
+    }
+    Result<GpuPack> pack = build_pack(cloud, palette ? &palette.value() : nullptr);
     if (!pack) return R::failure(pack.error());
     const std::vector<std::uint8_t> bytes = pack.value().serialize();
     report.count = pack.value().header.count;
     report.sh_degree = static_cast<int>(pack.value().header.sh_degree);
+    report.palette_count = pack.value().header.palette_count();
 
     if (!step(ImportStage::kWrite)) return cancelled();
     const fs::path tmp = fs::path(dst.string() + ".tmp");  // same directory, so rename is atomic

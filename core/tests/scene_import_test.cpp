@@ -8,6 +8,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -248,6 +249,61 @@ TEST(SceneImportTest, CancelLeavesNoOutput) {
     ASSERT_FALSE(report.ok());
     EXPECT_EQ(report.error(), "import cancelled");
     EXPECT_FALSE(fs::exists(dst));
+}
+
+TEST(SceneImportTest, Sh1PaletteWritesAPalettePack) {
+    const fs::path src = temp_file("palette.ply");
+    const fs::path dst = temp_file("palette.pspk");
+    write_bytes(src, ply_bytes(64, 2));
+    std::vector<ImportStage> stages;
+    std::vector<double> shares;
+    ImportOptions options;
+    options.sh1_palette = 16;
+    options.palette_threads = 2;
+    options.progress = [&](ImportStage stage) {
+        stages.push_back(stage);
+        return true;
+    };
+    options.palette_progress = [&](double share) {
+        shares.push_back(share);
+        return true;
+    };
+    Result<ImportReport> report = import_scene(src, dst, options);
+    ASSERT_TRUE(report.ok()) << report.error();
+    EXPECT_EQ(report.value().palette_count, 16u);
+    EXPECT_EQ(report.value().palette.epochs_run, 3u);  // e-means, 3 epochs by default
+    EXPECT_EQ(stages, (std::vector<ImportStage>{ImportStage::kRead, ImportStage::kClean, ImportStage::kPack,
+                                                ImportStage::kPalette, ImportStage::kWrite}));
+    ASSERT_FALSE(shares.empty());
+    EXPECT_EQ(shares.back(), 1.0);
+
+    std::ifstream in(dst, std::ios::binary);
+    const std::vector<std::uint8_t> bytes((std::istreambuf_iterator<char>(in)),
+                                          std::istreambuf_iterator<char>());
+    in.close();
+    Result<GpuPack> pack = parse_pack(bytes);
+    ASSERT_TRUE(pack.ok()) << pack.error();
+    EXPECT_EQ(pack.value().header.palette_count(), 16u);
+    EXPECT_EQ(pack.value().sh1.size(), 3u * 16u);
+    fs::remove(dst);
+
+    // Cancelled during training: the import fails like any cancel and writes nothing.
+    options.palette_progress = [](double share) { return share < 0.5; };
+    Result<ImportReport> cancelled = import_scene(src, dst, options);
+    ASSERT_FALSE(cancelled.ok());
+    EXPECT_EQ(cancelled.error(), "import cancelled");
+    EXPECT_FALSE(fs::exists(dst));
+
+    // An SH 0 import ignores the palette.
+    options.palette_progress = nullptr;
+    options.sh_target = 0;
+    stages.clear();
+    Result<ImportReport> sh0 = import_scene(src, dst, options);
+    fs::remove(src);
+    fs::remove(dst);
+    ASSERT_TRUE(sh0.ok()) << sh0.error();
+    EXPECT_EQ(sh0.value().palette_count, 0u);
+    EXPECT_EQ(std::find(stages.begin(), stages.end(), ImportStage::kPalette), stages.end());
 }
 
 TEST(SceneImportTest, RefusesOversizedInput) {

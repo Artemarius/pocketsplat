@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <vector>
 
 #include "splatcore/result.h"
@@ -28,6 +29,9 @@ inline constexpr std::uint32_t kMaxPaletteSize = 65536;  // indices fit 16 bits
 
 enum class PaletteTrainer { kLloyd, kHamerly, kEMeans };
 
+// The error of a training stopped by PaletteParams::progress.
+inline constexpr const char* kPaletteCancelled = "palette training cancelled";
+
 const char* palette_trainer_name(PaletteTrainer trainer);  // "lloyd", "hamerly", "emeans"
 
 struct PaletteParams {
@@ -40,6 +44,12 @@ struct PaletteParams {
     std::uint32_t threads = 0;    // 0 = std::thread::hardware_concurrency()
     std::uint32_t batch = 0;      // e-means batch size; 0 = the scaling law (emeans_schedule)
     double alpha0 = 0.0;          // e-means initial step; 0 = the scaling law
+    // Called on the calling thread with the share of the work done, 0..1 (training epochs, then
+    // the final assignment of every splat, counted in points): before every Lloyd/Hamerly epoch,
+    // every e-means batch and every 1/16 of the final assignment, and once with 1 at the end.
+    // Returning false stops at that point; train_sh1_palette then fails with kPaletteCancelled.
+    // Null = never cancel.
+    std::function<bool(double)> progress;
 };
 
 // e-means schedule from the paper's scaling laws (§3.3, Table 2) for n training points, k clusters

@@ -433,5 +433,42 @@ TEST(Palette, EveryTrainerHandlesDegenerateInputs) {
     }
 }
 
+TEST(Palette, ProgressIsMonotoneAndCancelStopsEveryTrainer) {
+    const std::vector<float> sh1 = random_vectors(5000, 9, 0.5f);
+    for (PaletteTrainer trainer :
+         {PaletteTrainer::kLloyd, PaletteTrainer::kHamerly, PaletteTrainer::kEMeans}) {
+        PaletteParams params;
+        params.k = 64;
+        params.epochs = 3;
+        params.trainer = trainer;
+        params.threads = 3;
+        std::vector<double> seen;
+        params.progress = [&seen](double f) {
+            seen.push_back(f);
+            return true;
+        };
+        Result<Sh1Palette> full = train_sh1_palette(sh1.data(), 5000, params);
+        ASSERT_TRUE(full.ok()) << full.error();
+        ASSERT_GE(seen.size(), 4u + 16u) << palette_trainer_name(trainer);  // epochs + final slices
+        EXPECT_EQ(seen.front(), 0.0);
+        EXPECT_EQ(seen.back(), 1.0);
+        for (std::size_t i = 1; i < seen.size(); ++i) EXPECT_GE(seen[i], seen[i - 1]);
+
+        // Stop mid-training, then during the final assignment (training is 3/4 of the work).
+        for (double stop_at : {0.3, 0.8}) {
+            params.progress = [stop_at](double f) { return f < stop_at; };
+            Result<Sh1Palette> stopped = train_sh1_palette(sh1.data(), 5000, params);
+            ASSERT_FALSE(stopped.ok()) << palette_trainer_name(trainer) << " stop at " << stop_at;
+            EXPECT_EQ(stopped.error(), kPaletteCancelled);
+        }
+        // A callback that never stops changes nothing.
+        params.progress = [](double) { return true; };
+        Result<Sh1Palette> again = train_sh1_palette(sh1.data(), 5000, params);
+        ASSERT_TRUE(again.ok());
+        EXPECT_EQ(again.value().centroids, full.value().centroids);
+        EXPECT_EQ(again.value().labels, full.value().labels);
+    }
+}
+
 }  // namespace
 }  // namespace splatcore
