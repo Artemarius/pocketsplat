@@ -1,6 +1,8 @@
 #version 460
 // Pass: splat cull + preprocess (compacting)
-// Inputs:  pack SSBOs (pos, scale_rot, color, sh1), camera UBO, push constants; with
+// Inputs:  pack SSBOs (pos, scale_rot, color, sh1), camera UBO, push constants; sh1 holds
+//          one entry per splat, or with push.sh1_palette != 0 the palette entries, selected by
+//          scale_rot word 2's high 16 bits (pack v3, docs/formats.md §3); with
 //          push.use_chunk_cull != 0 also chunk_list from the chunk-cull pass, and the dispatch
 //          is indirect with one 256-thread workgroup per visible chunk (workgroup size ==
 //          kPackChunkSize, asserted host-side).
@@ -58,6 +60,7 @@ layout(push_constant) uniform Push {
     float coverage_cos_full;  // cos of the angle within which an observed cell matches fully
     float coverage_cos_zero;  // cos of the angle beyond which it does not match at all
     uint capacity;            // record / key slots (visible capacity); later appends only count
+    uint sh1_palette;         // 1 = sh1[] is a palette indexed by scale_rot word 2 >> 16
 } push;
 
 const float kShC1 = 0.4886025119029199;  // sqrt(3 / (4*pi))
@@ -197,11 +200,12 @@ void main() {
     vec3 rgb = col.rgb;
     if (push.sh_degree >= 1u) {
         vec3 dir = normalize(p - cam_pos.xyz);
-        uint s0 = sh1[3u * idx];
-        uint s1 = sh1[3u * idx + 1u];
+        uint row = push.sh1_palette != 0u ? (w2 >> 16u) : idx;  // uniform select, no table
+        uint s0 = sh1[3u * row];
+        uint s1 = sh1[3u * row + 1u];
         vec4 b0 = unpackSnorm4x8(s0);                     // c0.r c0.g c0.b c1.r
         vec4 b1 = unpackSnorm4x8(s1);                     // c1.g c1.b c2.r c2.g
-        float b2 = unpackSnorm4x8(sh1[3u * idx + 2u]).x;  // c2.b
+        float b2 = unpackSnorm4x8(sh1[3u * row + 2u]).x;  // c2.b
         vec3 c0v = b0.xyz * push.sh1_scale;               // y-basis coefficient
         vec3 c1v = vec3(b0.w, b1.xy) * push.sh1_scale;    // z-basis
         vec3 c2v = vec3(b1.zw, b2) * push.sh1_scale;      // x-basis

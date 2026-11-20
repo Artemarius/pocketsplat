@@ -43,7 +43,8 @@ struct PreprocessPush {
     float coverage_strength;  // 0 = no coverage fade
     float coverage_cos_full;
     float coverage_cos_zero;
-    std::uint32_t capacity;  // record / key slots: appends at or beyond it are counted, not written
+    std::uint32_t capacity;     // record / key slots: appends at or beyond it are counted, not written
+    std::uint32_t sh1_palette;  // 1 = sh1 holds palette entries indexed by scale_rot word 2 >> 16
 };
 
 struct ChunkCullPush {
@@ -118,6 +119,7 @@ splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack
     m_chunk_count = static_cast<std::uint32_t>(pack.chunk_count());
     m_sh_degree = pack.header.sh_degree;
     m_sh1_scale = pack.header.sh1_scale;
+    m_sh1_palette = pack.has_palette();
     if (m_count == 0) return Status::failure("cannot render an empty pack");
     // Each per-splat array lives in one storage buffer bound whole, so the widest (12 B per splat)
     // caps the scene by the device's descriptor range (Adreno 750: 128 MB -> 11,184,810 splats);
@@ -554,7 +556,8 @@ bool SplatRenderer::record_compute(VkCommandBuffer cmd, std::uint32_t slot, GpuT
         m_has_coverage ? 1.0f - (1.0f - m_coverage_strength) * (1.0f - m_coverage_strength) : 0.0f,
         m_coverage_cos_full,
         m_coverage_cos_zero,
-        m_capacity};
+        m_capacity,
+        m_sh1_palette ? 1u : 0u};
     vkCmdPushConstants(cmd, m_preprocess.layout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(push), &push);
     if (m_chunk_cull) {
         vkCmdDispatchIndirect(cmd, m_cull_dispatch.handle(), 0);

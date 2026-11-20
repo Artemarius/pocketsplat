@@ -227,6 +227,7 @@ private:
     std::uint32_t m_chunk_count = 0;
     std::uint32_t m_sh_degree = 0;
     float m_sh1_scale = 0.0f;
+    bool m_sh1_palette = false;  // pack v3 SH1 palette (sh1 holds the entries, not one per splat)
     float m_aabb_min[3] = {}, m_aabb_max[3] = {};  // pack bounds: per-frame depth range of the keys
     float m_log_depth_min = 0.0f, m_log_depth_inv_range = 1.0f;
     int m_key_bits = 32;
