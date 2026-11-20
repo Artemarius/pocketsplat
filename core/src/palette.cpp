@@ -1,6 +1,7 @@
 #include "splatcore/palette.h"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <condition_variable>
@@ -19,6 +20,16 @@
 #if defined(_M_X64) || defined(__x86_64__)
 #include <emmintrin.h>  // SSE2: part of the x86-64 baseline, no compiler flag needed
 #define SPLATCORE_PALETTE_SSE2 1
+#elif defined(__aarch64__) || defined(_M_ARM64)
+#include <arm_neon.h>  // Advanced SIMD: part of the AArch64 baseline, no compiler flag needed
+#define SPLATCORE_PALETTE_NEON 1
+#endif
+
+// No fused multiply-adds anywhere in this file: clang contracts a * b + c by default on arm64
+// (MSVC on x86-64 does not), which rounds differently and made the S30 phone palettes differ from
+// the desktop ones. With contraction off, the same seed and inputs give the same palette on both.
+#if defined(__clang__)
+#pragma clang fp contract(off)
 #endif
 
 namespace splatcore {
@@ -152,10 +163,89 @@ inline std::uint32_t scan(const float* x, const SoaCentroids& soa, float* best_s
     return static_cast<std::uint32_t>(lane_idx[pick]);
 }
 
+#elif defined(SPLATCORE_PALETTE_NEON)
+
+// NEON kernel: the SSE2 kernel's structure lane for lane (two vectors of four centroids per step,
+// strictly-smaller-wins lanes, the same eight-lane merge, the same summation tree). Separate
+// multiplies and adds, not vfmaq: fused multiply-adds round once instead of twice, so the scores,
+// and the labels on near-ties, would differ from the x86-64 kernel. The S30 phone runs used the
+// portable loop, which the compiler may contract into FMAs; this kernel does not leave it the
+// choice.
+struct Lanes {
+    float32x4_t best = vdupq_n_f32(kInf);
+    float32x4_t second = vdupq_n_f32(kInf);
+    uint32x4_t best_idx = vdupq_n_u32(0);
+};
+
+template <bool kTop2>
+inline void keep_better(Lanes& lanes, float32x4_t score, uint32x4_t idx) {
+    const uint32x4_t better = vcltq_f32(score, lanes.best);
+    if constexpr (kTop2) lanes.second = vbslq_f32(better, lanes.best, vminq_f32(lanes.second, score));
+    lanes.best = vbslq_f32(better, score, lanes.best);
+    lanes.best_idx = vbslq_u32(better, idx, lanes.best_idx);
+}
+
+template <bool kTop2>
+inline std::uint32_t scan(const float* x, const SoaCentroids& soa, float* best_score, float* second_score) {
+    const std::size_t s = soa.stride;
+    const float* c = soa.c.data();
+    const float* hn = soa.half_norm.data();
+    const float32x4_t x0 = vdupq_n_f32(x[0]), x1 = vdupq_n_f32(x[1]), x2 = vdupq_n_f32(x[2]);
+    const float32x4_t x3 = vdupq_n_f32(x[3]), x4 = vdupq_n_f32(x[4]), x5 = vdupq_n_f32(x[5]);
+    const float32x4_t x6 = vdupq_n_f32(x[6]), x7 = vdupq_n_f32(x[7]), x8 = vdupq_n_f32(x[8]);
+    const auto score4 = [&](std::size_t j) {
+        const float32x4_t a = vaddq_f32(vmulq_f32(x0, vld1q_f32(c + j)), vmulq_f32(x1, vld1q_f32(c + s + j)));
+        const float32x4_t b =
+            vaddq_f32(vmulq_f32(x2, vld1q_f32(c + 2 * s + j)), vmulq_f32(x3, vld1q_f32(c + 3 * s + j)));
+        const float32x4_t e =
+            vaddq_f32(vmulq_f32(x4, vld1q_f32(c + 4 * s + j)), vmulq_f32(x5, vld1q_f32(c + 5 * s + j)));
+        const float32x4_t f =
+            vaddq_f32(vmulq_f32(x6, vld1q_f32(c + 6 * s + j)), vmulq_f32(x7, vld1q_f32(c + 7 * s + j)));
+        const float32x4_t dot =
+            vaddq_f32(vaddq_f32(vaddq_f32(a, b), vaddq_f32(e, f)), vmulq_f32(x8, vld1q_f32(c + 8 * s + j)));
+        return vsubq_f32(vld1q_f32(hn + j), dot);
+    };
+    Lanes lo, hi;
+    static constexpr std::uint32_t kIota[4] = {0, 1, 2, 3};
+    uint32x4_t idx = vld1q_u32(kIota);
+    const uint32x4_t four = vdupq_n_u32(4), eight = vdupq_n_u32(8);
+    for (std::size_t j = 0; j < s; j += 8) {  // stride is a multiple of 8
+        keep_better<kTop2>(lo, score4(j), idx);
+        keep_better<kTop2>(hi, score4(j + 4), vaddq_u32(idx, four));
+        idx = vaddq_u32(idx, eight);
+    }
+    float lane_best[8];
+    std::uint32_t lane_idx[8];
+    vst1q_f32(lane_best, lo.best);
+    vst1q_f32(lane_best + 4, hi.best);
+    vst1q_u32(lane_idx, lo.best_idx);
+    vst1q_u32(lane_idx + 4, hi.best_idx);
+    int pick = 0;
+    for (int l = 1; l < 8; ++l) {
+        if (lane_best[l] < lane_best[pick] ||
+            (lane_best[l] == lane_best[pick] && lane_idx[l] < lane_idx[pick])) {
+            pick = l;
+        }
+    }
+    if constexpr (kTop2) {
+        float lane_second[8];
+        vst1q_f32(lane_second, lo.second);
+        vst1q_f32(lane_second + 4, hi.second);
+        float second = kInf;
+        for (int l = 0; l < 8; ++l) {
+            second = std::min(second, lane_second[l]);
+            if (l != pick) second = std::min(second, lane_best[l]);
+        }
+        *best_score = lane_best[pick];
+        *second_score = second;
+    }
+    return lane_idx[pick];
+}
+
 #else
 
-// Portable kernel (arm64 for now; a NEON version comes with the phone measurements of Phase C,
-// where it can be tested on the device). Same scores in the same order of operations.
+// Portable kernel (targets without SSE2 or NEON). Same scores in the same order of operations,
+// unless the compiler contracts them into fused multiply-adds.
 template <bool kTop2>
 inline std::uint32_t scan(const float* x, const SoaCentroids& soa, float* best_score, float* second_score) {
     const std::size_t s = soa.stride;
@@ -198,7 +288,12 @@ std::uint32_t resolve_threads(std::uint32_t requested, std::size_t n) {
 // A fixed set of threads for the parallel phases of training: e-means runs one parallel
 // assignment per mini-batch, Hamerly several per epoch, so threads are started once.
 // ranges(n, fn) runs fn(thread, begin, end) over `threads` contiguous, equal ranges of [0, n);
-// the calling thread takes range 0. The split depends on n and the thread count only.
+// the calling thread takes range 0. The split depends on n and the thread count only, so
+// per-thread partial sums reduce in a fixed order.
+// dynamic(n, fn) runs fn(begin, end) over small ranges handed out from a shared counter, so a fast
+// core takes more of them than a slow one (phones: one big, several mid, two little cores; with
+// equal ranges every e-means batch waited for the little cores). Only for work whose result does
+// not depend on which thread runs a range: assignment into per-point outputs.
 class WorkerPool {
 public:
     explicit WorkerPool(std::uint32_t threads) : m_threads(std::max(1u, threads)) {
@@ -225,6 +320,22 @@ public:
             const std::size_t begin = std::min(n, per * t);
             const std::size_t end = std::min(n, begin + per);
             fn(t, begin, end);
+        };
+        run(job);
+    }
+
+    template <typename Fn>
+    void dynamic(std::size_t n, Fn&& fn) {
+        // About 16 ranges per thread, at least 32 points each: at k = 4,096 a range is ~130 K
+        // pairs, 0.1-0.2 ms on a phone core, against one atomic increment.
+        const std::size_t grain = std::max<std::size_t>(32, n / (16 * static_cast<std::size_t>(m_threads)));
+        std::atomic<std::size_t> next{0};
+        const std::function<void(std::uint32_t)> job = [&fn, &next, n, grain](std::uint32_t) {
+            for (;;) {
+                const std::size_t begin = next.fetch_add(grain, std::memory_order_relaxed);
+                if (begin >= n) return;
+                fn(begin, std::min(n, begin + grain));
+            }
         };
         run(job);
     }
@@ -668,7 +779,7 @@ void train_emeans(const Training& tr, std::uint32_t batch, double alpha0) {
                 std::copy_n(tr.point(order[b0 + p]), kSh1Dims,
                             points.data() + static_cast<std::size_t>(kSh1Dims) * p);
             fill_soa(soa, tr.centroids->data(), k);
-            pool.ranges(bn, [&](std::uint32_t, std::size_t begin, std::size_t end) {
+            pool.dynamic(bn, [&](std::size_t begin, std::size_t end) {
                 assign_range(points.data(), begin, end, soa, tr.centroids->data(), labels.data() + begin,
                              nullptr);
             });
@@ -756,7 +867,7 @@ void assign_nearest(const float* points, std::size_t n, const float* centroids, 
     SoaCentroids soa;
     fill_soa(soa, centroids, k);
     WorkerPool pool(resolve_threads(threads, n));
-    pool.ranges(n, [&](std::uint32_t, std::size_t begin, std::size_t end) {
+    pool.dynamic(n, [&](std::size_t begin, std::size_t end) {
         assign_range(points, begin, end, soa, centroids, labels + begin,
                      sq_dist != nullptr ? sq_dist + begin : nullptr);
     });
@@ -859,7 +970,7 @@ Result<Sh1Palette> train_sh1_palette(const float* sh1, std::size_t count, const 
         SoaCentroids soa;
         fill_soa(soa, palette.centroids.data(), k);
         WorkerPool final_pool(resolve_threads(params.threads, n));
-        final_pool.ranges(n, [&](std::uint32_t, std::size_t begin, std::size_t end) {
+        final_pool.dynamic(n, [&](std::size_t begin, std::size_t end) {
             assign_range(sh1, begin, end, soa, palette.centroids.data(), palette.labels.data() + begin,
                          sq_dist.data() + begin);
         });

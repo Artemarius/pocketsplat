@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <random>
@@ -62,6 +63,39 @@ TEST(Palette, AssignmentMatchesBruteForce) {
             ASSERT_EQ(labels[i], best_j) << "k " << k << " point " << i;
             EXPECT_NEAR(d2[i], best, 1e-5);
         }
+    }
+}
+
+// What a SIMD kernel can get wrong that the brute-force test does not pin: exact ties between
+// copies of a centroid in different lanes, vectors and steps (lowest index wins), the padded tail
+// of a stride that is not a multiple of 8, and labels that depend on the thread count (the
+// assignment hands ranges out dynamically).
+TEST(Palette, AssignmentTiesPickTheLowestIndexAtAnyThreadCount) {
+    const std::uint32_t k = 21;  // stride 24: three padding centroids
+    std::vector<float> centroids = random_vectors(k, 5, 1.0f);
+    const auto copy = [&](std::uint32_t from, std::uint32_t to) {
+        std::copy_n(centroids.begin() + from * kSh1Dims, kSh1Dims, centroids.begin() + to * kSh1Dims);
+    };
+    copy(13, 2);                 // 2 and 13: other vector, other step
+    copy(13, 6);                 // 6: same step, second vector
+    copy(19, 9);                 // 9 and 19: the 19 sits in the last, padded step
+    copy(20, 17);                // 17 and 20 likewise
+    const std::size_t n = 1237;  // not a multiple of any range size
+    std::vector<float> points(n * kSh1Dims);
+    for (std::size_t i = 0; i < n; ++i) {
+        const std::uint32_t at = static_cast<std::uint32_t>(i % k);  // points on the centroids
+        std::copy_n(centroids.begin() + at * kSh1Dims, kSh1Dims,
+                    points.begin() + static_cast<std::ptrdiff_t>(i * kSh1Dims));
+    }
+    const std::uint16_t lowest[k] = {0, 1, 2, 3, 4, 5, 2, 7, 8, 9, 10, 11, 12, 2, 14, 15, 16, 17, 18, 9, 17};
+    std::vector<std::uint16_t> reference;
+    for (std::uint32_t threads : {1u, 2u, 5u, 16u}) {
+        std::vector<std::uint16_t> labels(n);
+        assign_nearest(points.data(), n, centroids.data(), k, labels.data(), nullptr, threads);
+        for (std::size_t i = 0; i < n; ++i)
+            ASSERT_EQ(labels[i], lowest[i % k]) << "point " << i << " threads " << threads;
+        if (reference.empty()) reference = labels;
+        EXPECT_EQ(labels, reference);
     }
 }
 
