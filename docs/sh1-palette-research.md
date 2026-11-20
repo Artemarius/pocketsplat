@@ -1,7 +1,9 @@
 # SH 1 palette research: view-dependent colour at the SH 0 footprint
 
-Status: **gate A passed** (2026-11-19, S29, §6); phases B and C open. Written 2026-11-19 against
-`212b91b` (v0.3.0); measured at `c6f0a7f`. Where the implementation departs from §2, §6 says so. This note follows
+Status: **gate A passed** (2026-11-19, S29, §6); **phase B: desktop table complete** (S30, §3.1, §6),
+phone wall times in progress; phase C open. Written 2026-11-19 against `212b91b` (v0.3.0); gate A
+measured at `c6f0a7f`, phase B at `1cdd4cc`. Where the implementation departs from §2, §6 says so;
+for e-means, §3.1. This note follows
 the pattern of `coverage-mask-research.md`: the question, the design, the protocol, then results and
 negative results as they are measured. Numbers enter this file only from committed CSVs.
 
@@ -123,6 +125,47 @@ Summary of the method, as a reading aid only. **Implement from the paper, not fr
 Licence: Faiss is MIT, so its `contrib/e_means` may be read for constants. The licence header of that
 directory is confirmed before anyone reads it, per ADR-0005, and no code is copied.
 
+### 3.1 What was implemented (S30)
+
+Licence check (2026-11-19): `contrib/e_means/e_means.py` and `base.py` carry Meta's MIT header and
+refer to the repository's MIT `LICENSE`. The directory has no licence file of its own. One GPU
+file there, `cute_kernel.py`, adapts Apache-2.0 code from QuACK; it was not read and is not needed.
+The paper itself is CC BY 4.0. The two MIT files were read for constants and for points the paper
+leaves open, described in prose; no code was copied.
+
+`splatcore/palette.cpp` has three trainers over one assignment kernel and one worker pool:
+
+* **Lloyd** as in Phase A.
+* **Hamerly** (G. Hamerly, "Making k-means even faster", SDM 2010): Lloyd's iterations with one
+  upper and one lower bound per point. Each centroid's distance to its nearest other centroid gives a
+  second lower bound. The skip test carries a slack for the float error of the kernel's scores, so a
+  skipped point is one the kernel would have labelled the same. Same update step, same ranges, same
+  summation order: labels and centroids equal Lloyd's bit for bit (unit test).
+* **e-means**, from the paper's Algorithm 1, Eq. 2–8 and Table 2. Where the paper is silent or the
+  implementation departs from it:
+
+| Point | Paper | Here |
+|---|---|---|
+| Batch law | Undivided law for n ≤ 2 M, "knee / 8" above | Knee / 8 at every n: the reference code picks it for d ≤ 16, and d = 9. Table 2's constants (0.0044 k^0.13 n^0.88 T^0.81); the reference code's refit differs in the third digit |
+| Batch rounding | Nearest power of two, capped at n | The same; "nearest" by ratio, ties up (as the reference code) |
+| α0 | Eq. 6 with B | From the final, rounded B (the reference code does the same) |
+| Updates per epoch | M = T·⌊n/B⌋ | ⌈n/B⌉: the last partial batch is kept, so every point is in the last-epoch mean |
+| Schedule counter | t = 0 … M − 1 | The same; the first update uses α0 |
+| Initial N | 1e-10 | 1e-10 (the reference code: 2^-16) |
+| N, S precision | fp32 | double, so untouched clusters can decay for thousands of steps |
+| Split δ | bf16 machine epsilon | 2^-7, multiplicative, alternating signs per coordinate (the reference code: 1e-4). An all-zero donor gets an additive offset |
+| Donors | Among all clusters, ∝ N, without replacement | Among live clusters only (N ≥ τ), ∝ N, Efraimidis–Spirakis keys |
+| Revival | Every 5 batches | The same, also in the last epoch |
+| Labels returned | Last-epoch assignments | A full assignment of every splat against the final palette, as for the other trainers (needed with a training cap anyway). It is in `wall_ms`, not in `train_ms` or `pairs` |
+| Epochs | Fractional allowed | Integers only |
+
+The laws were fitted at d = 96 with n/k ≥ 8. Here d = 9; museum1 at k 65,536 (4.8 points per entry)
+would be outside the fitted range too, and that size is no longer swept.
+
+Work is counted as point–centroid distance pairs, which do not depend on the machine: Lloyd evaluates
+m·k per epoch, e-means m·k per epoch in batches, Hamerly m·k in its first epoch, then k² for the
+centroid distances plus k per point it cannot skip.
+
 ## 4. Protocol
 
 Scenes (SH 3 sources truncated to SH 1 by the normal import path):
@@ -243,7 +286,110 @@ Deviations from §2 and facts found on the way:
   `scale_rot` word 2 to zero for its test splat. The palette saves memory but does not raise the
   Adreno 750's 11.18 M splat limit, since `positions` and `scale_rot` are 12 B per splat too.
 
+### Phase B: trainers, losses and work (desktop, 2026-11-19)
+
+Source: `benchmarks/palette-trainers-1cdd4cc-2026-11-19.csv` (`scripts/palette_trainers.py`,
+`tools/palettebench`), the six scenes of gate A as `splatconv pack` trains on them. k 4,096 with
+seeds 1–5, with and without a training cap of 64 points per entry; k 1,024 and 16,384 with seed 1.
+Hamerly runs give Lloyd's losses (identical iterations). Loss is the MSE of every splat against its
+nearest entry, relative to Lloyd-25 with the same seed. Work is distance pairs during training,
+relative to Lloyd-25. Laptop wall times are in the CSV, indicative only.
+
+k 4,096, no cap, mean of 5 seeds (worst seed in brackets):
+
+| Scene | Lloyd-3 | Lloyd-10 | e-means-1 | e-means-2 | e-means-3 | e-means-5 | Dead: Lloyd-25 / e-means-5 |
+|---|---|---|---|---|---|---|---|
+| museum1.sh1 | 1.077 | 1.021 | 1.054 | 1.011 | 0.998 (1.000) | 0.987 (0.989) | 0 / 0 |
+| hornedlizard | 1.083 | 1.006 | 0.950 | 0.893 | 0.883 (0.889) | 0.881 (0.885) | 245 / 1.6 |
+| beetle | 1.128 | 1.043 | 1.076 | 1.021 | 1.009 (1.011) | 0.997 (1.000) | 0 / 0 |
+| giraffes_statue | 1.099 | 1.033 | 1.037 | 1.001 | 0.990 (0.993) | 0.979 (0.981) | 0 / 0 |
+| truck | 1.125 | 1.041 | 1.066 | 1.017 | 1.005 (1.007) | 0.996 (0.997) | 0 / 0 |
+| stump | 1.124 | 1.044 | 1.041 | 0.999 | 0.988 (0.992) | 0.979 (0.983) | 0 / 0 |
+| Work vs Lloyd-25 | 0.12 | 0.40 | 0.04 | 0.08 | 0.12 | 0.20 | |
+
+* **e-means reaches the Lloyd-25 loss in 3 epochs on four scenes and in 5 on all six**, on every
+  seed: an eighth to a fifth of the distance work, plus one final assignment pass that every trainer
+  pays. With that pass counted, e-means-3 costs 4/26 of Lloyd-25.
+* **At equal work e-means wins clearly**: e-means-3 is 7–18 % below Lloyd-3 on every scene. The
+  paper's advantage carries over to d = 9, which it did not test.
+* **hornedlizard** (an SPZ import: 106 K distinct snorm8 SH1 vectors among 765 K splats) is where
+  the revival matters. Lloyd leaves 245 of 4,096 entries without a splat; e-means-5 leaves 1.6, and
+  its loss is 12 % below Lloyd-25. At k 16,384: 2,718 dead entries for Lloyd-25, 643 for e-means-5,
+  loss 0.78 of Lloyd-25.
+* Other sizes (seed 1): e-means-3 is 0.93–1.01 of Lloyd-25 at k 1,024 and 0.81–1.01 at k 16,384;
+  e-means-5 is 0.94–1.01 and 0.78–0.99. Over all runs the scaling laws gave batches of
+  1,024–32,768 and α0 = 0.016–0.35. They worked as published, with no tuning.
+* **Hamerly saves 6–30 % of the distance work** at k 4,096 (25 epochs: 0.70 of Lloyd's pairs on
+  hornedlizard, 0.89–0.94 elsewhere), 10–36 % at k 1,024, and 4–25 % at k 16,384. A negative result
+  (§7).
+* **Training cap of 64 points per entry** (262,144 at k 4,096): e-means-3 does 0.8–4 % of the
+  Lloyd-25 work (museum1, barely capped, 10 %), but its loss is 1.06–1.08 of Lloyd-25 on beetle, giraffes_statue, truck and stump
+  (museum1, barely capped, 1.008; hornedlizard 0.91). Capped Lloyd-25 is 1.07–1.08. The cap trades
+  5–8 % loss for training work; whether that costs image quality is not measured yet.
+
+Image check (`benchmarks/palette-quality-emeans-4cee8a0-2026-11-20.csv`, gate A protocol, seed 1):
+e-means-3 palettes at k 4,096 render at 41.8 dB min / 47.0 mean on giraffes_statue (Lloyd-25: 42.6 /
+47.4) and 52.4 / 53.1 on hornedlizard (Lloyd-25: 51.3 / 52.2). Both are above 40 dB. On giraffes_statue
+the worst pose is 0.8 dB lower although the SH1-space loss is 1 % lower: the loss ranks palettes,
+but it does not fix the worst-pose PSNR to a fraction of a dB.
+
+### Phase B: wall times on the S25 Ultra (2026-11-20, second phone)
+
+Source: `benchmarks/palette-trainers-s25u-e87cf48-2026-11-20.csv`. palettebench (arm64, the portable
+scalar kernel: no NEON yet), 8 threads, k 4,096, seed 1. Phone unplugged on Wi-Fi adb, DND and
+heads-up notifications off, and every run started from skin ≤ 32 °C. **Per CLAUDE.md §7 these are
+the second-phone column, not the deciding numbers**: the S24 Ultra run is still to come. Total =
+training plus the final assignment of every splat.
+
+| Scene | Run | Training s | Total s | Loss vs Lloyd-25 | Dead |
+|---|---|---|---|---|---|
+| hornedlizard (765 K) | Lloyd-25 | 56.2 | 59.0 | 1.000 | 243 |
+| | Hamerly-25 | 46.1 | 48.2 | 1.000 | 243 |
+| | Lloyd-3 | 5.3 | 7.3 | 1.082 | 409 |
+| | e-means-3 | 6.7 | 8.7 | 0.879 | 5 |
+| | e-means-5 | 11.7 | 14.2 | 0.880 | 2 |
+| | e-means-3, cap 64 | 2.5 | 4.3 | 0.914 | 26 |
+| stump (4.05 M) | Lloyd-3 | 36.7 | 50.0 | 1.117 | 0 |
+| | e-means-3 | 42.6 | 55.6 | 0.990 | 0 |
+| | e-means-5 | 74.5 | 88.9 | 0.983 | 0 |
+| | e-means-3, cap 64 | 2.5 | 16.4 | 1.081 | 0 |
+
+Loss is the phone's own MSE relative to Lloyd-25 with seed 1: the phone's run for hornedlizard, the
+desktop's for stump, where Lloyd-25 was not run on the phone. Phone and desktop runs are not bit-identical.
+The phone's Lloyd-25 loss on hornedlizard is 0.03 % below the desktop's, most likely because
+arm64 clang contracts multiply-adds into FMAs (`-ffp-contract=on` by default), so near-ties break
+differently. Each platform is deterministic on its own. Phase C must not assume identical palettes
+across platforms: a test that pins a palette needs `-ffp-contract=off` or a tolerance.
+
+* **On the bundled-sample-sized scene, e-means-3 trains a better palette in 8.7 s than Lloyd-25 does
+  in 59 s** (6.8×). Hamerly-25 takes 48 s, 18 % less than Lloyd-25 for 29 % fewer pairs.
+* The kernel runs at 1.2–1.4 G pairs/s on 8 threads, so every trainer is bound by n·k·passes. For
+  an "all" import of 4 M splats, the final assignment alone takes 13–14 s, and e-means-3 takes
+  56 s in total. The cap removes the training (2.5 s) but not that pass. A NEON kernel (Phase C) is
+  the next lever.
+* At equal pairs, e-means' training costs 16–26 % more time than Lloyd's on this phone (6.7 vs
+  5.3 s, 42.6 vs 36.7 s). On the laptop the difference was within noise. Suspects: the per-batch
+  barrier with an equal static split over the phone's two core types, which Lloyd pays once per
+  epoch instead of once per batch. Not investigated yet.
+* Thermal status stayed 0, except LIGHT at the end of stump's Lloyd-3. The S25U skin readings stepped
+  by up to 8 °C within a run, which is the sensor behaviour noted in CLAUDE.md, not the load.
+
+Verdict for the import, pending the S24 Ultra's wall times: **e-means, 3 epochs, k 4,096, no cap**
+for the default 1 M budget. For "all" imports a cap, or a NEON kernel, decides whether the added
+import time is acceptable (Phase C).
+
 ## 7. Negative results
+
+* **Hamerly's bounds on SH1** (2026-11-19, S30): over 25 epochs at k 4,096 they skip only 6–30 % of
+  the distance work (§6). Diagnosis on museum1
+  at k 1,024, from a temporary instrumented build: the mean upper bound (distance to the own
+  centroid) is 0.048 and the mean lower bound (to any other) 0.054. The second-nearest entry is only
+  ~13 % farther than the nearest: SH1 vectors fill their space like noise, with little cluster
+  structure. Each epoch the lower bound shrinks by the largest centroid drift, and that drift
+  (0.02–0.13) is 5–10× the median (0.002–0.017), so it consumes the gap. Per epoch, 87–97 % of the
+  points still needed a full scan. Elkan's or Yinyang's per-centroid or per-group bounds would follow
+  the median drift instead, but Elkan needs n × k bounds, and e-means already does an eighth of
+  Lloyd's work. Hamerly stays in the code: it reproduces Lloyd exactly, which makes it a free check.
 
 * **An auto-vectorized assignment kernel under MSVC** (2026-11-19): one scoring loop over a
   512-centroid tile plus a lane-blocked minimum ran at 0.59 G pairs/s on one thread (~6.5 cycles

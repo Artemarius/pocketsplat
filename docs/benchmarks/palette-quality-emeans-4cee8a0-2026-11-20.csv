@@ -1,0 +1,7 @@
+build,scene,count,variant,k,epochs,epochs_run,seed,threads,train_wall_s,mse,dead,used_entropy_bits,pack_bytes,psnr_min_db,psnr_mean_db,moved_px_max_pct,resolution,poses,render_flags
+4cee8a0-dirty,giraffes_statue,2880821,direct@repeat,,,,,,,,,,115548016,79.07,87.19,0.004,864x1872,6,--key-bits 32 --min-contribution 0
+4cee8a0-dirty,giraffes_statue,2880821,sh0,,,,,,,,,,80978164,29.56,35.06,80.143,864x1872,6,--key-bits 32 --min-contribution 0
+4cee8a0-dirty,giraffes_statue,2880821,k4096.emeans.e3,4096,3,3,1,4,24.86,0.00262359,0,11.6528,115548016,41.81,47.04,17.649,864x1872,6,--key-bits 32 --min-contribution 0
+4cee8a0-dirty,hornedlizard,764985,direct@repeat,,,,,,,,,,30683156,91.92,97.90,0.000,864x1872,6,--key-bits 32 --min-contribution 0
+4cee8a0-dirty,hornedlizard,764985,sh0,,,,,,,,,,21503336,35.32,37.43,51.443,864x1872,6,--key-bits 32 --min-contribution 0
+4cee8a0-dirty,hornedlizard,764985,k4096.emeans.e3,4096,3,3,1,4,6.32,0.00214859,6,11.1412,30683156,52.37,53.11,3.039,864x1872,6,--key-bits 32 --min-contribution 0

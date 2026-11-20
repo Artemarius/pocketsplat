@@ -146,6 +146,12 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
   864×1872 at the six `quality_ab.py` poses; PSNR min/mean and the share of pixels moved > 2 LSB
   against the reference, `direct@repeat` = the renderer's noise floor; per palette the training
   wall time, thread count, epochs run, MSE in SH1 space, unused entries and label entropy.
+- `palette-trainers-<hash>-<date>.csv` — SH 1 palette trainers, Phase 8 B (`tools/palettebench` via
+  `scripts/palette_trainers.py`): one row per training run (scene, trainer, k, epochs, seed, cap in
+  points per entry) with batch and α0 (e-means), revivals, distance pairs evaluated, MSE of every splat
+  against its nearest entry, unused entries, label entropy, training and total wall time, and, for
+  phone rows, thermal status and skin temperature before and after. `label` names the machine;
+  desktop wall times are indicative only, as for every laptop timing.
 
 ## CSV columns (frame benchmarks)
 `device, build_hash, scene, splats_total, splats_visible, sh_degree, internal_w, internal_h, key_bits,
@@ -489,9 +495,32 @@ renders, i5-11400H training. PSNR is the minimum over the six poses against the 
   (25,896 of 65,536 entries unused); museum1, truck and giraffes_statue have 85–100 % distinct, and
   no PLY-sourced scene leaves more than 196 entries unused at 65,536.
 
+## SH 1 palette — trainers (2026-11-19/20, Phase 8 B)
+
+`palette-trainers-1cdd4cc-2026-11-19.csv`: the six gate A scenes, k 4,096 with 5 seeds (with and
+without a 64-points-per-entry training cap), k 1,024 and 16,384 with 1 seed; i5-11400H, 4 threads,
+idle priority. Hamerly rows give Lloyd's losses (identical iterations). Details are in
+`docs/sh1-palette-research.md` §6.
+
+* **e-means (arXiv 2611.09501) reaches the Lloyd-25 loss in 3 epochs on four scenes and in 5 on all
+  six**, on every seed, with the paper's scaling laws untuned at d = 9. That is 12–20 % of Lloyd-25's
+  distance work. At equal work (3 epochs) its loss is 7–18 % below Lloyd's.
+* On hornedlizard, an SPZ import with many duplicate SH1 vectors, Lloyd-25 leaves 245 of 4,096
+  entries unused; e-means-5 leaves 1.6, and its loss is 12 % lower.
+* Hamerly's bounds save 6–30 % of Lloyd's distance work (negative results log).
+* A 64-per-entry training cap cuts e-means-3's training work to 0.8–4 % of Lloyd-25 and costs
+  6–8 % loss on the four larger PLY scenes.
+* S25 Ultra (`palette-trainers-s25u-e87cf48-2026-11-20.csv`, second phone; the deciding S24 Ultra
+  run is pending; portable scalar kernel, 8 threads, k 4,096): on hornedlizard (765 K), e-means-3
+  takes 8.7 s in total against 59.0 s for Lloyd-25 and 48.2 s for Hamerly-25, with 12 % lower loss.
+  On stump (4.05 M), e-means-3 takes 55.6 s, of which the final assignment of every splat is ~13 s;
+  with a 64-per-entry cap, 16.4 s. The kernel runs at 1.2–1.4 G pairs/s. At equal pairs, e-means'
+  training is 16–26 % slower than Lloyd's on the phone (per-batch barrier suspected).
+
 ## Negative results log
 | Date | What was tried | Result | Diagnosis |
 |---|---|---|---|
+| 2026-11-19 | Hamerly's bounds (one upper, one lower bound per point) to speed up Lloyd for the SH1 palette, the classical choice at low dimension (`docs/sh1-palette-research.md` §3.1) | Same labels and centroids as Lloyd, bit for bit, but 0.70–0.94 of Lloyd's distance pairs at k 4,096 over 25 epochs (0.64–0.90 at k 1,024, 0.75–0.96 at k 16,384); 87–97 % of points need a full scan in each epoch (museum1, k 1,024) | SH1 vectors have little cluster structure: the second-nearest entry is only ~13 % farther than the nearest on average, and the lower bound shrinks by the largest centroid drift each epoch, 5–10× the median drift. e-means needs an eighth of Lloyd's work for the same loss, so per-centroid bounds (Elkan, n × k memory) were not tried |
 | 2026-11-19 | SH1 palette assignment kernel written to auto-vectorize (`docs/sh1-palette-research.md` §2.2): one scoring loop over a 512-centroid tile, then a lane-blocked minimum, MSVC `/O2` (scratch microbenchmark, 200 K random points, k 4,096, i5-11400H at ~2.6 GHz) | 0.59 G pairs/s on one thread (~6.5 cycles per pair), 3.2 on 12; the vectorizer report confirmed both loops vectorized (SSE2) | x64 MSVC targets SSE2 without FMA, and the separate score and minimum passes plus a nine-add chain left ~2 iterations in flight. Explicit SSE2 with per-lane best value and index, a tree-summed dot product and two vectors per step: 0.77 on one thread, 3.6 on 12, close to the SSE2 µop limit at that clock. arm64 keeps the portable loop until a NEON kernel can be tested on a phone (Phase C) |
 | 2026-11-06 | Clip guard lowering its contribution floor whenever the visible count stays under 60 % of the visible capacity for 30 computed frames (S28) | 18 M tiled bicycle orbit at capacity 4,194,304 (desktop): the floor flipped 0 ↔ 0.1 px 26 times in 600 frames; 4.4 % of frames clipped (70.3 % without a floor) | 0.1 px halves a large view's visible count (5.0 M → 2.4 M), so a count under 60 % at 0.1 overflowed again at 0. Lowering now predicts the count after the step from what the last raise removed and needs it under 90 %: 0.7 % clipped frames, 4 changes (ADR-0016) |
 | 2026-11-06 | Clipping a frame's visible splats at the draw-record capacity with nothing else (S28, step 1 of ADR-0016) | Raw bicycle at `--visible-cap 2000000` (desktop): 13.4 dB against the full image, the ground in front of the camera gone; S24U no-cull orbits of 13 M / 18 M tiled scenes clipped 46 % / 99.8 % of frames | A workgroup is a 256-splat chunk, so whole chunks that append last are dropped: arbitrary regions, near ones included. Replaced by the contribution floor (52.0 dB on the same view) |
