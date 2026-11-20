@@ -387,6 +387,39 @@ the default 1 M budget. It is the best palette at a sixth of Lloyd-25's time: ab
 S24U for the bundled sample, with today's scalar kernel. For "all" imports, a NEON kernel and the
 cap decide whether the added time is acceptable (Phase C, against today's import time).
 
+### Phase C: format, shader and import on the desktop (2026-11-20, S31)
+
+What landed, before any phone run:
+
+* **Pack v3** (`formats.md` §3): header word 28 = `palette_count | flags << 24`, entry index in
+  `scale_rot` word 2's high 16 bits, the palette in `sh1` (12 B per entry). `sh1_scale` is the
+  max-abs over the entries in use, so a palette pack decodes bit for bit like the direct pack of
+  the snapped cloud (`pack_test`, `PackPalette.*`). Readers reject unknown flags and indices
+  outside the palette. v2 packs read as v3 direct packs (deviation from §2.1: v2 wrote zero in
+  both places, so no re-import is needed). 1 M splats at k 4,096: 28.05 MB instead of 40 MB
+  (museum1, 314 K splats: 8.89 MB against 12.61 MB).
+* **Preprocess**: one push-constant flag selects `sh1[3 · (w2 >> 16)]` instead of `sh1[3 · idx]`.
+  Desktop check on museum1 (e-means-3, k 4,096): palette pack against the snapped direct pack
+  93–105 dB at the six `quality_ab` poses, inside the renderer's repeat noise (93–101 dB);
+  validation clean. ctest `golden_palette_equivalence` (`scripts/palette_check.py`) pins the same
+  on the synthetic SH 1 sphere and checks that the palette render is not SH 0 (34 dB apart).
+* **Trainer**: a NEON assignment kernel (the SSE2 kernel lane for lane, separate multiplies and
+  adds), a dynamic work split for e-means' per-batch assignment and for the final assignment
+  (ranges handed out from a counter, so fast cores take more), and `#pragma clang fp contract(off)`
+  for `palette.cpp`. The pragma targets the cause suspected in §6 for phone ≠ desktop palettes:
+  the arm64 build fused the e-means EMA update (`s += α·x`, doubles) into `fmla`; objdump now shows
+  no fused multiply-adds in the palette code. Desktop results are unchanged by all three (museum1:
+  e-means-3 and Lloyd-3 MSE, revivals and entropy identical at 3 and 4 threads). **Not yet run
+  on a phone:** the NEON kernel's correctness (`splatcore_tests` built for arm64), its speed, the
+  effect of the dynamic split, and whether phone palettes now equal the desktop's.
+* **Import**: `ImportOptions::sh1_palette` (e-means, 3 epochs) trains after the Morton reorder and
+  writes a palette pack. Training reports its progress and can be cancelled between batches and
+  in 16 slices of the final assignment. The app has an import toggle, off by default until the
+  ADR, with "training SH palette… NN %" in the import status. Bench CSV headers record
+  `sh1_palette`.
+
+Gate C (preprocess no slower than direct SH 1 on both phones, import cost recorded) is open.
+
 ## 7. Negative results
 
 * **Hamerly's bounds on SH1** (2026-11-19, S30): over 25 epochs at k 4,096 they skip only 6–30 % of
