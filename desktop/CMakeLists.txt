@@ -61,6 +61,15 @@ if(POCKETSPLAT_BUILD_TESTS)
                     --splatconv $<TARGET_FILE:splatconv>
                     --workdir ${CMAKE_BINARY_DIR}/chiral
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+            # Palette golden (pack v3): a palette pack renders like its snapped direct SH 1 pack
+            # and unlike SH 0. Skips (77) without the synthetic sphere scene.
+            add_test(NAME golden_palette_equivalence
+                COMMAND Python3::Interpreter ${CMAKE_SOURCE_DIR}/scripts/palette_check.py
+                    --exe $<TARGET_FILE:pocketsplat-desktop>
+                    --splatconv $<TARGET_FILE:splatconv>
+                    --workdir ${CMAKE_BINARY_DIR}/palette_check
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+            set_tests_properties(golden_palette_equivalence PROPERTIES SKIP_RETURN_CODE 77)
         endif()
     endif()
 endif()
