@@ -12,9 +12,10 @@ Outputs in --out-dir:
   trace-<device>-<hash>-<scene>-<name>.csv     the app's trace (replay input)
   thermal-<device>-<hash>-<scene>-<name>.csv   host-side samples, the bench_android.py columns
 
-Run hygiene as in the benchmark protocol (docs/benchmarks/README.md): fixed brightness, Do Not
-Disturb and heads-up notifications off for the session, all restored afterwards; Wi-Fi adb with
-the phone unplugged (`adb tcpip 5555`, `adb connect <phone>:5555`).
+Run hygiene as in the benchmark protocol (docs/benchmarks/README.md): fixed brightness and
+heads-up notifications off for the session, restored afterwards; Wi-Fi adb with the phone
+unplugged (`adb tcpip 5555`, `adb connect <phone>:5555`). Do Not Disturb is never switched on: the
+phones are the owner's personal phones (owner's rule, 2026-11-20).
 
 Usage:
   python scripts/session_android.py --serial <ip>:5555 --device s24u --name handheld1 --minutes 20
@@ -32,9 +33,7 @@ from bench_android import ACTIVITY, PACKAGE, REPO, adb, apk_build, device_state,
 
 REASONS = ["none", "frame_miss", "thermal_high", "thermal_low", "ladder_exhausted"]
 SETTINGS = [("system", "screen_brightness_mode"), ("system", "screen_brightness"),
-            ("system", "screen_off_timeout"), ("global", "zen_mode"),
-            ("global", "heads_up_notifications_enabled")]
-DND = {"0": "off", "1": "priority", "2": "on", "3": "alarms"}  # zen_mode -> cmd notification set_dnd
+            ("system", "screen_off_timeout"), ("global", "heads_up_notifications_enabled")]
 
 
 def read_trace(path: Path) -> tuple[dict[str, str], list[dict[str, float]]]:
@@ -119,10 +118,7 @@ def save_settings(serial: str) -> dict[tuple[str, str], str]:
 
 def restore_settings(serial: str, saved: dict[tuple[str, str], str]) -> None:
     for (namespace, name), value in saved.items():
-        if name == "zen_mode":
-            if value in DND:
-                shell(f"cmd notification set_dnd {DND[value]}", serial=serial)
-        elif value and value != "null":
+        if value and value != "null":
             shell(f"settings put {namespace} {name} {value}", serial=serial)
     shell("svc power stayon false", serial=serial)
 
@@ -154,8 +150,7 @@ def run_session(args) -> int:
         shell("settings put system screen_brightness 128", serial=serial)
         shell("settings put system screen_off_timeout 1800000", serial=serial)
         shell("svc power stayon true", serial=serial)
-        shell("cmd notification set_dnd on", serial=serial)
-        shell("settings put global heads_up_notifications_enabled 0", serial=serial)  # DND lets some through
+        shell("settings put global heads_up_notifications_enabled 0", serial=serial)
         if args.cool_skin > 0:
             wait_cool_held(serial, args.cool_skin, args.cool_hold)
         print(f"[{tag}] {device_state(serial)}")
