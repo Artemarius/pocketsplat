@@ -90,10 +90,12 @@ void print_usage() {
                  "      --no-morton), then the quantized SoA layout with 256-splat chunk AABBs.\n"
                  "      --sh 0|1 and coordinate flags as for convert.\n"
                  "      --sh1-palette K  EXPERIMENTAL (Phase 8, docs/sh1-palette-research.md): train a\n"
-                 "                       K-entry SH1 palette (Lloyd, K <= 65536), replace every\n"
+                 "                       K-entry SH1 palette (K <= 65536), replace every\n"
                  "                       splat's SH1 by its entry and write an ordinary pack; the\n"
                  "                       JSON line gains the palette statistics.\n"
-                 "      --palette-epochs N  Lloyd update steps (default 25)\n"
+                 "      --palette-trainer lloyd|hamerly|emeans  (default lloyd)\n"
+                 "      --palette-epochs N  update steps (Lloyd, Hamerly) or passes (e-means)\n"
+                 "                       (default 25)\n"
                  "      --palette-seed S    initialisation seed (default 1)\n"
                  "      --palette-threads N  training threads (default 0 = all; the palette depends\n"
                  "                       on N only through summation order)\n"
@@ -217,6 +219,7 @@ struct Options {
     bool dump_header = false;
     std::uint32_t sh1_palette = 0;  // pack: palette size, 0 = direct SH1
     std::uint32_t palette_epochs = 25;
+    splatcore::PaletteTrainer palette_trainer = splatcore::PaletteTrainer::kLloyd;
     std::uint64_t palette_seed = 1;
     std::uint32_t palette_threads = 0;  // 0 = all hardware threads
     std::optional<float> target_fps;    // replay overrides of the CSV header
@@ -283,6 +286,19 @@ bool parse_options(int argc, char** argv, int start, Options& options) {
             options.sh = std::stoi(*v);
             if (*options.sh != 0 && *options.sh != 1) {
                 std::fprintf(stderr, "splatconv: --sh must be 0 or 1\n");
+                return false;
+            }
+        } else if (arg == "--palette-trainer") {
+            auto v = value("--palette-trainer");
+            if (!v) return false;
+            if (*v == "lloyd") {
+                options.palette_trainer = splatcore::PaletteTrainer::kLloyd;
+            } else if (*v == "hamerly") {
+                options.palette_trainer = splatcore::PaletteTrainer::kHamerly;
+            } else if (*v == "emeans") {
+                options.palette_trainer = splatcore::PaletteTrainer::kEMeans;
+            } else {
+                std::fprintf(stderr, "splatconv: --palette-trainer must be lloyd, hamerly or emeans\n");
                 return false;
             }
         } else if (arg == "--sh1-palette" || arg == "--palette-epochs" || arg == "--palette-seed" ||
@@ -649,6 +665,7 @@ int cmd_pack(const Options& options) {
         splatcore::PaletteParams params;
         params.k = options.sh1_palette;
         params.epochs = options.palette_epochs;
+        params.trainer = options.palette_trainer;
         params.seed = options.palette_seed;
         params.threads = options.palette_threads;
         splatcore::Result<splatcore::Sh1Palette> palette = splatcore::train_sh1_palette(cloud, params);
@@ -665,10 +682,11 @@ int cmd_pack(const Options& options) {
         char buf[512];
         std::snprintf(
             buf, sizeof(buf),
-            ", \"palette\": {\"trainer\": \"lloyd\", \"k\": %u, \"epochs\": %u, \"epochs_run\": %u, "
+            ", \"palette\": {\"trainer\": \"%s\", \"k\": %u, \"epochs\": %u, \"epochs_run\": %u, "
             "\"seed\": %llu, \"threads\": %u, \"mse\": %.6g, \"dead\": %u, \"used_entropy_bits\": %.6g, "
             "\"wall_ms\": %.1f}",
-            palette.value().size(), params.epochs, s.epochs_run, static_cast<unsigned long long>(params.seed),
+            splatcore::palette_trainer_name(params.trainer), palette.value().size(), params.epochs,
+            s.epochs_run, static_cast<unsigned long long>(params.seed),
             params.threads != 0 ? params.threads : std::max(1u, std::thread::hardware_concurrency()), s.mse,
             s.dead, s.used_entropy, s.wall_ms);
         palette_json = buf;

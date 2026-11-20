@@ -84,6 +84,7 @@ def main() -> int:
     parser.add_argument("--scene", action="append", required=True, help="name=path of an SH 1 PLY/SPZ")
     parser.add_argument("--k", type=int, nargs="+", default=[1024, 4096, 16384, 65536])
     parser.add_argument("--epochs", type=int, default=25)
+    parser.add_argument("--trainer", default="lloyd", choices=["lloyd", "hamerly", "emeans"])
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--threads", type=int, default=0, help="palette training threads (0 = all)")
     parser.add_argument("--low-priority", action="store_true", help="run everything at idle priority")
@@ -115,11 +116,13 @@ def main() -> int:
             info = pack(splatconv, src, work / f"{name}.sh0.pspk", ["--sh", "0"])
             variants.append(("sh0", work / f"{name}.sh0.pspk", info))
             for k in args.k:
-                out = work / f"{name}.k{k}.e{args.epochs}.s{args.seed}.pspk"
+                tag = "" if args.trainer == "lloyd" else f".{args.trainer}"  # Lloyd keeps gate A's names
+                out = work / f"{name}.k{k}{tag}.e{args.epochs}.s{args.seed}.pspk"
                 info = pack(splatconv, src, out, ["--sh1-palette", str(k), "--palette-epochs", str(args.epochs),
+                                                  "--palette-trainer", args.trainer,
                                                   "--palette-seed", str(args.seed),
                                                   "--palette-threads", str(args.threads)])
-                variants.append((f"k{k}", out, info))
+                variants.append((f"k{k}{tag}.e{args.epochs}" if tag else f"k{k}", out, info))
                 print(f"{name:>16} k {k:>6}: trained in {info['palette']['wall_ms'] / 1000:7.1f} s, "
                       f"mse {info['palette']['mse']:.3g}, dead {info['palette']['dead']}", flush=True)
 
