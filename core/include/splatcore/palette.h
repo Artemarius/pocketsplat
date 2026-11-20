@@ -9,10 +9,10 @@
 
 // SH 1 palette (docs/sh1-palette-research.md, Phase 8): cluster the scene's 9-D SH1 vectors
 // (coefficient-major c0.rgb c1.rgb c2.rgb, as in SplatCloud::sh at degree 1) into at most 65,536
-// centroids, so each splat can carry a 16-bit index instead of its own 12 B of SH1. Experimental:
-// Phase A measures the image-quality price with ordinary packs whose SH1 is snapped to the
-// centroids (apply_sh1_palette); no pack format uses the palette yet. Phase B compares three
-// trainers on one assignment kernel (research note §3):
+// centroids, so each splat can carry a 16-bit index instead of its own 12 B of SH1: pack v3
+// (build_pack with a palette, docs/formats.md §3). apply_sh1_palette snaps a cloud's SH1 to the
+// centroids instead - the direct-pack reference a palette pack renders identically to. Phase B
+// compared three trainers on one assignment kernel (research note §3):
 //   kLloyd    full passes, empty clusters refilled by splitting the largest;
 //   kHamerly  the same iterations with Hamerly's bounds (G. Hamerly, "Making k-means even faster",
 //             SDM 2010): one upper and one lower bound per point skip most distance evaluations,

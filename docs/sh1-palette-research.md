@@ -48,7 +48,9 @@ dimension the newest one was not tested at (§3).
 * **Header**: `kPackVersion` 2 → 3. The 4 reserved bytes at offset 28 are also wanted for the
   antialiased flag (open question in the roadmap), so they are split: low 24 bits `palette_count`
   (0 = direct SH 1), high 8 bits flags. Version 2 packs are rejected at load as before; scenes are
-  re-imported.
+  re-imported. *Implemented differently (S31):* a v2 pack wrote zero in word 28 and in word 2's
+  high 16 bits, so it is byte for byte a v3 pack without a palette; readers accept it as one and
+  nothing needs re-importing (`formats.md` §3). v1 stays rejected.
 * **`subset_pack`** copies `scale_rot` words, so indices survive; the palette is kept whole.
 * **Coverage sidecar**: unaffected (bound to positions).
 * The direct SH 1 pack stays. It is the quality reference and the fallback.

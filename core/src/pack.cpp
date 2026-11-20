@@ -47,6 +47,16 @@ float sigmoid(float x) {
     return 1.0f / (1.0f + std::exp(-x));
 }
 
+// One SH1 entry (9 coefficients, coefficient-major) as 3 uint32 lanes: 9 snorm8 of sh / scale,
+// bytes 9-11 zero.
+void encode_sh1(const float* sh, float inv_scale, std::uint32_t* out) {
+    std::uint32_t bytes[9] = {};
+    for (int k = 0; k < 9; ++k) bytes[k] = snorm8(sh[k] * inv_scale);
+    out[0] = bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
+    out[1] = bytes[4] | (bytes[5] << 8) | (bytes[6] << 16) | (bytes[7] << 24);
+    out[2] = bytes[8];
+}
+
 }  // namespace
 
 std::vector<std::uint8_t> GpuPack::serialize() const {
@@ -68,7 +78,7 @@ std::vector<std::uint8_t> GpuPack::serialize() const {
     return out;
 }
 
-Result<GpuPack> build_pack(const SplatCloud& cloud) {
+Result<GpuPack> build_pack(const SplatCloud& cloud, const Sh1Palette* palette) {
     using R = Result<GpuPack>;
     if (cloud.sh_degree != 0 && cloud.sh_degree != 1) {
         return R::failure("GPU pack supports SH degree 0 or 1 only, got degree " +
@@ -79,6 +89,21 @@ Result<GpuPack> build_pack(const SplatCloud& cloud) {
         return R::failure("splat count exceeds the pack's 32-bit limit");
     }
     const std::size_t n = cloud.count;
+    if (palette != nullptr) {
+        if (cloud.sh_degree != 1) return R::failure("an SH1 palette needs an SH degree 1 cloud");
+        const std::uint32_t k = palette->size();
+        if (k == 0 || k > kMaxPaletteSize ||
+            palette->centroids.size() != static_cast<std::size_t>(kSh1Dims) * k) {
+            return R::failure("SH1 palette must hold 1..65536 entries of 9 coefficients");
+        }
+        if (palette->labels.size() != n) {
+            return R::failure("palette labels (" + std::to_string(palette->labels.size()) +
+                              ") do not match the splat count (" + std::to_string(n) + ")");
+        }
+        for (std::uint16_t label : palette->labels) {
+            if (label >= k) return R::failure("palette label out of range");
+        }
+    }
 
     GpuPack pack;
     pack.header.count = static_cast<std::uint32_t>(n);
@@ -102,7 +127,8 @@ Result<GpuPack> build_pack(const SplatCloud& cloud) {
     }
 
     // scale_rot lanes (docs/formats.md §3): word 0 = h(sx) | h(sy)<<16; word 1 = h(sz) |
-    // snorm8(w)<<16 | snorm8(x)<<24; word 2 = snorm8(y) | snorm8(z)<<8, high 16 bits zero.
+    // snorm8(w)<<16 | snorm8(x)<<24; word 2 = snorm8(y) | snorm8(z)<<8 | palette index<<16 (zero
+    // without a palette).
     // Quaternions are sign-canonicalized (w >= 0) so packing is deterministic; q and -q are the
     // same rotation.
     pack.scale_rot.resize(3 * n);
@@ -117,7 +143,8 @@ Result<GpuPack> build_pack(const SplatCloud& cloud) {
         }
         pack.scale_rot[3 * i + 0] = hx | (hy << 16);
         pack.scale_rot[3 * i + 1] = hz | (snorm8(q[0]) << 16) | (snorm8(q[1]) << 24);
-        pack.scale_rot[3 * i + 2] = snorm8(q[2]) | (snorm8(q[3]) << 8);
+        const std::uint32_t entry = palette != nullptr ? palette->labels[i] : 0u;
+        pack.scale_rot[3 * i + 2] = snorm8(q[2]) | (snorm8(q[3]) << 8) | (entry << 16);
     }
 
     // RGBA8: rgb is the displayed base color 0.5 + C0 * f_dc clamped to [0,1]; a = sigmoid(logit).
@@ -131,21 +158,34 @@ Result<GpuPack> build_pack(const SplatCloud& cloud) {
     }
 
     // SH1: 9 snorm8 coefficients (coefficient-major, channel fastest) scaled by the per-pack
-    // max-abs, plus 3 bytes of padding, as 3 uint32 lanes.
-    if (cloud.sh_degree == 1) {
+    // max-abs, plus 3 bytes of padding, as 3 uint32 lanes - one entry per splat, or one per
+    // palette entry. A palette's max-abs runs over the entries in use only, which is the max-abs
+    // of the snapped cloud: a palette pack then decodes bit for bit like the direct pack of
+    // apply_sh1_palette's output (an unused entry beyond that range is clamped; nothing reads it).
+    if (palette != nullptr) {
+        const std::uint32_t k = palette->size();
+        std::vector<char> used(k, 0);
+        for (std::uint16_t label : palette->labels) used[label] = 1;
+        float max_abs = 0.0f;
+        for (std::size_t e = 0; e < k; ++e) {
+            if (used[e] == 0) continue;
+            for (std::size_t c = 0; c < static_cast<std::size_t>(kSh1Dims); ++c)
+                max_abs = std::max(max_abs, std::abs(palette->centroids[kSh1Dims * e + c]));
+        }
+        pack.header.sh1_scale = max_abs > 0.0f ? max_abs : 1.0f;
+        pack.header.palette_flags = k;
+        const float inv_scale = 1.0f / pack.header.sh1_scale;
+        pack.sh1.resize(3 * static_cast<std::size_t>(k));
+        for (std::size_t e = 0; e < k; ++e)
+            encode_sh1(palette->centroids.data() + kSh1Dims * e, inv_scale, pack.sh1.data() + 3 * e);
+    } else if (cloud.sh_degree == 1) {
         float max_abs = 0.0f;
         for (float v : cloud.sh) max_abs = std::max(max_abs, std::abs(v));
         pack.header.sh1_scale = max_abs > 0.0f ? max_abs : 1.0f;
         const float inv_scale = 1.0f / pack.header.sh1_scale;
         pack.sh1.resize(3 * n);
-        for (std::size_t i = 0; i < n; ++i) {
-            const float* sh = cloud.sh.data() + 9 * i;
-            std::uint32_t bytes[12] = {};
-            for (int k = 0; k < 9; ++k) bytes[k] = snorm8(sh[k] * inv_scale);
-            pack.sh1[3 * i + 0] = bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
-            pack.sh1[3 * i + 1] = bytes[4] | (bytes[5] << 8) | (bytes[6] << 16) | (bytes[7] << 24);
-            pack.sh1[3 * i + 2] = bytes[8];  // bytes 9-11 are padding, zero
-        }
+        for (std::size_t i = 0; i < n; ++i)
+            encode_sh1(cloud.sh.data() + 9 * i, inv_scale, pack.sh1.data() + 3 * i);
     }
 
     // Morton order (the caller's responsibility) makes chunks spatially compact; each chunk gets
@@ -194,7 +234,9 @@ Result<GpuPack> parse_pack(const std::vector<std::uint8_t>& bytes) {
     pack.positions.resize(3 * n);
     pack.scale_rot.resize(3 * n);
     pack.color.resize(n);
-    pack.sh1.resize(pack.header.sh_degree == 1 ? 3 * n : 0);
+    const std::size_t sh1_entries =
+        pack.header.sh_degree != 1 ? 0 : (pack.has_palette() ? pack.header.palette_count() : n);
+    pack.sh1.resize(3 * sh1_entries);
     pack.chunks.resize(static_cast<std::size_t>(kChunkFloats) * pack.chunk_count());
 
     const std::size_t expected = sizeof(PackHeader) + pack.positions.size() * sizeof(float) +
@@ -215,6 +257,14 @@ Result<GpuPack> parse_pack(const std::vector<std::uint8_t>& bytes) {
     take(pack.color.data(), pack.color.size() * sizeof(std::uint32_t));
     take(pack.sh1.data(), pack.sh1.size() * sizeof(std::uint32_t));
     take(pack.chunks.data(), pack.chunks.size() * sizeof(float));
+    if (pack.has_palette()) {
+        const std::uint32_t k = pack.header.palette_count();
+        for (std::size_t i = 0; i < n; ++i) {
+            if ((pack.scale_rot[3 * i + 2] >> 16) >= k) {
+                return R::failure("palette index out of range at splat " + std::to_string(i));
+            }
+        }
+    }
     return R::success(std::move(pack));
 }
 
@@ -224,10 +274,18 @@ Result<PackHeader> parse_pack_header(const std::vector<std::uint8_t>& bytes) {
     PackHeader header;
     std::memcpy(&header, bytes.data(), sizeof(header));
     if (header.magic != kPackMagic) return R::failure("not a PocketSplat pack (bad magic)");
-    if (header.version != kPackVersion) {
+    // v2 is v3 without a palette: its word 28 was reserved (written 0) and scale_rot word 2's high
+    // 16 bits were zero, so it reads as a direct-SH1 v3 pack. v1 (center-only chunk AABBs, unsafe
+    // to cull with) stays rejected.
+    if (header.version != kPackVersion && header.version != kPackMinVersion) {
         return R::failure("unsupported pack version " + std::to_string(header.version));
     }
+    if (header.version < 3 && header.palette_flags != 0) return R::failure("v2 pack sets its reserved word");
     if (header.sh_degree > 1) return R::failure("pack header carries invalid SH degree");
+    if (header.flags() != 0) return R::failure("pack header sets unknown flags");
+    if (header.palette_count() != 0 && (header.sh_degree != 1 || header.palette_count() > kMaxPaletteSize)) {
+        return R::failure("pack header carries an invalid SH1 palette");
+    }
     return R::success(header);
 }
 
@@ -272,11 +330,14 @@ GpuPack subset_pack(const GpuPack& pack, std::size_t max_count, std::vector<std:
     GpuPack out;
     out.header = pack.header;
     out.header.count = static_cast<std::uint32_t>(index.size());
-    const bool sh1 = !pack.sh1.empty();
+    // Direct SH1 is selected per splat; a palette is shared and kept whole, and the indices
+    // travel in the copied scale_rot words.
+    const bool sh1 = !pack.sh1.empty() && !pack.has_palette();
     out.positions.resize(3 * index.size());
     out.scale_rot.resize(3 * index.size());
     out.color.resize(index.size());
     if (sh1) out.sh1.resize(3 * index.size());
+    if (pack.has_palette()) out.sh1 = pack.sh1;
     for (int c = 0; c < 3; ++c) {
         out.header.aabb_min[c] = std::numeric_limits<float>::max();
         out.header.aabb_max[c] = std::numeric_limits<float>::lowest();

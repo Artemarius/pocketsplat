@@ -54,7 +54,8 @@ only what it needs (cull: positions + chunk AABBs; preprocess: everything; draw:
 | *(pad)* | 2 B | | `logscale`+`rot` packed as 3 × uint32 |
 | `color` | 4 B | RGBA8 unorm | `rgb` = DC color already converted to [0,1]; `a` = sigmoid(opacity) |
 | `sh1` (degree 1 only) | 12 B | 9 × snorm8 + 3 B pad, as 3 × uint32 | Coefficients scaled by a per-pack `sh1_scale` (max-abs over the scene) stored in the header |
-| **Total** | **28 B (SH 0) / 40 B (SH 1)** | | 1 M splats ⇒ 28 / 40 MB resident |
+| `sh1` palette (v3, instead) | 0 B | 16-bit entry index in the `scale_rot` pad; 12 B per palette entry | At most 65,536 entries shared by the scene (`docs/sh1-palette-research.md`) |
+| **Total** | **28 B (SH 0) / 40 B (SH 1) / 28 B + 12 B × entries (SH 1 palette)** | | 1 M splats ⇒ 28 / 40 / 28.05 MB resident (4,096 entries) |
 
 Plus per 256-splat chunk (Morton order makes chunks spatially compact): `aabb_min`, `aabb_max` (6 ×
 float32 = 24 B) and an `importance_max` float for budget culling — ~110 KB per 1 M splats.
@@ -66,28 +67,40 @@ Header (`PackHeader`, 64 B): magic `PSPK`, version, count, chunk size, sh_degree
 AABB, coordinate system tag, source hash. The pack is an in-memory/cached artifact, not an interchange
 format — SPZ is what leaves the app.
 
-### Pinned bit layout (pack version 2, implemented in `splatcore/pack.h|cpp`)
+### Pinned bit layout (pack version 3, implemented in `splatcore/pack.h|cpp`)
 
 Version history: v1 stored center-only chunk AABBs; v2 (2026-09-01) stores the conservative cull
 AABBs described above. The byte layout is unchanged, but v1 packs are rejected at load so stale
-caches cannot silently render with unsafe cull bounds — re-run `splatconv pack`.
+caches cannot silently render with unsafe cull bounds — re-run `splatconv pack`. v3 (2026-11-20,
+Phase 8) adds the optional SH1 palette: header word 28 (reserved in v2) holds the palette count and
+flags, `scale_rot` word 2's high 16 bits hold the entry index. A v2 pack wrote zero in both places,
+so it is exactly a v3 pack without a palette: readers accept it as one (`kPackMinVersion` = 2) and
+only v3 is written. That reverses the research note's plan to reject v2: nothing about a v2 pack's
+meaning changed, so existing imports and bench caches stay valid.
 
 * **Header (64 B)**, little-endian, offsets: 0 `magic` u32 (`PSPK` bytes), 4 `version` u32, 8 `count`
   u32, 12 `chunk_size` u32 (=256), 16 `sh_degree` u32, 20 `coords` u32 (1 = RUB), 24 `sh1_scale` f32,
   28 reserved u32, 32 `aabb_min` 3×f32, 44 `aabb_max` 3×f32 (raw min/max of packed positions),
-  56 `source_hash` u64 (FNV-1a 64 over the source SplatCloud arrays).
+  56 `source_hash` u64 (FNV-1a 64 over the source SplatCloud arrays). Word 28 (v3): low 24 bits
+  `palette_count` (0 = direct SH1; 1..65,536 entries, SH degree 1 only), high 8 bits flags (none
+  defined; readers reject a pack that sets any). In v2 the word was reserved and always 0.
 * **`scale_rot`** (3 × u32 per splat): word0 = `h(sx) | h(sy)<<16`; word1 = `h(sz) | snorm8(w)<<16 |
-  snorm8(x)<<24`; word2 = `snorm8(y) | snorm8(z)<<8`, high 16 bits zero. `h()` is IEEE fp16 of the
-  log-scale; quaternions are sign-canonicalized (`w ≥ 0`) before snorm8.
+  snorm8(x)<<24`; word2 = `snorm8(y) | snorm8(z)<<8 | index<<16`, where `index` is the splat's
+  palette entry in a palette pack and zero otherwise. `h()` is IEEE fp16 of the log-scale;
+  quaternions are sign-canonicalized (`w ≥ 0`) before snorm8.
 * **`color`** (u32 per splat): `r | g<<8 | b<<16 | a<<24`, rgb = `clamp(0.5 + 0.28209479·f_dc, 0, 1)`
   unorm8, a = `sigmoid(opacity)` unorm8.
-* **`sh1`** (3 × u32 per splat, degree 1 only): 9 snorm8 of `sh[k]/sh1_scale` in coefficient-major
-  order (c0.rgb, c1.rgb, c2.rgb) packed little-endian, bytes 9–11 zero. `sh1_scale` = max-abs
-  coefficient over the scene (1.0 if all zero).
+* **`sh1`** (3 × u32 per entry, degree 1 only): 9 snorm8 of `sh[k]/sh1_scale` in coefficient-major
+  order (c0.rgb, c1.rgb, c2.rgb) packed little-endian, bytes 9–11 zero. Direct: one entry per
+  splat, `sh1_scale` = max-abs coefficient over the scene (1.0 if all zero). Palette:
+  `palette_count` entries (the trained centroids), splat `i` reads entry `scale_rot[3i+2] >> 16`,
+  and `sh1_scale` = max-abs over the entries some splat uses, so each splat decodes bit for bit
+  like the direct pack of the snapped cloud (`apply_sh1_palette`). A reader rejects a palette pack
+  with any index ≥ `palette_count`. `subset_pack` keeps the palette whole.
 * **`chunks`** (7 × f32 per 256-splat chunk): cull-bound `min.xyz`, `max.xyz` (see above) and
   `importance_max` where importance = α·(s_x s_y + s_y s_z + s_z s_x). Last chunk may be partial.
 * **Serialized order** (`.pspk`, `splatconv pack`): header, `pos`, `scale_rot`, `color`, `sh1`,
-  `chunks`, each tightly packed.
+  `chunks`, each tightly packed (`sh1` is 3 × count, 3 × `palette_count` or 0 words).
 
 ### Coverage sidecar (`.pscov`, ADR-0013, implemented in `splatcore/coverage.h|cpp`)
 

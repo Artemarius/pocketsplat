@@ -4,8 +4,9 @@
 For each scene source (an SH 1 PLY/SPZ, already cleaned), builds with splatconv:
   direct  - the ordinary SH 1 pack (the reference),
   sh0     - the same splats at SH 0 (`pack --sh 0`),
-  k<K>    - SH1 snapped to a trained K-entry palette (`pack --sh1-palette K`, Lloyd), still an
-            ordinary SH 1 pack, so the unchanged renderer shows the palette's price,
+  k<K>    - SH1 snapped to a trained K-entry palette (`pack --sh1-palette K --palette-snap`), an
+            ordinary SH 1 pack, so the direct renderer path shows the palette's price; with --v3
+            a real palette pack (pack v3, `<name>.k<K>....v3.pspk`), which renders identically,
 then renders every pack with the desktop host at the quality_ab.py poses (offscreen, 32-bit keys,
 no contribution cull) and compares each against `direct`: PSNR min/mean over the poses and the
 share of pixels moved by more than 2 LSB. `direct@repeat` re-renders the reference: the
@@ -86,6 +87,7 @@ def main() -> int:
     parser.add_argument("--epochs", type=int, default=25)
     parser.add_argument("--trainer", default="lloyd", choices=["lloyd", "hamerly", "emeans"])
     parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--v3", action="store_true", help="real palette packs (pack v3) instead of snapped SH 1 packs")
     parser.add_argument("--threads", type=int, default=0, help="palette training threads (0 = all)")
     parser.add_argument("--low-priority", action="store_true", help="run everything at idle priority")
     parser.add_argument("--width", type=int, default=864)
@@ -117,12 +119,14 @@ def main() -> int:
             variants.append(("sh0", work / f"{name}.sh0.pspk", info))
             for k in args.k:
                 tag = "" if args.trainer == "lloyd" else f".{args.trainer}"  # Lloyd keeps gate A's names
-                out = work / f"{name}.k{k}{tag}.e{args.epochs}.s{args.seed}.pspk"
+                fmt = ".v3" if args.v3 else ""  # snapped packs keep the cached gate A/B names
+                out = work / f"{name}.k{k}{tag}.e{args.epochs}.s{args.seed}{fmt}.pspk"
                 info = pack(splatconv, src, out, ["--sh1-palette", str(k), "--palette-epochs", str(args.epochs),
                                                   "--palette-trainer", args.trainer,
                                                   "--palette-seed", str(args.seed),
-                                                  "--palette-threads", str(args.threads)])
-                variants.append((f"k{k}{tag}.e{args.epochs}" if tag else f"k{k}", out, info))
+                                                  "--palette-threads", str(args.threads)]
+                            + ([] if args.v3 else ["--palette-snap"]))
+                variants.append(((f"k{k}{tag}.e{args.epochs}" if tag else f"k{k}") + fmt, out, info))
                 print(f"{name:>16} k {k:>6}: trained in {info['palette']['wall_ms'] / 1000:7.1f} s, "
                       f"mse {info['palette']['mse']:.3g}, dead {info['palette']['dead']}", flush=True)
 
