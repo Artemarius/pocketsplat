@@ -245,7 +245,12 @@ JNIEXPORT jstring JNICALL Java_com_pocketsplat_app_SplatEngine_nativeImportScene
     options.sh_target = static_cast<int>(sh_target);
     options.deep_clean = deep_clean == JNI_TRUE;
     options.max_splats = max_splats > 0 ? static_cast<std::size_t>(max_splats) : 0;
-    options.progress = [](splatcore::ImportStage stage) {
+    // Stage timings for logcat ("import timing"): scripted imports (bench) read them from there.
+    using Clock = std::chrono::steady_clock;
+    const Clock::time_point import_start = Clock::now();
+    std::vector<std::pair<int, Clock::time_point>> marks;
+    options.progress = [&marks](splatcore::ImportStage stage) {
+        marks.emplace_back(static_cast<int>(stage), Clock::now());
         g_import_stage.store(static_cast<int>(stage));
         return !g_import_cancel.load();
     };
@@ -258,6 +263,24 @@ JNIEXPORT jstring JNICALL Java_com_pocketsplat_app_SplatEngine_nativeImportScene
         splatcore::import_scene(to_string(env, src), to_string(env, dst), options);
     g_import_stage.store(-1);
     g_import_share.store(-1.0f);
+    {
+        static const char* const kStageNames[] = {"read", "clean", "sor", "pack", "write", "palette"};
+        const Clock::time_point end = Clock::now();
+        std::string line;
+        for (std::size_t i = 0; i < marks.size(); ++i) {
+            const Clock::time_point next = i + 1 < marks.size() ? marks[i + 1].second : end;
+            const int s = marks[i].first;
+            char part[48];
+            std::snprintf(part, sizeof(part), "%s%s %.0f ms", line.empty() ? "" : ", ",
+                          s >= 0 && s < 6 ? kStageNames[s] : "?",
+                          std::chrono::duration<double, std::milli>(next - marks[i].second).count());
+            line += part;
+        }
+        __android_log_print(ANDROID_LOG_INFO, "PocketSplat", "import timing: %s; total %.0f ms (%s)",
+                            line.c_str(),
+                            std::chrono::duration<double, std::milli>(end - import_start).count(),
+                            report.ok() ? "ok" : report.error().c_str());
+    }
     g_import_active.store(false);
     if (!report.ok()) {
         __android_log_print(ANDROID_LOG_ERROR, "PocketSplat", "import: %s", report.error().c_str());

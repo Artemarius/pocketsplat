@@ -80,6 +80,9 @@ data class BenchRequest(
 )
 
 /** A probed .ply/.spz source waiting for import confirmation ([src] is always a local file). */
+/** Scripted import from an intent (import_src = a path the app can read; bench timing). */
+data class ImportRequest(val src: File, val budget: Long, val palette: Boolean, val name: String?)
+
 data class ImportCandidate(
     val src: File,
     val displayName: String,
@@ -100,6 +103,13 @@ class MainActivity : ComponentActivity() {
         val request = benchRequestFromIntent()
         // Scripted interactive open (no bench): e.g. idle-power checks of on-demand rendering.
         val openScene = intent.getStringExtra("open_scene")
+        // Scripted import (Phase 8 timings): import_src path, import_budget (splats, 0 = all,
+        // default 1 M), import_palette (true = SH palette), import_name (pack name without .pspk).
+        // Stage times go to logcat as "import timing: ...".
+        val importRequest = intent.getStringExtra("import_src")?.let {
+            ImportRequest(File(it), intent.getLongExtra("import_budget", 1_000_000L),
+                intent.getBooleanExtra("import_palette", false), intent.getStringExtra("import_name"))
+        }
         // Scripted backside info for open_scene (ADR-0015): "room", "object" or "cameras" with
         // backside_files = comma-separated paths the app can read (e.g. under files/cameras).
         val backsideRequest = when (intent.getStringExtra("backside")) {
@@ -127,7 +137,7 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 ViewerScreen(
                     engine, ::sceneFiles, request, openScene, protocolRes, filesDir, coverageStrength,
-                    !scriptedFade, backsideRequest, backsideFiles,
+                    !scriptedFade, backsideRequest, backsideFiles, importRequest,
                 )
             }
         }
@@ -384,6 +394,7 @@ private fun ViewerScreen(
     initialFadeWhileMoving: Boolean,
     backsideRequest: Int = -1,
     backsideRequestFiles: List<File> = emptyList(),
+    importRequest: ImportRequest? = null,
 ) {
     var surfaceView by remember { mutableStateOf<SplatSurfaceView?>(null) }
     var sceneName by remember { mutableStateOf<String?>(null) }
@@ -581,6 +592,16 @@ private fun ViewerScreen(
                 runBench(file, benchRequest.seconds, benchRequest.keyBits, benchRequest.minContribution,
                     benchRequest.targetFps, benchRequest.resolution ?: protocolRes, benchRequest.drawMode,
                     benchRequest.controller, benchRequest.voteFps, benchRequest.homeSwing)
+            }
+        } else if (importRequest != null) {
+            val probe = SplatEngine.nativeProbeScene(importRequest.src.absolutePath)
+            if (probe == null) {
+                importStatus = "import_src is not a loadable scene: ${importRequest.src}"
+            } else {
+                budget = importRequest.budget
+                shPalette = importRequest.palette
+                startImport(ImportCandidate(importRequest.src, importRequest.name ?: importRequest.src.name,
+                    probe[0], probe[1], deleteAfter = false))
             }
         } else if (openSceneName != null) {
             sceneList.find { it.name == openSceneName }?.let {
