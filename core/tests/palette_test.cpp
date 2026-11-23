@@ -157,7 +157,12 @@ TEST(Palette, MoreEntriesThanDistinctValuesLeavesTheRestDead) {
     const Result<Sh1Palette> palette = train_sh1_palette(cloud, params);
     ASSERT_TRUE(palette) << palette.error();
     EXPECT_EQ(palette.value().size(), 25u);
-    EXPECT_EQ(palette.value().stats.mse, 0.0);
+    // Not exactly 0: the 15 spare entries are split copies of the values, offset by split_eps
+    // (~3e-5 here) per coordinate. Such a copy scores ~4e-9 worse than the exact mean, below the
+    // float resolution of the kernel's scores (~3e-8), so the final assignment may pick it on a
+    // tie; which one wins depends on the random data (libc++ and MSVC draw different floats from
+    // the same seed: the arm64 run gave 7.9e-9 = every value one offset away). Bound: 9 eps^2.
+    EXPECT_LT(palette.value().stats.mse, 1e-8);
     EXPECT_EQ(palette.value().stats.dead, 15u);
 }
 
