@@ -1,0 +1,5 @@
+label,input,count,trainer,k,epochs,seed,cap_per_entry,train_count,threads,batch,alpha0,updates,revived,epochs_run,pairs,mse,dead,used_entropy_bits,train_ms,wall_ms,build,thermal_before,skin_before_c,thermal_after,skin_after_c
+S24U-8t-neon-dynsplit-charging,hornedlizard.sh1,764985,emeans,4096,3,1,0,764985,8,4096,0.0638614,561,2264,3,9400135680,0.0021485945,6,11.1412,2290.5,3084.7,cd347ef,0,32.0,0,32.0
+S24U-8t-neon-dynsplit-charging,hornedlizard.sh1,764985,lloyd,4096,3,1,0,764985,8,0,0,0,0,3,9400135680,0.0026478318,409,11.0364,2295.0,3106.1,cd347ef,0,32.0,0,32.0
+S24U-8t-neon-dynsplit-charging,stump.sh1,4049567,emeans,4096,3,1,0,4049567,8,16384,0.105052,744,817,3,49761079296,0.00138855473,0,11.6146,13973.7,18902.6,cd347ef,0,32.0,0,36.4
+S24U-8t-neon-dynsplit-charging,stump.sh1,4049567,lloyd,4096,3,1,0,4049567,8,0,0,0,0,3,49761079296,0.0015636178,0,11.7929,13631.9,18624.5,cd347ef,0,32.0,0,36.3

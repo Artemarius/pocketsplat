@@ -152,6 +152,16 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
   against its nearest entry, unused entries, label entropy, training and total wall time, and, for
   phone rows, thermal status and skin temperature before and after. `label` names the machine;
   desktop wall times are indicative only, as for every laptop timing.
+- `palette-gatec-<hash>-<date>.csv` — SH 1 palette, Phase 8 gate C (`scripts/bench_android.py` runs
+  summarised by `scripts/palette_gatec.py frames`): per phone, scene size and pack variant (`pal4096`
+  palette pack, `sh1` direct SH 1, `sh0`) and window (`cold_0_30s`, `min_4_5` = 240–300 s of a
+  5-minute run) the fps, GPU and per-pass ms, visible splats and the highest thermal status; `run`
+  numbers repeated runs; `power` = `charging` when the phone was on the charger.
+- `palette-import-<hash>-<date>.csv` — SH 1 palette, Phase 8 gate C import cost (scripted imports
+  through the app's `import_src` intent, `scripts/palette_gatec.py imports` over the app's
+  `import timing` logcat lines): per import the budget, palette on/off, per-stage and total ms and,
+  with a palette, training and training + final assignment ms and the palette MSE. The `palette`
+  stage also includes building the pack.
 
 ## CSV columns (frame benchmarks)
 `device, build_hash, scene, splats_total, splats_visible, sh_degree, internal_w, internal_h, key_bits,
@@ -519,9 +529,36 @@ idle priority. Hamerly rows give Lloyd's losses (identical iterations). Details 
   takes 12–58 % longer than Lloyd's on the phones (a barrier per mini-batch with a static split over
   unequal cores is suspected). Both phones give identical losses.
 
+## SH 1 palette — gate C on the phones (2026-11-23/24, Phase 8 C)
+
+`palette-gatec-cd347ef-2026-11-23.csv`, `palette-import-cd347ef-2026-11-23.csv`,
+`palette-trainers-s24u-cd347ef-2026-11-23.csv` (deciding) and `palette-trainers-s25u-cd347ef-…`.
+Both phones on the charger (owner's setup), Wi-Fi adb, heads-up notifications off, cool start for
+every run. Stump at the default 1 M budget and at its full 4.05 M; app defaults on the phone
+(16-bit keys, contribution cull 0.1 px), protocol resolution 1872×864, 5-minute runs; the palette
+packs use e-means-3 with k 4,096, trained on the desktop (the same palette the phone trains:
+losses match bit for bit). Details: `docs/sh1-palette-research.md` §6.
+
+* **Preprocess with the palette is no slower than direct SH 1 on either phone, at either size**
+  (minute 4–5, thermal status 2 everywhere): S24U 3.41 / 3.46 ms (two runs) vs 3.53 ms at 1 M and
+  5.29 vs 5.52 ms at 4 M; S25U 2.18 vs 2.23 and 3.56 vs 3.72 ms. SH 0 is within ±2 % of the palette.
+  fps follows (S24U 4 M: 70.3 palette, 68.5 direct, 69.5 SH 0). **Gate C passed.**
+* **Import cost** (S24U, deciding): the palette adds 4.5 s at the 1 M budget (5.6 s against 1.1 s)
+  and 19.6 s for the 4.05 M "all" import (21.3 against 1.8 s). S25U: +3.0 s and +13.0 s. The source
+  was an already cleaned SH 1 PLY in the page cache, so read and clean are short here.
+* **Trainer** (S24U, NEON kernel + dynamic work split, against the S30 scalar kernel): hornedlizard
+  e-means-3 3.1 s in total (was 15.4 s), stump e-means-3 18.9 s (was 76.3 s). At equal pairs e-means
+  now costs the same as Lloyd (+0 % and +2.5 %; S30: +12 to +58 %), so the static split over unequal
+  cores was the cause. S25U: 2.2 s and 12.0 s (was 8.7 and 55.6 s), ~5.6 G pairs/s.
+* Phone palettes now equal the desktop's (same MSE, revivals and dead entries on both scenes): FP
+  contraction is off in `palette.cpp`.
+* GPU-resident pack: 28.16 MB against 40.11 MB at 1 M, 113.9 against 162.4 MB at 4 M (the buffer
+  sizes; `dumpsys meminfo` does not resolve them, negative results log).
+
 ## Negative results log
 | Date | What was tried | Result | Diagnosis |
 |---|---|---|---|
+| 2026-11-23 | `dumpsys meminfo` to show the SH 1 palette's memory saving (12 MB per 1 M splats) on the S24U and S25U | `GL mtrack` identical to the kilobyte for palette, direct SH 1 and SH 0 on the S25U (170,976 KB at 1 M); TOTAL PSS within 0.2 % at 4 M | The renderer allocates with VMA's defaults: the per-splat buffers are sub-allocated from shared large blocks, and the driver accounts whole blocks. A 12–48 MB change does not change the block count at these sizes. The saving is reported from the buffer sizes instead; an allocation-level measure would need VMA statistics in the bench CSV |
 | 2026-11-19 | Hamerly's bounds (one upper, one lower bound per point) to speed up Lloyd for the SH1 palette, the classical choice at low dimension (`docs/sh1-palette-research.md` §3.1) | Same labels and centroids as Lloyd, bit for bit, but 0.70–0.94 of Lloyd's distance pairs at k 4,096 over 25 epochs (0.64–0.90 at k 1,024, 0.75–0.96 at k 16,384); 87–97 % of points need a full scan in each epoch (museum1, k 1,024) | SH1 vectors have little cluster structure: the second-nearest entry is only ~13 % farther than the nearest on average, and the lower bound shrinks by the largest centroid drift each epoch, 5–10× the median drift. e-means needs an eighth of Lloyd's work for the same loss, so per-centroid bounds (Elkan, n × k memory) were not tried |
 | 2026-11-19 | SH1 palette assignment kernel written to auto-vectorize (`docs/sh1-palette-research.md` §2.2): one scoring loop over a 512-centroid tile, then a lane-blocked minimum, MSVC `/O2` (scratch microbenchmark, 200 K random points, k 4,096, i5-11400H at ~2.6 GHz) | 0.59 G pairs/s on one thread (~6.5 cycles per pair), 3.2 on 12; the vectorizer report confirmed both loops vectorized (SSE2) | x64 MSVC targets SSE2 without FMA, and the separate score and minimum passes plus a nine-add chain left ~2 iterations in flight. Explicit SSE2 with per-lane best value and index, a tree-summed dot product and two vectors per step: 0.77 on one thread, 3.6 on 12, close to the SSE2 µop limit at that clock. arm64 keeps the portable loop until a NEON kernel can be tested on a phone (Phase C) |
 | 2026-11-06 | Clip guard lowering its contribution floor whenever the visible count stays under 60 % of the visible capacity for 30 computed frames (S28) | 18 M tiled bicycle orbit at capacity 4,194,304 (desktop): the floor flipped 0 ↔ 0.1 px 26 times in 600 frames; 4.4 % of frames clipped (70.3 % without a floor) | 0.1 px halves a large view's visible count (5.0 M → 2.4 M), so a count under 60 % at 0.1 overflowed again at 0. Lowering now predicts the count after the step from what the last raise removed and needs it under 90 %: 0.7 % clipped frames, 4 changes (ADR-0016) |

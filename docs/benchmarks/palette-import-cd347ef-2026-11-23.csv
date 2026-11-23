@@ -1,0 +1,9 @@
+device,build,source,budget,palette,read_ms,clean_ms,pack_ms,palette_ms,write_ms,total_ms,palette_train_ms,palette_train_assign_ms,palette_mse,power
+s25u,cd347ef,"stump-full.sh1.ply (4,049,567 splats, SH 1)",1000000,False,227,242,243,,45,758,,,,charging
+s25u,cd347ef,"stump-full.sh1.ply (4,049,567 splats, SH 1)",1000000,True,230,245,102,3192,30,3800,2300,3066,0.000739025,charging
+s25u,cd347ef,"stump-full.sh1.ply (4,049,567 splats, SH 1)",4049567,False,229,161,823,,181,1394,,,,charging
+s25u,cd347ef,"stump-full.sh1.ply (4,049,567 splats, SH 1)",4049567,True,235,165,251,13554,170,14374,9639,12891,0.00138855,charging
+s24u,cd347ef,"stump-full.sh1.ply (4,049,567 splats, SH 1)",1000000,False,474,324,307,,44,1148,,,,charging
+s24u,cd347ef,"stump-full.sh1.ply (4,049,567 splats, SH 1)",1000000,True,410,323,132,4723,25,5612,3417,4577,0.000739025,charging
+s24u,cd347ef,"stump-full.sh1.ply (4,049,567 splats, SH 1)",4049567,False,324,221,996,,218,1760,,,,charging
+s24u,cd347ef,"stump-full.sh1.ply (4,049,567 splats, SH 1)",4049567,True,292,246,325,20262,191,21316,14629,19670,0.00138855,charging

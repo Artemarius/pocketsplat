@@ -1,8 +1,9 @@
 # SH 1 palette research: view-dependent colour at the SH 0 footprint
 
 Status: **gate A passed** (2026-11-19, S29, §6); **gate B complete** (2026-11-20, S30, §3.1, §6:
-e-means, 3 epochs); phase C open. Written 2026-11-19 against `212b91b` (v0.3.0); gate A
-measured at `c6f0a7f`, phase B at `1cdd4cc`. Where the implementation departs from §2, §6 says so;
+e-means, 3 epochs); **gate C passed** (2026-11-24, S31, §6: pack v3, preprocess no slower than
+direct SH 1 on both phones). Written 2026-11-19 against `212b91b` (v0.3.0); gate A
+measured at `c6f0a7f`, phase B at `1cdd4cc`, phase C at `cd347ef`. Where the implementation departs from §2, §6 says so;
 for e-means, §3.1. This note follows
 the pattern of `coverage-mask-research.md`: the question, the design, the protocol, then results and
 negative results as they are measured. Numbers enter this file only from committed CSVs.
@@ -409,18 +410,91 @@ What landed, before any phone run:
   for `palette.cpp`. The pragma targets the cause suspected in §6 for phone ≠ desktop palettes:
   the arm64 build fused the e-means EMA update (`s += α·x`, doubles) into `fmla`; objdump now shows
   no fused multiply-adds in the palette code. Desktop results are unchanged by all three (museum1:
-  e-means-3 and Lloyd-3 MSE, revivals and entropy identical at 3 and 4 threads). **Not yet run
-  on a phone:** the NEON kernel's correctness (`splatcore_tests` built for arm64), its speed, the
-  effect of the dynamic split, and whether phone palettes now equal the desktop's.
+  e-means-3 and Lloyd-3 MSE, revivals and entropy identical at 3 and 4 threads). Phone results
+  below.
 * **Import**: `ImportOptions::sh1_palette` (e-means, 3 epochs) trains after the Morton reorder and
   writes a palette pack. Training reports its progress and can be cancelled between batches and
   in 16 slices of the final assignment. The app has an import toggle, off by default until the
   ADR, with "training SH palette… NN %" in the import status. Bench CSV headers record
   `sh1_palette`.
 
-Gate C (preprocess no slower than direct SH 1 on both phones, import cost recorded) is open.
+### Phase C: phones (2026-11-23/24, S31)
+
+Sources: `benchmarks/palette-gatec-cd347ef-2026-11-23.csv`, `benchmarks/palette-import-cd347ef-2026-11-23.csv`,
+`benchmarks/palette-trainers-s24u-cd347ef-2026-11-23.csv` (**S24U, deciding**) and
+`benchmarks/palette-trainers-s25u-cd347ef-2026-11-23.csv`. Build cd347ef on both phones. Both were
+on the charger (the owner's setup for this window), so these runs are warmer than the unplugged
+protocol and carry no energy numbers; every run started cool (skin ≤ 32 °C for the trainers,
+≤ 36 °C for rendering and imports, as the scripts' defaults), heads-up notifications off.
+
+**arm64 unit tests.** `splatcore_tests` ran on a phone for the first time: 125 of 129 pass on both,
+including every palette kernel and trainer test (brute-force assignment at k 1, 7, 512, 1,000;
+cross-lane ties at 1–16 threads; e-means determinism; progress and cancel). Three fail on arm64:
+`Palette.MoreEntriesThanDistinctValuesLeavesTheRestDead` expected an exact-zero MSE that depends on
+which of two split copies wins a sub-resolution tie, and libc++ draws different test vectors than
+MSVC (fixed in e2bf1dd: bound instead of zero). `HomeView.PicksTheSideWhoseViewShowsDetail` and
+`QualityController.HotStartStepsDownAfterTheForecastWarmUpThenOncePerInterval` touch no palette
+code and use no random distributions; they are open (arm64 floating point, not investigated).
+
+**Trainer** (palettebench, k 4,096, 8 threads; total = training + final assignment):
+
+| Scene | Run | S24U now | S24U S30 | S25U now | S25U S30 |
+|---|---|---|---|---|---|
+| hornedlizard (765 K) | e-means-3 | 3.1 s | 15.4 s | 2.2 s | 8.7 s |
+| | Lloyd-3 | 3.1 s | 10.8 s | 2.0 s | 7.3 s |
+| stump (4.05 M) | e-means-3 | 18.9 s | 76.3 s | 12.0 s | 55.6 s |
+| | Lloyd-3 | 18.6 s | 70.6 s | 12.1 s | 50.0 s |
+
+* NEON makes training 3.7–5× faster. At equal pairs e-means now costs what Lloyd costs (S24U: +0 %
+  on hornedlizard, +2.5 % on stump; S30: +12 to +58 %), which confirms §6's suspicion: the static
+  split made every mini-batch wait for the little cores.
+* **The phones now train the same palettes as the desktop**: identical MSE, revivals, dead entries
+  and entropy for both scenes and both trainers. The S30 difference was the clang FMA contraction.
+
+**Rendering** (stump, 1 M = the default import budget, and 4.05 M; 16-bit keys, contribution cull
+0.1 px, 1872×864, 5-minute runs; preprocess ms, mean over minute 4–5, thermal status 2 in all):
+
+| Phone | Size | Palette | Direct SH 1 | SH 0 |
+|---|---|---|---|---|
+| S24U | 1 M | 3.41 / 3.46 (two runs) | 3.53 | 3.32 |
+| S24U | 4.05 M | 5.29 | 5.52 | 5.35 |
+| S25U | 1 M | 2.18 | 2.23 | 2.15 |
+| S25U | 4.05 M | 3.56 | 3.72 | 3.49 |
+
+The palette pack's preprocess is 2–4 % faster than direct SH 1 and within ±2 % of SH 0, at both
+sizes on both phones: it reads 48 KB of palette instead of 12 B of SH1 per splat. Frame rates follow
+(S24U 4.05 M: 70.3 / 68.5 / 69.5 fps). On the S24U the first 1 M direct SH 1 run was lost to an adb
+host restart and was rerun with a second palette run right after it, so that pair is like for like.
+
+**Memory.** The GPU-resident pack is 28.16 MB instead of 40.11 MB at 1 M (113.9 instead of 162.4 MB
+at 4.05 M). `dumpsys meminfo` cannot show it: the per-splat buffers sit in shared VMA blocks and the
+driver accounts whole blocks (§7).
+
+**Import** (scripted through the app's new `import_src` intent; source: the cleaned stump SH 1 PLY,
+4.05 M splats, already in the page cache, so read and clean are short):
+
+| Phone | Budget | Without palette | With palette | Added |
+|---|---|---|---|---|
+| S24U | 1 M | 1.1 s | 5.6 s | +4.5 s |
+| S24U | all (4.05 M) | 1.8 s | 21.3 s | +19.6 s |
+| S25U | 1 M | 0.8 s | 3.8 s | +3.0 s |
+| S25U | all (4.05 M) | 1.4 s | 14.4 s | +13.0 s |
+
+The palettes the app trains at import equal the desktop's (same MSE). At the 1 M default the palette
+adds 4.5 s on the S24U, a third of which is the final assignment of every splat.
+
+**Gate C: passed (2026-11-24).** Preprocess is no slower than direct SH 1 on both phones at both
+sizes, and the import cost is recorded. Next: ADR-0017 (proposed), with the default-on question for
+the import toggle.
 
 ## 7. Negative results
+
+* **`dumpsys meminfo` as the palette's memory measure** (2026-11-23, S31): on the S25U `GL mtrack`
+  read 170,976 KB for the palette, direct SH 1 and SH 0 packs of stump at 1 M, identical to the
+  kilobyte, although SH 0 holds 12 MB less than direct SH 1; at 4.05 M TOTAL PSS differed by
+  under 0.2 %. The renderer allocates with VMA's defaults, which sub-allocate the per-splat buffers
+  from shared large blocks, and the driver accounts whole blocks. The saving is reported from the
+  buffer sizes; a measured figure would need VMA's own statistics in the bench output.
 
 * **Hamerly's bounds on SH1** (2026-11-19, S30): over 25 epochs at k 4,096 they skip only 6–30 % of
   the distance work (§6). Diagnosis on museum1
