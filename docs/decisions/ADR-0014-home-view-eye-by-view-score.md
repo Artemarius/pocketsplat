@@ -5,6 +5,8 @@ with the owner's look on the phones open. The owner opened the bench scenes on t
 `2023540`, the S22 home view unchanged) and judged every home view fine. Home view at scene open
 in that session: S25U 625–1038 ms (stump 625, truck 966, counter 994, drjohnson 1038), S24U
 656–750 ms (stump, bicycle-4m).
+Amended in S33 (2026-11-24, proposed): the score raster takes the shape of the frame the view
+is shown in, and a weak plane far from +y no longer sets the up axis (amendment at the end).
 
 **Supersedes**: the eye rule of ADR-0012 decision 1 ("15° above the plane, else 35°, else
 closer, on the first of 8 sides where no splat reaches into the line of sight"). The focus,
@@ -63,3 +65,58 @@ show detail, not an overview of floating garbage.
 * Up from the axial mode of flat-splat normals (to fix room's 30° tilt): failed worse, logged in
   the negative-results table. The owner does not need the orientation fixed.
 * A third, 60° elevation tier: top-down ground views, see Evidence.
+
+**Amendment (S33, 2026-11-24, proposed): the frame the view is shown in, and weak tilted planes.**
+
+*Context.* The S33 phone check before v0.4.0 (S24U, APK `905e9c6`): the owner found beetle's and
+museum1's start views too close, and museum1 tilted. Two causes, both older than S32
+(`docs/benchmarks/README.md`, S33 section):
+* The 48 × 48 score raster is a square at 60°, but the app shows a portrait frame: 60° along,
+  ~30° across at 1080 × 2340. The winning view was framed for a screen twice as wide, so its
+  subject ran off the sides.
+* On museum1 (a statue) and racoonfamily (a carved stump), +y-up captures of a lone object, the
+  best plane near the focus is a face of the object: 80–85° from +y with 7.6–9.0 % of the points.
+  This amends ADR-0012's up estimate, which ADR-0014 had left unchanged.
+
+*Decision.*
+* `estimate_home_view(pack, frame)`: `HomeViewFrame` gives the width, height and FOV across the
+  long side. The raster keeps 48 px along the long side, the short side in proportion (22 in
+  portrait), one focal length for both. Candidates, elevations, distances, the centre-block test
+  and tie order are unchanged. The default frame is the old square, so focus, up, `full_distance`,
+  virtual capture (ADR-0015) and `splatconv` are unchanged.
+  * The app passes its surface size when the scene opens (portrait 9:19.5 if no surface exists
+    yet) and keeps that view on rotation. The Windows viewer passes its framebuffer, and the
+    desktop host its window.
+* A plane more than 60° from +y must hold at least 20 % of the points near the focus; otherwise no
+  plane is found and up is +y. The only correct planes that far from +y on the 36 probe scenes are
+  the drjohnson family's floors, at 89° (COLMAP frame) with 30.4–44.8 %. Every other plane is
+  within 48.5° of +y.
+
+*Evidence.*
+* Desktop renders at 540 × 1170 (the phone's portrait at half size) of the 8 phone scenes, square
+  vs frame. Better: beetle (the whole car, side-on), counter (the whole counter instead of a pot
+  close-up), bicycle (bike and bench), museum1 (more of the statue). Unchanged: stump, truck,
+  drjohnson. The owner judged them fine.
+* Up axis over 36 scenes (`home-view-tilt-probe-0d73046-2026-11-24.csv`): bit-identical on 32.
+  Changed on the 3 museum1 packs and racoonfamily, which now open upright.
+* Tests: `HomeView.AWeakPlaneFarFromPlusYKeepsPlusY` (fails with the rule off),
+  `AStrongGroundFarFromPlusYIsKept`, `DefaultAndDegenerateFramesAreTheSquare`,
+  `APortraitFrameMovesOnlyTheEye`.
+* Cost: the portrait raster is 46 % of the square's pixels and projects the same splats. Open time
+  before the change, S24U: 86–199 ms (`home-view-open-s24u-905e9c6-2026-11-24.csv`). The phone
+  time of this change is still to be measured.
+
+*Alternatives rejected* (negative-results log):
+* Moving the chosen eye back along its ray, × 1.3–2.0: poles, signs and a wall come between the
+  camera and the subject. The score had checked the line of sight only at its own distance.
+* Candidates beyond the full distance, or "the farthest within 15 % / 30 % of the best score":
+  truck opens on a 22–35 m overview from outside the capture.
+* Any +y gate on its own: drjohnson's correct floor is 89° from +y.
+* Separating museum1 by share alone (0.090 against hornedlizard's correct 0.105), in-plane
+  spread, focus height, or the strength of the best rival plane: no clean gap.
+
+*Consequences.*
+* Bench runs with `--pose home` and the home-view numbers in earlier CSVs describe the square
+  frame. After this change they are not like-for-like on scenes whose view moved.
+* museum1 now opens level but still close on one figure. Its focus is the statue's detail peak, and
+  ADR-0012's distance rule is unchanged.

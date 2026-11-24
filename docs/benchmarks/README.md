@@ -137,6 +137,14 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
   scene: points near the focus, best inliers old/new, best-plane share, the old code's chance of
   missing that plane, change of the up axis, home distance, and the up error against the INRIA
   training cameras where they exist.
+- `home-view-open-<device>-<hash>-<date>.csv` — `estimate_home_view` time at scene open on a phone
+  (logcat "home view in … ms", scripted `open_scene`), per scene and open, with the build and the
+  commit `home_view.cpp` came from (S33 A/B of the S31 and S32 RANSAC), focus, distance and
+  whether a plane was found.
+- `home-view-tilt-probe-<hash>-<date>.csv` — the home view's accepted ground plane per probe scene
+  (S33): share of the points near the focus, normal, angle to +y, the best rival plane > 30° away
+  (share, angle, rival/winner ratio), and whether a plane is kept before and after the S33 rule
+  (> 60° from +y needs ≥ 20 %), with the resulting up axis.
 - `quality-rtx3060-rungs-<date>-864x1872.csv` — image cost of the thermal controller's candidate
   rungs (cull threshold × internal-resolution scale, ADR-0009); scaled variants are upscaled
   bilinearly to 864×1872 before PSNR (`quality_ab.py --scale`).
@@ -585,9 +593,43 @@ losses match bit for bit). Details: `docs/sh1-palette-research.md` §6.
   hypotheses × 2,048 plus 8 × the points, which is less on scenes with a clear ground and at most
   41 M at the cap. Scene-open time on the phones is not measured yet.
 
+## Home view on the phone: open time, portrait frame, tilt rule (2026-11-24, S33)
+
+`home-view-open-s24u-905e9c6-2026-11-24.csv`: S24U on battery, APK 905e9c6 with the S32 RANSAC
+against the same APK with `home_view.cpp` from 5142815 (the S31 RANSAC), opened through the app's
+`open_scene` intent, 3 opens per scene, the two builds interleaved per scene with the order flipped
+every scene. `home-view-tilt-probe-0d73046-2026-11-24.csv`: desktop, the accepted plane of every
+probe scene (11 bench packs, the museum1 app pack, 24 raw public scenes).
+
+* **Open time**: `estimate_home_view` takes 86–199 ms with the S32 RANSAC (median 119 ms) and
+  95–234 ms with the S31 one (median 144.5 ms), same scenes and phone. ADR-0014's 647–1091 ms
+  (S25U, S24) came from an older build and does not compare. The views were identical between the
+  two builds except beetle's, the change S32 described.
+* **Portrait frame**: the S32 owner check found beetle's and museum1's start views too close. The
+  eye's score raster was a 48 × 48 square at 60°, but the app shows a portrait 1080 × 2340 frame,
+  ~30° across: the winner was framed for a screen twice as wide. Scored through the frame (raster
+  22 × 48), beetle opens on the whole car side-on, counter on the whole counter, bicycle on the
+  bike and bench, museum1 on more of the statue; stump, truck and drjohnson are unchanged (owner:
+  fine). Renders at 540 × 1170, desktop, not committed (scene media policy).
+* **museum1's tilt was never caused by S32**: the old build's phone capture is tilted the same, and
+  S32's "6.2° up change" compared two planes that were both a face of the statue. The probe found
+  the same failure on racoonfamily: on both (+y-up captures of a lone object) the best plane near
+  the focus is a face of the object, 80–85° from +y, holding 7.6–9.0 % of the points. The only
+  correct planes far from +y are the drjohnson family's floors (89° from +y in COLMAP's frame,
+  30.4–44.8 %); every other plane is within 48.5° of +y (stump). A plane more than 60° from +y now
+  needs ≥ 20 % of the points, else up stays +y: up is bit-identical on 32 of the 36 probe scenes and
+  changes only on the 3 museum1 packs and racoonfamily, which now open upright.
+* Statistics that did **not** separate museum1 from correct grounds: share alone (0.090 against
+  hornedlizard's correct 0.105), in-plane spread of the inliers (truck 0.11–0.26 of the radius,
+  museum1 0.25), focus height above the plane (drjohnson's focus sits on its rug), and the best
+  rival plane > 30° away divided by the winner (museum1 0.70–0.73, truck 0.87–0.89, hornedlizard
+  0.87: a ground next to a building wall has a strong rival too).
+
 ## Negative results log
 | Date | What was tried | Result | Diagnosis |
 |---|---|---|---|
+| 2026-11-24 | Home view further out (owner: "step away a bit") by moving the chosen eye back along its ray, × 1.3 / 1.6 / 2.0 (S33, desktop renders at the phone's portrait frame) | Better on bicycle, counter and stump; beetle gets a pole in front of the car, truck a sign, drjohnson goes through a wall into the next room at × 1.3 | The eye's score checked the line of sight at its own distance only. Any step back has to be a candidate the score sees |
+| 2026-11-24 | Candidate eyes beyond the full distance (× 1.3, 1.6) and "the farthest candidate within 15 % / 30 % of the best score" (S33, with the portrait frame) | Truck opens on a 22–35 m overview from outside the capture, full of floaters; at 30 % drjohnson opens in the next room | Truck's good view is its closest candidate (0.18 × 21.7 m); its far ones score nearly as well on fine detail. The portrait frame alone was kept (owner: stump and truck fine) |
 | 2026-11-23 | `dumpsys meminfo` to show the SH 1 palette's memory saving (12 MB per 1 M splats) on the S24U and S25U | `GL mtrack` identical to the kilobyte for palette, direct SH 1 and SH 0 on the S25U (170,976 KB at 1 M); TOTAL PSS within 0.2 % at 4 M | The renderer allocates with VMA's defaults: the per-splat buffers are sub-allocated from shared large blocks, and the driver accounts whole blocks. A 12–48 MB change does not change the block count at these sizes. The saving is reported from the buffer sizes instead; an allocation-level measure would need VMA statistics in the bench CSV |
 | 2026-11-19 | Hamerly's bounds (one upper, one lower bound per point) to speed up Lloyd for the SH1 palette, the classical choice at low dimension (`docs/sh1-palette-research.md` §3.1) | Same labels and centroids as Lloyd, bit for bit, but 0.70–0.94 of Lloyd's distance pairs at k 4,096 over 25 epochs (0.64–0.90 at k 1,024, 0.75–0.96 at k 16,384); 87–97 % of points need a full scan in each epoch (museum1, k 1,024) | SH1 vectors have little cluster structure: the second-nearest entry is only ~13 % farther than the nearest on average, and the lower bound shrinks by the largest centroid drift each epoch, 5–10× the median drift. e-means needs an eighth of Lloyd's work for the same loss, so per-centroid bounds (Elkan, n × k memory) were not tried |
 | 2026-11-19 | SH1 palette assignment kernel written to auto-vectorize (`docs/sh1-palette-research.md` §2.2): one scoring loop over a 512-centroid tile, then a lane-blocked minimum, MSVC `/O2` (scratch microbenchmark, 200 K random points, k 4,096, i5-11400H at ~2.6 GHz) | 0.59 G pairs/s on one thread (~6.5 cycles per pair), 3.2 on 12; the vectorizer report confirmed both loops vectorized (SSE2) | x64 MSVC targets SSE2 without FMA, and the separate score and minimum passes plus a nine-add chain left ~2 iterations in flight. Explicit SSE2 with per-lane best value and index, a tree-summed dot product and two vectors per step: 0.77 on one thread, 3.6 on 12, close to the SSE2 µop limit at that clock. arm64 keeps the portable loop until a NEON kernel can be tested on a phone (Phase C) |
