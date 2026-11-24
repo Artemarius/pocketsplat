@@ -69,7 +69,7 @@ flowchart LR
   (SH 0–3) and SPZ, converts the coordinate system (RDF → RUB with an SH parity table) and truncates
   SH to degree 1. It removes floaters and degenerate splats, sorts in Morton order and writes a GPU
   pack with conservative chunk bounds. The SH 1 colour terms become a 16-bit index into a palette of
-  4,096 vectors trained at import with e-means, so an SH 1 scene takes the 28 B per splat of SH 0
+  4,096 vectors trained at import with e-means ([against Lloyd](docs/e-means-vs-lloyd.md)), so an SH 1 scene takes the 28 B per splat of SH 0
   instead of 40 B ([ADR-0017](docs/decisions/ADR-0017-sh1-palette.md),
   [docs/sh1-palette-research.md](docs/sh1-palette-research.md)).
 * **Frame**: everything after the chunk cull is GPU-driven. The preprocess projects each splat
