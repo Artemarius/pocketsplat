@@ -132,6 +132,11 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
   whole-scene start in ring radii, home distance and focus error in ring radii, angle to the
   nearest training camera, error of the fitted up axis. The cameras were read from the pretrained
   models archive for this check only; they are not committed.
+- `home-view-ransac-<hash>-<date>.csv` — the home view's ground-plane RANSAC before and after S32
+  (fixed 400 hypotheses vs subset scoring until a miss is unlikely), per bench pack and raw public
+  scene: points near the focus, best inliers old/new, best-plane share, the old code's chance of
+  missing that plane, change of the up axis, home distance, and the up error against the INRIA
+  training cameras where they exist.
 - `quality-rtx3060-rungs-<date>-864x1872.csv` — image cost of the thermal controller's candidate
   rungs (cull threshold × internal-resolution scale, ADR-0009); scaled variants are upscaled
   bilinearly to 864×1872 before PSNR (`quality_ab.py --scale`).
@@ -541,7 +546,8 @@ losses match bit for bit). Details: `docs/sh1-palette-research.md` §6.
 
 * **Preprocess with the palette is no slower than direct SH 1 on either phone, at either size**
   (minute 4–5, thermal status 2 everywhere): S24U 3.41 / 3.46 ms (two runs) vs 3.53 ms at 1 M and
-  5.29 vs 5.52 ms at 4 M; S25U 2.18 vs 2.23 and 3.56 vs 3.72 ms. SH 0 is within ±2 % of the palette.
+  5.29 vs 5.52 ms at 4 M; S25U 2.18 vs 2.23 and 3.56 vs 3.72 ms. SH 0 is between 4 % faster (S24U
+  1 M) and 1 % slower than the palette (S32 correction of "within ±2 %").
   fps follows (S24U 4 M: 70.3 palette, 68.5 direct, 69.5 SH 0). **Gate C passed.**
 * **Import cost** (S24U, deciding): the palette adds 4.5 s at the 1 M budget (5.6 s against 1.1 s)
   and 19.6 s for the 4.05 M "all" import (21.3 against 1.8 s). S25U: +3.0 s and +13.0 s. The source
@@ -554,6 +560,30 @@ losses match bit for bit). Details: `docs/sh1-palette-research.md` §6.
   contraction is off in `palette.cpp`.
 * GPU-resident pack: 28.16 MB against 40.11 MB at 1 M, 113.9 against 162.4 MB at 4 M (the buffer
   sizes; `dumpsys meminfo` does not resolve them, negative results log).
+
+## Home view ground plane — RANSAC hypotheses (2026-11-24, S32)
+
+`home-view-ransac-99529ba-2026-11-24.csv`, desktop only (no timings): `estimate_home_view` on the
+11 cleaned bench packs and 22 raw public scenes, the S31 code against 99529ba.
+
+* **Cause of the arm64 HomeView test failure**: the test's walled scene has its ground at ~13 % of
+  the points near the focus, so a random triple lies on it with p ≈ 0.0023, and 400 fixed
+  hypotheses miss it ~40 % of the time. arm64's libm moved the focus by ~1e-6, 85 points crossed
+  the RANSAC radius, every pick changed, and that draw missed (1,167 inliers against 6,299 on MSVC).
+* **Real scenes are as marginal**: the best plane holds 7.7 % of the points on museum1, 11–13 % on
+  the beetle pack, giraffes_statue and bonsai, and 18–21 % on truck and room. At 400 hypotheses the
+  chance of missing it is 0.83, 0.4–0.6 and 0.03–0.14. Every scene had found *a* plane, but a
+  few-ulp change of the input could change its up axis.
+* **Now**: hypotheses are scored on a fixed stride subset of 2,048 points. They continue until
+  `it · w³ ≥ −ln 1e-4` for the best subset share w, with at least 400 and at most 20,000
+  hypotheses (the cap covers a 7.7 % share), and the 8 best are scored again on every point.
+  Inliers are never fewer than before. Up changes by 0–2.2° everywhere except museum1 (6.2°) and
+  the beetle pack (10.4°, 10,877 → 20,309 inliers: the old draw had found a lesser plane; its home
+  view became a level 3/4 view of the whole car instead of a close side crop). Against the 13 INRIA
+  training camera sets the up error is unchanged within 0.8° (room stays at ~30°).
+* Work in point tests: before, 400 × the points near the focus (7–55 M on these scenes); now, the
+  hypotheses × 2,048 plus 8 × the points, which is less on scenes with a clear ground and at most
+  41 M at the cap. Scene-open time on the phones is not measured yet.
 
 ## Negative results log
 | Date | What was tried | Result | Diagnosis |

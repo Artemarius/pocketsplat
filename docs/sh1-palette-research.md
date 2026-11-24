@@ -434,7 +434,10 @@ cross-lane ties at 1–16 threads; e-means determinism; progress and cancel). Th
 which of two split copies wins a sub-resolution tie, and libc++ draws different test vectors than
 MSVC (fixed in e2bf1dd: bound instead of zero). `HomeView.PicksTheSideWhoseViewShowsDetail` and
 `QualityController.HotStartStepsDownAfterTheForecastWarmUpThenOncePerInterval` touch no palette
-code and use no random distributions; they are open (arm64 floating point, not investigated).
+code. Both were reproduced off-device in S32 (WSL clang with FMA) and fixed: the controller's
+slope by building all of `splatcore` without FP contraction (5142815), and the home view's ground
+RANSAC, which missed a 13 %-share plane ~40 % of the time, by scoring hypotheses until a miss is
+unlikely (99529ba, `benchmarks/README.md`).
 
 **Trainer** (palettebench, k 4,096, 8 threads; total = training + final assignment):
 
@@ -461,8 +464,9 @@ code and use no random distributions; they are open (arm64 floating point, not i
 | S25U | 1 M | 2.18 | 2.23 | 2.15 |
 | S25U | 4.05 M | 3.56 | 3.72 | 3.49 |
 
-The palette pack's preprocess is 2–4 % faster than direct SH 1 and within ±2 % of SH 0, at both
-sizes on both phones: it reads 48 KB of palette instead of 12 B of SH1 per splat. Frame rates follow
+The palette pack's preprocess is 2–4 % faster than direct SH 1, at both sizes on both phones, and
+between 1 % faster and 4 % slower than SH 0 (the S24U at 1 M: +2.7 / +4.2 %; corrected in S32 from
+"within ±2 %"): it reads 48 KB of palette instead of 12 B of SH1 per splat. Frame rates follow
 (S24U 4.05 M: 70.3 / 68.5 / 69.5 fps). On the S24U the first 1 M direct SH 1 run was lost to an adb
 host restart and was rerun with a second palette run right after it, so that pair is like for like.
 
