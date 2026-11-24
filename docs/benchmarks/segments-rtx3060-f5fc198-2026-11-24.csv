@@ -1,0 +1,24 @@
+# quality_ab.py, desktop host (RTX 3060 Laptop), build f5fc198, 864x1872 offscreen, six quality_ab poses + the 600-frame bench orbit; seg* = --segment-splats N against one segment (ref); orbit_* GPU times indicative only (shared laptop)
+scene,variant,flags,compared_to,resolution,psnr_min_db,psnr_mean_db,moved_px_max_pct,orbit_visible,orbit_gpu_ms,orbit_sort_ms,orbit_draw_ms,orbit_preprocess_ms,visible_vs_ref
+museum1,ref,--key-bits 32 --min-contribution 0,ref,864x1872,inf,inf,0.0000,310788.5322,2.4395,0.3402,1.9941,0.0874,1.0000
+museum1,ref@repeat,--key-bits 32 --min-contribution 0,ref,864x1872,91.0809,96.9237,0.0001,,,,,,
+museum1,seg64k,--key-bits 32 --min-contribution 0 --segment-splats 65536,ref,864x1872,91.9367,97.1721,0.0001,310788.5322,2.4335,0.3394,1.9905,0.0858,1.0000
+hornedlizard,ref,--key-bits 32 --min-contribution 0,ref,864x1872,inf,inf,0.0000,561093.3983,1.8681,0.5000,1.1667,0.1657,1.0000
+hornedlizard,ref@repeat,--key-bits 32 --min-contribution 0,ref,864x1872,92.0677,100.3500,0.0000,,,,,,
+hornedlizard,seg64k,--key-bits 32 --min-contribution 0 --segment-splats 65536,ref,864x1872,92.0236,98.2084,0.0000,561093.3983,1.8687,0.4995,1.1672,0.1660,1.0000
+beetle,ref,--key-bits 32 --min-contribution 0,ref,864x1872,inf,inf,0.0000,896024.1085,2.3235,0.8477,1.1053,0.2996,1.0000
+beetle,ref@repeat,--key-bits 32 --min-contribution 0,ref,864x1872,97.1369,101.5145,0.0000,,,,,,
+beetle,seg64k,--key-bits 32 --min-contribution 0 --segment-splats 65536,ref,864x1872,95.5950,99.5117,0.0002,896024.1085,2.3311,0.8511,1.1099,0.2982,1.0000
+giraffes_statue,ref,--key-bits 32 --min-contribution 0,ref,864x1872,inf,inf,0.0000,787770.3576,3.6279,0.7691,2.3619,0.3854,1.0000
+giraffes_statue,ref@repeat,--key-bits 32 --min-contribution 0,ref,864x1872,77.7295,85.9634,0.0085,,,,,,
+giraffes_statue,seg64k,--key-bits 32 --min-contribution 0 --segment-splats 65536,ref,864x1872,77.9111,86.6758,0.0085,787770.3576,3.6275,0.7658,2.3604,0.3887,1.0000
+truck,ref,--key-bits 32 --min-contribution 0,ref,864x1872,inf,inf,0.0000,779561.6305,2.1907,0.7560,1.0868,0.2786,1.0000
+truck,ref@repeat,--key-bits 32 --min-contribution 0,ref,864x1872,90.4266,97.0429,0.0006,,,,,,
+truck,seg64k,--key-bits 32 --min-contribution 0 --segment-splats 65536,ref,864x1872,89.5002,95.3582,0.0006,779561.6305,2.1885,0.7529,1.0872,0.2785,1.0000
+stump,ref,--key-bits 32 --min-contribution 0,ref,864x1872,inf,inf,0.0000,2137057.7831,5.4311,2.0810,2.4736,0.7176,1.0000
+stump,ref@repeat,--key-bits 32 --min-contribution 0,ref,864x1872,83.8608,94.3737,0.0006,,,,,,
+stump,seg64k,--key-bits 32 --min-contribution 0 --segment-splats 65536,ref,864x1872,91.2427,95.7410,0.0001,2137057.7831,5.4312,2.0721,2.4776,0.7209,1.0000
+bicycle-x3,ref,--key-bits 32 --min-contribution 0,ref,864x1872,inf,inf,0.0000,3903701.1898,9.5273,3.9545,3.7059,1.3618,1.0000
+bicycle-x3,ref@repeat,--key-bits 32 --min-contribution 0,ref,864x1872,92.2718,95.1887,0.0001,,,,,,
+bicycle-x3,seg750,--key-bits 32 --min-contribution 0 --segment-splats 11141120,ref,864x1872,81.6699,91.8422,0.0009,3903701.1898,9.5118,3.9277,3.7341,1.3414,1.0000
+bicycle-x3,seg4m,--key-bits 32 --min-contribution 0 --segment-splats 4194304,ref,864x1872,94.5370,96.9933,0.0001,3903701.1898,9.4310,3.8822,3.7031,1.3415,1.0000

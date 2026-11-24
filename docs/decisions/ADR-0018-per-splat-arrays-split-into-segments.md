@@ -97,7 +97,9 @@ viewer's importers) and a quantization change, which needs explicit acceptance. 
 measured by simulation below. Its real payoff is memory and bandwidth (−29 % per splat), not
 the limit.
 
-**Decision** (owner, S34): (b), segments with one preprocess dispatch each.
+**Decision** (owner, S34): (b), segments with one preprocess dispatch each. On acceptance this
+supersedes ADR-0016's Decision 2 (scene limit = range / 12); ADR-0016's visible capacity, clip
+reporting and clip guard stay as they are.
 
 1. `splatcore` gets a pure function `plan_segments(count, max_storage_buffer_range,
    max_workgroup_count_x, bytes_per_splat = 12)`. It returns the segment size, a multiple of
@@ -130,14 +132,16 @@ the limit.
    the split path runs on the RTX under validation, as `--visible-cap` does for the clip path
    (ADR-0016).
 
-**Desktop evidence (segments, implemented at 3b9c2d3)**:
-`../benchmarks/segments-rtx3060-3b9c2d3-2026-11-24.csv`, summarized in `../benchmarks/README.md`
+**Desktop evidence (segments, f5fc198)**:
+`../benchmarks/segments-rtx3060-f5fc198-2026-11-24.csv`, summarized in `../benchmarks/README.md`
 ("Segments"). `--segment-splats` forced 5–62 segments of 65,536 splats on the six gate-A packs,
 and 2 (the 750's split) or 4 segments on tiled bicycle ×3 (13.45 M). Every split drew the
-reference's visible count to the splat over the 600-frame orbit, at the renderer's repeat noise
-in PSNR. Validation reported 0 messages with and without the chunk cull, with palette, direct
-SH 1 and coverage masks. `ctest` 146/146 (4 new `PackSegments` tests). The debug APK builds
-(NDK clang, `-Werror`).
+reference's visible count to the splat over the 600-frame orbit, with PSNR within the renderer's
+run-to-run repeat noise. Validation reported 0 messages with and without the chunk cull, with
+palette, direct SH 1 and coverage masks. `ctest` 146/146 (4 new `PackSegments` tests, 4 goldens).
+The debug APK builds (NDK clang, `-Werror`). The chunk cull closes a segment inside its existing
+end-of-block step, so its barriers are the v0.4.0 ones. The RTX's memory bound: heap 5,994 MB,
+5,222 MB available (`VK_EXT_memory_budget`) → 64.0 M splats at 29 B per splat.
 
 **Evidence (desktop, simulation of (e), 2026-11-24)**: `../benchmarks/quantize-sim-fb66214-2026-11-24.csv`
 and `quantize-steps-fb66214-2026-11-24.csv`, summarized in `../benchmarks/README.md` ("Smaller
@@ -162,9 +166,19 @@ times do not count (CLAUDE.md §7).
 **What decides it** (S24U first, the owner's go for each run; debuggable release build
 `-PdebuggableRelease` over the installed 0.4.0, which keeps the scenes):
 
+0. First, before any scene opens: the app's "Vulkan ready" logcat line (heap size, available
+   budget, `VK_EXT_memory_budget`, `maxComputeWorkGroupCount.x`, scene limit). A scene limit
+   below 11,184,810 at 29 B per splat would be a regression against v0.4.0. If it is, stop the
+   run and fix the memory policy first.
 1. Gate: on bicycle-4m, preprocess and chunk-cull ms, the v0.4.0 build against the segment
    build, interleaved runs (`scripts/bench_android.py`, 540 × 975, 16-bit keys, 0.1 px cull).
    One segment must be no slower than today.
+1a. Correctness of two or more segments on the 750's compiler, which has miscompiled silently
+   before. On bicycle-4m, the same build with `bench_android.py --segment-splats 2097152` (two
+   segments) against one segment: the per-frame `visible` column must be identical. That is
+   the same GPU and the same arithmetic, so it should be exact. ×3 on the phone against the
+   desktop's `--segment-splats 11141120` orbit at the phone's settings must agree within the
+   culls' float noise. The CSV header records `segments` and `segment_splats`.
 2. bicycle ×2 (8.97 M, one segment) against ×3 (13.45 M) and ×4 (17.93 M) (two segments on the
    750; `scripts/tile_scene.py`, `data/derived/stress`). Each must open whole with no
    partial-scene banner. Record per-pass times, chunk-cull ms (its loop grows to 274 blocks at
@@ -172,7 +186,8 @@ times do not count (CLAUDE.md §7).
 3. The device limits not on record, from `adb shell cmd gpu vkjson`, kept this time:
    `maxPerStageDescriptorStorageBuffers`, `maxBufferSize`, `maxMemoryAllocationSize`,
    `maxComputeWorkGroupCount`, and whether the device has `VK_EXT_memory_budget`.
-4. S25U: one segment always (2 GB range). A regression check of 1 and 2 only.
+4. S25U: its 2 GB binding never splits a scene; its dispatch limit (logged in 0) does if it is
+   the spec minimum (×4 would then be two segments). A regression check of 1, 1a and 2.
 
 Desktop gates before any phone run: `ctest` green; validation layers clean with and without
 `--segment-splats`; the goldens unchanged. Forced segments against one segment on the six
@@ -181,8 +196,8 @@ bit-identical: atomic slot order already differs run to run (`quality_ab.py` `@r
 
 **Consequences**:
 
-* The 750 opens scenes up to its memory: 28 B per splat on the GPU for palette and SH 0 packs,
-  40 B for direct SH 1. The visible capacity (4,194,304) and the clip guard (ADR-0016) are
+* The 750 opens scenes up to its memory: 29 B per splat on the GPU for palette and SH 0 packs,
+  41 B for direct SH 1 (`gpu_bytes_per_splat`). The visible capacity (4,194,304) and the clip guard (ADR-0016) are
   unchanged, so wide views of very large scenes still meet the contribution floor.
 * Importing such a scene on the phone is a separate limit, not measured above 6.13 M (S28). The
   tiled test packs are built on the desktop.

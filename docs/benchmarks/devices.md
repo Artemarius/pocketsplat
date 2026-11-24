@@ -49,5 +49,7 @@ The development laptop exposes two Vulkan devices; `pocketsplat-desktop --list-g
 * 32 KB workgroup memory comfortably holds the 256-bin histograms (1 KB) and rank scratch.
 * GPU per-pass timing works on device (timestamps in compute), so `bench_android.py` can reuse the
   desktop GpuTimer approach.
-* `maxStorageBufferRange` 128 MB caps any single SSBO at ~4.5 M splats of positions — irrelevant
-  under the 1 M budget, relevant only if someone disables the budget prune.
+* `maxStorageBufferRange` 128 MB caps any single SSBO: 11.18 M splats of 12-byte positions. Since
+  ADR-0018 the per-splat arrays are split into segments that each fit one binding (and one
+  dispatch of `maxComputeWorkGroupCount.x` workgroups, not recorded here yet), so memory limits
+  a scene, not the binding.

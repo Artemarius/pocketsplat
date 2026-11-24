@@ -674,29 +674,34 @@ poses / worst of the two close poses:
 
 ## Segments: the per-splat arrays split for the 750's binding (2026-11-24, S34, ADR-0018)
 
-`segments-rtx3060-3b9c2d3-2026-11-24.csv`: desktop host, 864 × 1872 offscreen, 32-bit keys, no
-contribution cull. `--segment-splats N` forces segments on the RTX, whose own binding (4 GB)
-never needs them, against the same pack in one segment. The six gate-A packs use 65,536-splat
-segments (5 on museum1 to 62 on stump); tiled bicycle ×3 (13.45 M, SH 0) is split as the 750
-splits it (2 × 11,141,120) and into 4 × 4,194,304.
+`segments-rtx3060-f5fc198-2026-11-24.csv`: desktop host at f5fc198, 864 × 1872 offscreen, 32-bit
+keys, no contribution cull. `--segment-splats N` forces segments on the RTX, whose own binding
+(4 GB) never needs them, against the same pack in one segment. The six gate-A packs use
+65,536-splat segments (5 on museum1 to 62 on stump); tiled bicycle ×3 (13.45 M, SH 0) is split as
+the 750 splits it (2 × 11,141,120) and into 4 × 4,194,304.
 
 | Scene | Segments | PSNR min / mean (dB) | `@repeat` min / mean (dB) | Orbit visible, ref = segments |
 |---|---|---|---|---|
-| museum1 | 5 | 94.5 / 99.0 | 90.6 / 96.2 | 310,789 = 310,789 |
-| hornedlizard | 12 | 91.9 / 99.2 | 97.6 / 101.1 | 561,093 = 561,093 |
-| beetle | 26 | 75.1 / 95.3 | 75.1 / 94.7 | 896,024 = 896,024 |
-| giraffes_statue | 44 | 78.4 / 86.9 | 79.0 / 87.2 | 787,770 = 787,770 |
-| truck | 26 | 94.0 / 99.2 | 89.5 / 99.1 | 779,562 = 779,562 |
-| stump | 62 | 83.6 / 94.6 | 83.9 / 94.2 | 2,137,058 = 2,137,058 |
-| bicycle ×3 (tiled) | 2 / 4 | 81.7 / 92.1, 81.7 / 92.5 | 82.3 / 94.0 | 3,903,701 = 3,903,701 (both) |
+| museum1 | 5 | 91.9 / 97.2 | 91.1 / 96.9 | 310,789 = 310,789 |
+| hornedlizard | 12 | 92.0 / 98.2 | 92.1 / 100.4 | 561,093 = 561,093 |
+| beetle | 26 | 95.6 / 99.5 | 97.1 / 101.5 | 896,024 = 896,024 |
+| giraffes_statue | 44 | 77.9 / 86.7 | 77.7 / 86.0 | 787,770 = 787,770 |
+| truck | 26 | 89.5 / 95.4 | 90.4 / 97.0 | 779,562 = 779,562 |
+| stump | 62 | 91.2 / 95.7 | 83.9 / 94.4 | 2,137,058 = 2,137,058 |
+| bicycle ×3 (tiled) | 2 | 81.7 / 91.8 | 92.3 / 95.2 | 3,903,701 = 3,903,701 |
+| bicycle ×3 (tiled) | 4 | 94.5 / 97.0 | (same) | 3,903,701 = 3,903,701 |
 
 * Same splats, same image: every split draws the reference's visible count to the splat over the
-  600-frame orbit, and its PSNR sits at the renderer's own repeat noise (equal-key blend order,
-  ADR-0008). Images cannot be bit-identical: atomic slot order differs run to run.
+  600-frame orbit. PSNR sits at the renderer's repeat noise (equal-key blend order, ADR-0008),
+  which itself varies between runs. ×3 in two segments is 81.7 dB at its worst pose, below this
+  run's `@repeat` minimum of 92.3 dB, but the same scene's `@repeat` minimum was 82.3 dB in an
+  earlier run of the same comparison (3b9c2d3, the cull's previous close-out, 81.7 dB as well).
+  No pixel moves by more than 2 LSB beyond 0.0009 % anywhere. Images cannot be bit-identical:
+  atomic slot order differs run to run.
 * Validation layers: 0 messages on 120-frame bench orbits with forced segments: ×3 in 2 segments
   with and without the chunk cull, stump direct SH 1 in 62 with the phone's 16-bit keys and
-  0.1 px cull, a museum1 palette pack in 5. The coverage fade (stump-full sidecar, strength 1)
-  renders at 93.4 dB against one segment, the same as a re-render of one segment.
+  0.1 px cull, a museum1 palette pack in 5, stump-full with its coverage sidecar at strength 1
+  in 62. `ctest` 146/146, including the 4 golden-image tests.
 * GPU times in the CSV are the shared laptop's, indicative only. The deciding comparison, one
   segment against the v0.4.0 build at 4 M, is the S24U's (ADR-0018, "What decides it").
 
