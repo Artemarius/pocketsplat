@@ -17,6 +17,14 @@ add_library(splatcore STATIC
 target_include_directories(splatcore PUBLIC include)
 target_compile_features(splatcore PUBLIC cxx_std_20)
 target_link_libraries(splatcore PRIVATE pocketsplat_warnings spz::spz glm::glm)
+# The same arithmetic on every platform: clang (the NDK) contracts a * b + c into fused multiply-adds
+# by default, MSVC on x86-64 does not, and the two round differently. On the phones that turned the
+# quality controller's slope of a flat forecast negative ("falling": a held step, S32 arm64 test
+# failure) and could make `splatconv replay` disagree with the phone's own decisions. palette.cpp
+# also says so with a pragma (S31).
+if(NOT MSVC)
+    target_compile_options(splatcore PRIVATE -ffp-contract=off)
+endif()
 
 # scene_import probes legacy gzip SPZ headers with a partial inflate. Reuse whichever zlib spz
 # resolved: its FetchContent zlibstatic (deps.cmake rewrites the shared target away), or the
