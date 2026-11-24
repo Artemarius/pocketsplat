@@ -14,6 +14,10 @@ Android app (NDK). **Training is not part of this repo.**
 
 1. **SH degree 0 and 1 only** at runtime and in our storage. Input PLY may carry degree 2–3; the
    converter truncates. Do not add SH 2/3 code paths to the renderer.
+   *Exception (owner, 2026-11-24):* desktop-only feasibility studies may read and process SH 2/3
+   coefficients in tools, scripts and research notes (band energy, palette trainers at d = 15/21/45).
+   Nothing of it enters the renderer, the pack format, the app or a default; shipping SH 2/3 would
+   need the owner to lift this constraint and an ADR.
 2. **Permissive licenses only**: MIT, BSD, Apache-2.0, zlib. No GPL, LGPL, MPL, CC-NC, or
    "research/non-commercial" code anywhere — including transitive deps, shader snippets, and "just this
    one function". The INRIA 3DGS reference code and `diff-gaussian-rasterization`, and 3DGS.cpp (LGPL),
