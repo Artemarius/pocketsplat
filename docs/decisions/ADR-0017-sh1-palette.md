@@ -1,9 +1,9 @@
 # ADR-0017 — SH 1 palette: a 16-bit index per splat into a palette of SH1 vectors trained at import
 
-**Status**: proposed (2026-11-24, S32). Implemented and measured on the desktop and on both phones
+**Status**: accepted (2026-11-24, S32). Implemented and measured on the desktop and on both phones
 (Evidence; the three gates of `docs/sh1-palette-research.md` §5 passed). The owner turned the app's
-import option on by default after gate C, and chose the same for the Windows viewer (S32).
-Acceptance is open until the owner reviews this ADR.
+import option on by default after gate C, chose the same for the Windows viewer, and accepted this
+ADR after reviewing it (S32).
 
 **Context**: the app imports at SH 1, so a scene costs 40 B per splat on the GPU, against 28 B at
 SH 0. SH 0 is not a free substitute: against direct SH 1 it renders at 29.6–38.7 dB at the worst
