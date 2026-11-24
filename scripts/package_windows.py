@@ -52,8 +52,10 @@ Opening scenes
 * Without arguments the viewer opens samples/hornedlizard.spz.
 * Drop a .ply, .spz or .pspk file on the window, press O for a file dialog, or pass a path:
       pocketsplat-viewer.exe scene.ply
-* .ply and .spz files are imported once (cleaned, SH truncated to degree 1) and cached under
-  %LOCALAPPDATA%\\PocketSplat\\imports. Delete that folder to free the space.
+* .ply and .spz files are imported once (cleaned, SH truncated to degree 1, the degree-1 colour
+  stored as a trained palette of 4,096 entries, as on the phone) and cached under
+  %LOCALAPPDATA%\\PocketSplat\\imports. Delete that folder to free the space. Scenes imported
+  by an earlier version stay cached as they are and keep working.
 * Scenes larger than the GPU's storage-buffer limit are budget-pruned to fit.
 
 Controls

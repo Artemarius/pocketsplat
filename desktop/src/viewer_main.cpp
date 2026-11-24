@@ -60,7 +60,11 @@ constexpr float kBackground[3] = {0.55f, 0.58f, 0.62f};  // the app's light gray
 constexpr int kFastKeyBits = 16;
 constexpr float kFastMinContribution = 0.1f;
 // Imported .ply/.spz scenes are cached as packs; bump when the import pipeline's output changes.
+// Not bumped for the SH1 palette (ADR-0017): a cached direct SH 1 pack still renders the same
+// scene, as the phone keeps its earlier imports, so only new imports get the palette.
 constexpr int kImportCacheVersion = 1;
+// SH1 palette entries trained at import (ADR-0017, the app's kSh1PaletteEntries).
+constexpr std::uint32_t kSh1PaletteEntries = 4096;
 // The import's float expansion is ~240 B per splat at SH 3: refuse captures beyond ~3.8 GB of it.
 constexpr std::uint64_t kRefuseAbove = 16'000'000;
 
@@ -171,10 +175,18 @@ private:
                 options.sh_target = 1;
                 options.max_splats = max_splats;
                 options.refuse_above = kRefuseAbove;
+                options.sh1_palette = kSh1PaletteEntries;
                 options.progress = [this](splatcore::ImportStage stage) {
-                    static const char* kNames[] = {"Reading", "Cleaning", "Removing floaters", "Packing",
-                                                   "Writing"};
-                    set_stage(kNames[static_cast<int>(stage)]);
+                    static const char* kNames[] = {"Reading", "Cleaning", "Removing floaters",
+                                                   "Packing", "Writing",  "Training SH palette"};
+                    const auto index = static_cast<std::size_t>(stage);
+                    set_stage(index < std::size(kNames) ? kNames[index] : "Importing");
+                    return true;
+                };
+                options.palette_progress = [this](double share) {
+                    set_stage(
+                        ("Training SH palette " + std::to_string(static_cast<int>(share * 100.0)) + " %")
+                            .c_str());
                     return true;
                 };
                 splatcore::Result<splatcore::ImportReport> report =
@@ -182,7 +194,11 @@ private:
                 if (!report) return Out::failure(report.error());
                 scene.note = "imported " + with_thousands(report.value().input_count) + " -> " +
                              with_thousands(report.value().count) + " splats (cleaned, SH " +
-                             std::to_string(report.value().sh_degree) + ")";
+                             std::to_string(report.value().sh_degree) +
+                             (report.value().palette_count > 0
+                                  ? ", palette of " + with_thousands(report.value().palette_count)
+                                  : std::string()) +
+                             ")";
             }
         }
         set_stage("Loading");
