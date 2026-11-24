@@ -25,7 +25,7 @@ a new document.
 | `benchmarks/README.md` | Benchmark file index, CSV column schema, measurement protocol, **negative results log** | Contributors + public evidence |
 | `benchmarks/*.csv`, `benchmarks/*.md` | Curated measurements (device, build hash, scene, per-pass timings, thermal) and cleaning reports | Public evidence |
 | `figures/*-light.svg`, `figures/*-dark.svg` | README figures and `emeans-*` figures, regenerated from the committed CSVs by `scripts/plot_readme.py` and `scripts/plot_emeans.py` (never edited by hand) | Public evidence |
-| `media/*` | README media (turntables of open-licence scenes), made by `scripts/make_turntable.py`; phone screen recordings | Public |
+| `media/*` | README media (turntables of open-licence scenes), made by `scripts/make_turntable.py`; palette comparisons (`palette-*`) by `scripts/make_palette_media.py`; phone screen recordings | Public |
 | `../data/README.md` + `../data/manifest.json` | Test-set sources and licenses; the data itself is never committed | Contributors |
 
 ## Update contract — when X happens, update Y

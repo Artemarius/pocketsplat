@@ -360,7 +360,7 @@ public specs, not ported from copyleft or non-commercial code.
 * *hornedlizard* and *racoonfamily* are sample assets of
   [nianticlabs/spz](https://github.com/nianticlabs/spz) (MIT, © 2024 Niantic Labs). hornedlizard
   ships in the app and the Windows zip.
-* *beetle*, shown in the phone recording and the side-by-side clip, is from the
+* *beetle*, shown in the phone recording, the side-by-side clip and the SH palette comparison, is from the
   [loopce/gaussiansplats](https://huggingface.co/datasets/loopce/gaussiansplats) dataset under
   [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). It was cleaned for each: to 1.0 M
   splats for the recording and at full count (1.68 M) for the side-by-side. It is not

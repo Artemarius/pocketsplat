@@ -107,6 +107,53 @@ revives clusters that fall under a tenth of the mean count by splitting a busy o
 likely reason it beats Lloyd-25 by 12 % on this scene, its largest margin of the six. On the other
 five scenes, Lloyd-25 and e-means-3 leave no entry empty at k 4,096.
 
+## What it looks like
+
+The same camera path, rendered four times by the desktop host: direct SH 1 (no palette, the
+reference), SH 0 (no view-dependent colour at all), and the two palettes at k 4,096, seed 1. The
+camera swings ±25° about the app's start view; the renderer settings are those of the quality runs
+(32-bit keys, no contribution cull). Each label gives the variant's PSNR against direct SH 1 over all
+40 frames of this swing, min / mean (400 × 300 per panel, so the numbers differ from the 864 × 1872
+six-pose tables below).
+
+**beetle** (1.68 M splats; car paint and plants carry most of the view-dependent colour):
+
+![beetle: direct SH 1, SH 0, Lloyd-25 palette and e-means-3 palette on the same swing](media/palette-beetle-swing.webp)
+
+| Variant | PSNR vs direct SH 1 over the swing, min / mean |
+|---|---|
+| SH 0 | 36.7 / 37.1 dB |
+| Lloyd-25 palette | 46.9 / 47.3 dB |
+| e-means-3 palette | 47.1 / 47.4 dB |
+
+**hornedlizard** (765 K splats, a metal sculpture; the bundled sample):
+
+![hornedlizard: direct SH 1, SH 0, Lloyd-25 palette and e-means-3 palette on the same swing](media/palette-hornedlizard-swing.webp)
+
+| Variant | PSNR vs direct SH 1 over the swing, min / mean |
+|---|---|
+| SH 0 | 30.2 / 30.9 dB |
+| Lloyd-25 palette | 48.7 / 48.8 dB |
+| e-means-3 palette | 49.5 / 49.7 dB |
+
+At this size the two palettes cannot be told from direct SH 1 by eye; SH 0 can, mostly in how the
+metal and the paint change with the angle. The differences become visible when they are amplified.
+Below, each pixel shows |variant − direct SH 1| × 16, on the same swing: black is identical.
+
+![beetle: per-pixel difference to direct SH 1, times 16, for SH 0, Lloyd-25 and e-means-3](media/palette-beetle-diff.webp)
+
+![hornedlizard: per-pixel difference to direct SH 1, times 16, for SH 0, Lloyd-25 and e-means-3](media/palette-hornedlizard-diff.webp)
+
+Lossless stills at the start view, renders above and differences below:
+[beetle](media/palette-beetle-still.webp), [hornedlizard](media/palette-hornedlizard-still.webp).
+The animations are lossy WebP (quality 75 and 60), which adds its own small error; the stills
+and the PSNR values are computed from the uncompressed renders.
+
+Made with `scripts/make_palette_media.py` from the packs of the quality runs. beetle is from the
+[loopce/gaussiansplats](https://huggingface.co/datasets/loopce/gaussiansplats) dataset
+([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)); hornedlizard is a sample asset of
+[nianticlabs/spz](https://github.com/nianticlabs/spz) (MIT).
+
 ## Does the loss show in the image?
 
 Worst of six camera poses at 864 × 1872, PSNR against direct SH 1 (no palette), seed 1, k 4,096
@@ -134,4 +181,5 @@ The case for e-means here is time and dead entries, not image quality.
 * The paper is a preprint (v1). Its own headline numbers (embedding datasets, 200–3,072 dimensions)
   are not reproduced here; only this palette task is.
 
-Figures: `python scripts/plot_emeans.py`, regenerated from the committed CSVs.
+Figures: `python scripts/plot_emeans.py`, regenerated from the committed CSVs. Renders:
+`scripts/make_palette_media.py` (usage in its header).
