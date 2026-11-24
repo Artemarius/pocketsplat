@@ -1,8 +1,8 @@
 # ADR-0018 — Lifting the Adreno 750's scene limit: per-splat arrays split into segments, one preprocess dispatch each
 
-**Status**: proposed (2026-11-24, S34). Design and desktop evidence only; nothing is implemented.
-The phone measurements that decide it are listed under "What decides it". The owner chooses the
-option.
+**Status**: proposed (2026-11-24, S34). The owner chose option (b), segments, and the memory policy
+in Decision 3 (S34). It is implemented and checked on the desktop ("Desktop evidence"). It stays
+proposed until the S24U runs under "What decides it" are in.
 
 **Context**: every per-splat input array lives in one storage buffer bound whole, so each is
 capped by `maxStorageBufferRange`. On the Adreno 750 (128 MB) the widest of them, 12 B per
@@ -97,7 +97,7 @@ viewer's importers) and a quantization change, which needs explicit acceptance. 
 measured by simulation below. Its real payoff is memory and bandwidth (−29 % per splat), not
 the limit.
 
-**Decision** (proposed): (b), segments with one preprocess dispatch each.
+**Decision** (owner, S34): (b), segments with one preprocess dispatch each.
 
 1. `splatcore` gets a pure function `plan_segments(count, max_storage_buffer_range,
    max_workgroup_count_x, bytes_per_splat = 12)`. It returns the segment size, a multiple of
@@ -107,14 +107,21 @@ the limit.
 2. The renderer splits every per-splat array at upload into per-segment buffers, writes one
    compute descriptor set per frame slot and segment, and records one indirect dispatch per
    segment. Without the chunk cull it records one direct dispatch per segment.
-3. **Above memory (open question for the owner).** Today `max_splats` turns an oversized pack
-   into a partial open (S27). With no binding limit, a pack that does not fit would instead fail
-   an allocation, or the OS would kill the app. Proposal: at open, compare the pack's GPU bytes
-   (per-splat arrays plus the visible-capacity buffers) against the device-local heap's
-   budget, and open the most important splats that fit under the same red partial-scene
-   banner. The budget comes from `VK_EXT_memory_budget` where the device has it, otherwise a
-   fixed share of the heap. The S24U runs in "What decides it" give the first real number: peak
-   PSS against splat count.
+3. **Above memory: a partial open under a memory budget** (owner, S34). Without the binding
+   limit, a pack that does not fit would fail an allocation, or the OS would kill the app.
+   Instead, `SplatRenderer::max_splats(context, bytes_per_splat)` is a memory bound. It takes the
+   largest device-local heap's budget minus its usage. VMA reports that from
+   `VK_EXT_memory_budget`, enabled where the device has it; without the extension VMA counts 80 %
+   of the heap minus its own allocations. From that budget it subtracts 32 MB of slack (palette,
+   chunk lists, pick buffers, UBOs) and 56 B per visible-capacity slot (record, key, value, the
+   sort's ping-pong pair, margin). It then divides by the pack's resident bytes per splat
+   (`splatcore::gpu_bytes_per_splat`: 29 B for SH 0 and palette packs, 41 B for direct SH 1,
+   +4 B with coverage masks). The app asks it at open, after the previous scene is freed, and
+   opens the most important splats that fit under the same red partial-scene banner (the S27
+   path). The Windows viewer uses it, at the widest 45 B, as its import budget. The desktop dev
+   host does not cut: an oversized pack fails with an allocation error. The 32 MB, 56 B and
+   80 % are estimates; the S24U runs in "What decides it" give the first real numbers (heap
+   size, budget, peak PSS against splat count). The app now logs them at Vulkan start.
 4. The chunk cull's `Push` gets the segment size in chunks. At each segment boundary in its
    block loop it writes the finished segment's dispatch triplet and restarts compaction at the
    next segment's fixed list offset. Its `// Pass:` header and the preprocess's document the new
@@ -122,6 +129,15 @@ the limit.
 5. `pocketsplat-desktop --segment-splats N` (N a multiple of 65,536) forces small segments, so
    the split path runs on the RTX under validation, as `--visible-cap` does for the clip path
    (ADR-0016).
+
+**Desktop evidence (segments, implemented at 3b9c2d3)**:
+`../benchmarks/segments-rtx3060-3b9c2d3-2026-11-24.csv`, summarized in `../benchmarks/README.md`
+("Segments"). `--segment-splats` forced 5–62 segments of 65,536 splats on the six gate-A packs,
+and 2 (the 750's split) or 4 segments on tiled bicycle ×3 (13.45 M). Every split drew the
+reference's visible count to the splat over the 600-frame orbit, at the renderer's repeat noise
+in PSNR. Validation reported 0 messages with and without the chunk cull, with palette, direct
+SH 1 and coverage masks. `ctest` 146/146 (4 new `PackSegments` tests). The debug APK builds
+(NDK clang, `-Werror`).
 
 **Evidence (desktop, simulation of (e), 2026-11-24)**: `../benchmarks/quantize-sim-fb66214-2026-11-24.csv`
 and `quantize-steps-fb66214-2026-11-24.csv`, summarized in `../benchmarks/README.md` ("Smaller

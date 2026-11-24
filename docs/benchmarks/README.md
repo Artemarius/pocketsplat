@@ -151,6 +151,9 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
   `ref@repeat`. `quantize-steps-<hash>-<date>.csv` — the same scenes' step sizes: chunk extent
   against the scene diagonal, position error in sigmas of the splat's largest axis, log-scale
   range and step.
+- `segments-<device>-<hash>-<date>.csv` — the per-splat arrays split into segments (ADR-0018)
+  against one segment, `quality_ab.py` with `--segment-splats N`: PSNR at the six poses, pixels
+  moved > 2 LSB, and the bench orbit's mean visible count, with `ref@repeat`.
 - `quality-rtx3060-rungs-<date>-864x1872.csv` — image cost of the thermal controller's candidate
   rungs (cull threshold × internal-resolution scale, ADR-0009); scaled variants are upscaled
   bilinearly to 864×1872 before PSNR (`quality_ab.py --scale`).
@@ -668,6 +671,34 @@ poses / worst of the two close poses:
   splats far too small to see: truck spans log-scale −32.1 to 1.5, a step of 0.13 (±6.8 % in
   scale). A floor on the range or per-chunk ranges would shrink the step. Not tried.
 * Both together cost what the scales cost alone.
+
+## Segments: the per-splat arrays split for the 750's binding (2026-11-24, S34, ADR-0018)
+
+`segments-rtx3060-3b9c2d3-2026-11-24.csv`: desktop host, 864 × 1872 offscreen, 32-bit keys, no
+contribution cull. `--segment-splats N` forces segments on the RTX, whose own binding (4 GB)
+never needs them, against the same pack in one segment. The six gate-A packs use 65,536-splat
+segments (5 on museum1 to 62 on stump); tiled bicycle ×3 (13.45 M, SH 0) is split as the 750
+splits it (2 × 11,141,120) and into 4 × 4,194,304.
+
+| Scene | Segments | PSNR min / mean (dB) | `@repeat` min / mean (dB) | Orbit visible, ref = segments |
+|---|---|---|---|---|
+| museum1 | 5 | 94.5 / 99.0 | 90.6 / 96.2 | 310,789 = 310,789 |
+| hornedlizard | 12 | 91.9 / 99.2 | 97.6 / 101.1 | 561,093 = 561,093 |
+| beetle | 26 | 75.1 / 95.3 | 75.1 / 94.7 | 896,024 = 896,024 |
+| giraffes_statue | 44 | 78.4 / 86.9 | 79.0 / 87.2 | 787,770 = 787,770 |
+| truck | 26 | 94.0 / 99.2 | 89.5 / 99.1 | 779,562 = 779,562 |
+| stump | 62 | 83.6 / 94.6 | 83.9 / 94.2 | 2,137,058 = 2,137,058 |
+| bicycle ×3 (tiled) | 2 / 4 | 81.7 / 92.1, 81.7 / 92.5 | 82.3 / 94.0 | 3,903,701 = 3,903,701 (both) |
+
+* Same splats, same image: every split draws the reference's visible count to the splat over the
+  600-frame orbit, and its PSNR sits at the renderer's own repeat noise (equal-key blend order,
+  ADR-0008). Images cannot be bit-identical: atomic slot order differs run to run.
+* Validation layers: 0 messages on 120-frame bench orbits with forced segments: ×3 in 2 segments
+  with and without the chunk cull, stump direct SH 1 in 62 with the phone's 16-bit keys and
+  0.1 px cull, a museum1 palette pack in 5. The coverage fade (stump-full sidecar, strength 1)
+  renders at 93.4 dB against one segment, the same as a re-render of one segment.
+* GPU times in the CSV are the shared laptop's, indicative only. The deciding comparison, one
+  segment against the v0.4.0 build at 4 M, is the S24U's (ADR-0018, "What decides it").
 
 ## Negative results log
 | Date | What was tried | Result | Diagnosis |
