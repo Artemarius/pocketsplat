@@ -40,7 +40,8 @@ recording, with the HUD's per-pass GPU times, is attached to the
   [latest release](../../releases/latest). Side-loaded, not on the Play Store. Tested on
   Snapdragon 8 Gen 3 and 8 Elite phones. The first launch opens the bundled sample.
   **Open PLY/SPZ file…** imports any 3DGS scene through the system file picker; it is cleaned and
-  packed on the phone.
+  packed on the phone. The SH palette adds about 4.5 s per million splats to an import on the S24
+  Ultra, and the import screen can turn it off.
   One finger orbits, a pinch zooms, two fingers pan, a double tap moves the pivot to the point
   under the finger, and **Home** returns to the start view.
 * **Windows** (10/11, a Vulkan 1.3 driver): unzip `pocketsplat-viewer-0.3.0-windows-x64.zip` from the
@@ -55,7 +56,7 @@ recording, with the HUD's per-pass GPU times, is attached to the
 ```mermaid
 flowchart LR
   subgraph IMPORT["import, once per scene (splatcore, C++20)"]
-    A["PLY / SPZ"] --> B["clean<br/>SH to degree 1"] --> C["Morton order<br/>chunk bounds"] --> D["GPU pack"]
+    A["PLY / SPZ"] --> B["clean<br/>SH to degree 1"] --> C["Morton order<br/>chunk bounds"] --> P["SH 1 palette<br/>(e-means)"] --> D["GPU pack"]
   end
   subgraph FRAME["every frame (splatrender, Vulkan 1.3)"]
     E["chunk cull"] --> F["preprocess<br/>EWA projection, SH 1,<br/>contribution cull,<br/>depth keys, compaction"] --> G["prepare<br/>indirect args"] --> H["radix sort<br/>(indirect)"] --> I["draw<br/>one triangle per splat"]
@@ -66,8 +67,11 @@ flowchart LR
 
 * **Import** ([docs/cleaning.md](docs/cleaning.md), [docs/formats.md](docs/formats.md)): reads PLY
   (SH 0–3) and SPZ, converts the coordinate system (RDF → RUB with an SH parity table) and truncates
-  SH to degree 1. It removes floaters and degenerate splats, sorts in Morton order and writes a
-  32-byte-per-splat GPU pack with conservative chunk bounds.
+  SH to degree 1. It removes floaters and degenerate splats, sorts in Morton order and writes a GPU
+  pack with conservative chunk bounds. The SH 1 colour terms become a 16-bit index into a palette of
+  4,096 vectors trained at import with e-means, so an SH 1 scene takes the 28 B per splat of SH 0
+  instead of 40 B ([ADR-0017](docs/decisions/ADR-0017-sh1-palette.md),
+  [docs/sh1-palette-research.md](docs/sh1-palette-research.md)).
 * **Frame**: everything after the chunk cull is GPU-driven. The preprocess projects each splat
   (EWA), evaluates SH 1, drops splats that would cover less than 0.1 px
   ([ADR-0008](docs/decisions/ADR-0008-contribution-culling-and-16-bit-keys-on-the-phone.md)), and
@@ -269,6 +273,9 @@ resolution as a thermal rung (no power saved), and copying draw records into sor
   limits come from the GPU's Vulkan limits at run time. The 830 (2 GB range) is limited by memory
   only: a 17.9 M-splat test scene ran at 2.0 GB.
 * **SH degree 0 and 1 only**, by design: higher degrees are truncated on import.
+* **SH palette**: a palette scene renders a few dB below direct SH 1 (41.8 dB at the worst pose of
+  the hardest test scene; SH 0 is at 29.6–38.7 dB). Import with the palette off for the exact
+  colours. Packs from earlier versions keep working without a re-import.
 * **Devices**: arm64, Android 13+, Vulkan 1.3. Measured on two Samsung phones with Adreno GPUs
   only; Mali and Xclipse GPUs are untested.
 * **Mip-Splatting ("antialiased") scenes** render slightly softer than in viewers that apply their
