@@ -145,6 +145,12 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
   (S33): share of the points near the focus, normal, angle to +y, the best rival plane > 30° away
   (share, angle, rival/winner ratio), and whether a plane is kept before and after the S33 rule
   (> 60° from +y needs ≥ 20 %), with the resulting up axis.
+- `quantize-sim-<hash>-<date>.csv` — image price of 16-bit chunk-relative positions and 8-bit
+  log-scales, simulated (`scripts/quantize_sim.py`, ADR-0018 option (e)): PSNR and pixels moved
+  > 2 LSB per scene, variant and pose against the untouched pack, with a bounds-only control and
+  `ref@repeat`. `quantize-steps-<hash>-<date>.csv` — the same scenes' step sizes: chunk extent
+  against the scene diagonal, position error in sigmas of the splat's largest axis, log-scale
+  range and step.
 - `quality-rtx3060-rungs-<date>-864x1872.csv` — image cost of the thermal controller's candidate
   rungs (cull threshold × internal-resolution scale, ADR-0009); scaled variants are upscaled
   bilinearly to 864×1872 before PSNR (`quality_ab.py --scale`).
@@ -626,6 +632,39 @@ probe scene (11 bench packs, the museum1 app pack, 25 raw public scenes; 36 with
   museum1 0.25), focus height above the plane (drjohnson's focus sits on its rug), and the best
   rival plane > 30° away divided by the winner (museum1 0.70–0.73, truck 0.87–0.89, hornedlizard
   0.87: a ground next to a building wall has a strong rival too).
+
+## Smaller position and scale arrays — simulated image price (2026-11-24, S34, ADR-0018)
+
+`quantize-sim-fb66214-2026-11-24.csv`, `quantize-steps-fb66214-2026-11-24.csv`: the six gate-A
+packs (direct SH 1, the same files as `palette-quality-c6f0a7f-2026-11-19.csv`) rewritten by
+`scripts/quantize_sim.py` with positions at 16 bits per axis inside each chunk's tight centre
+bounds and/or log-scales at 8 bits over the scene's log-scale range, stored back in an ordinary
+v3 pack. Rotation is untouched: the smallest-three encoding option (e) would use is finer than
+today's snorm8. Desktop host, 864 × 1872 offscreen, 32-bit keys, no contribution cull, the six
+`quality_ab.py` poses plus two at 0.35 × the protocol distance. PSNR in dB, worst of the six
+poses / worst of the two close poses:
+
+| Scene | Splats | Noise (`@repeat`) | Bounds only (control) | Positions 16 bit | Log-scales 8 bit | Both |
+|---|---|---|---|---|---|---|
+| museum1 | 314,457 | 91.2 / 88.1 | 94.3 / 87.9 | 59.0 / 58.3 | 45.2 / 45.0 | 45.2 / 45.0 |
+| hornedlizard | 764,985 | 97.8 / 93.3 | 97.5 / 93.4 | 51.1 / 49.3 | 47.9 / 47.6 | 47.6 / 46.9 |
+| beetle | 1,681,983 | 95.3 / 100.1 | 75.1 / 108.0 | 63.0 / 61.7 | 45.5 / 45.1 | 45.5 / 45.1 |
+| giraffes_statue | 2,880,821 | 77.7 / 84.2 | 80.1 / 84.2 | 52.9 / 56.6 | 41.8 / 42.5 | 41.8 / 42.5 |
+| truck | 1,653,927 | 89.2 / 93.5 | 89.0 / 96.3 | 61.5 / 58.4 | 41.5 / 41.2 | 41.4 / 41.2 |
+| stump | 4,049,567 | 91.5 / 89.7 | 83.9 / 90.5 | 63.0 / 60.5 | 47.7 / 46.8 | 47.7 / 46.8 |
+
+* **The simulation adds nothing of its own**: the control rebuilds the chunk bounds from the
+  pack's values and lands inside the renderer's repeat noise.
+* **Positions are not the risk**: 49.3–63.0 dB. Median chunks span 0.02–4.2 % of the scene
+  diagonal, the widest 41–61 %. Half a step is a median 0.0002–0.0006 σ of the splat's largest
+  axis, and more than 0.1 σ on at most 0.03 % of the splats. Those are tiny splats in wide
+  chunks, and the worst is 17 σ on giraffes_statue. hornedlizard moves the most pixels (4.5 % by
+  more than 2 LSB at a close pose).
+* **Log-scales at 8 bits set the price**: 41.2–47.9 dB, above the 40 dB bar but moving up to
+  39 % of the pixels by more than 2 LSB (giraffes_statue). The scene's range is stretched by
+  splats far too small to see: truck spans log-scale −32.1 to 1.5, a step of 0.13 (±6.8 % in
+  scale). A floor on the range or per-chunk ranges would shrink the step. Not tried.
+* Both together cost what the scales cost alone.
 
 ## Negative results log
 | Date | What was tried | Result | Diagnosis |
