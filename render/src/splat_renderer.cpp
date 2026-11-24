@@ -102,9 +102,10 @@ void memory_barrier(VkCommandBuffer cmd, VkPipelineStageFlags2 src_stage, VkAcce
 
 }  // namespace
 
-std::uint64_t SplatRenderer::max_splats(const Context& context, std::uint64_t bytes_per_splat) {
+std::uint64_t SplatRenderer::max_splats(const Context& context, std::uint64_t bytes_per_splat,
+                                        std::uint64_t available) {
     // count * bytes_per_splat + min(count, max_visible) * kBytesPerVisibleSlot + slack <= available.
-    const std::uint64_t available = context.device_local_available();
+    if (available == 0) available = context.device_local_available();
     if (available <= kFixedSlackBytes) return 0;
     const std::uint64_t budget = available - kFixedSlackBytes;
     const std::uint64_t visible = max_visible(context);

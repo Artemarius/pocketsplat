@@ -62,11 +62,15 @@ public:
     static constexpr std::uint32_t kRecordBytes = 32;
     static constexpr std::uint32_t kSegmentBytesPerSplat = 12;  // widest per-splat array (one binding)
     static constexpr std::uint64_t kMaxBytesPerSplat = 45;      // gpu_bytes_per_splat, direct SH1 + coverage
-    // Per visible slot: record 32 B, key + value 8 B, the sort's ping-pong key + value 8 B, margin.
-    static constexpr std::uint64_t kBytesPerVisibleSlot = 56;
+    // Per visible slot: record 32 B, key + value 8 B, the sort's ping-pong pair and histograms.
+    // Measured on the Adreno 830 (S34): 69.8 B per slot (GL mtrack of a 17.9 M-splat scene whose
+    // capacity is the whole scene, less 29 B per splat); 72 B keeps a margin.
+    static constexpr std::uint64_t kBytesPerVisibleSlot = 72;
     static constexpr std::uint64_t kFixedSlackBytes = 32ull << 20;  // palette, chunk lists, pick, UBOs
-    static std::uint64_t max_splats(const Context& context,
-                                    std::uint64_t bytes_per_splat = kMaxBytesPerSplat);
+    // `available`: the memory to fit in; 0 = context.device_local_available(). Hosts on unified
+    // memory pass a tighter one (the Android host: half the system's MemAvailable, ADR-0018).
+    static std::uint64_t max_splats(const Context& context, std::uint64_t bytes_per_splat = kMaxBytesPerSplat,
+                                    std::uint64_t available = 0);
     static std::uint64_t max_visible(const Context& context) {
         return context.max_storage_buffer_range() / kRecordBytes;
     }

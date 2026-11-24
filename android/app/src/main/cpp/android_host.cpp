@@ -45,6 +45,37 @@ std::int32_t read_gpu_mhz() {
     return mhz;
 }
 
+// Scene-size limit on a phone (ADR-0018). GPU memory is system RAM here, and Adreno drivers may
+// lack VK_EXT_memory_budget (the 830 does): VMA then guesses 80 % of an 11 GB heap, far more than
+// the system can give (S25U: 8.9 GB "available" against 6.0 GB MemAvailable). So the budget is
+// the smaller of VMA's and half of MemAvailable, and each splat also counts the 28 B CPU copy of
+// the pack that is alive while it uploads (freed after). 0 when /proc/meminfo is unreadable:
+// VMA's figure alone then.
+std::uint64_t mem_available_bytes() {
+    std::FILE* f = std::fopen("/proc/meminfo", "r");
+    if (f == nullptr) return 0;
+    char key[64];
+    unsigned long long kb = 0, found = 0;
+    while (std::fscanf(f, "%63s %llu kB", key, &kb) == 2) {
+        if (std::strcmp(key, "MemAvailable:") == 0) {
+            found = kb;
+            break;
+        }
+    }
+    std::fclose(f);
+    return found * 1024ull;
+}
+
+constexpr std::uint64_t kCpuPackBytesPerSplat = 28;  // pos + scale_rot + color, alive during upload
+
+std::uint64_t phone_max_splats(const splatrender::Context& context, std::uint64_t gpu_bytes_per_splat) {
+    std::uint64_t available = context.device_local_available();
+    const std::uint64_t ram = mem_available_bytes() / 2;
+    if (ram > 0) available = std::min(available, ram);
+    return splatrender::SplatRenderer::max_splats(context, gpu_bytes_per_splat + kCpuPackBytesPerSplat,
+                                                  available > 0 ? available : 1);
+}
+
 // Highest clock kgsl offers (MHz), the reference of the controller's step-up gate; 0 = unreadable.
 std::int32_t read_max_gpu_mhz() {
     if (std::FILE* f = std::fopen("/sys/class/kgsl/kgsl-3d0/gpu_available_frequencies", "r")) {
@@ -188,14 +219,17 @@ splatcore::Status AndroidHost::init() {
     // ADR-0018), never a table. The scene limit is a memory bound at the widest per-splat size.
     LOGI(
         "Vulkan ready: %s, maxStorageBufferRange %u B, maxComputeWorkGroupCount.x %u, device-local heap "
-        "%llu MB, available %llu MB (VK_EXT_memory_budget %s) -> scene limit %llu splats (45 B), visible "
-        "capacity %llu",
+        "%llu MB, available %llu MB (VK_EXT_memory_budget %s), MemAvailable %llu MB -> scene limit %llu "
+        "splats at 29 B (SH 0 / palette), %llu at 45 B, visible capacity %llu",
         m_context.device_name(), m_context.max_storage_buffer_range(),
         m_context.max_compute_workgroup_count_x(),
         static_cast<unsigned long long>(m_context.device_local_heap_size() >> 20),
         static_cast<unsigned long long>(m_context.device_local_available() >> 20),
         m_context.has_memory_budget_ext() ? "yes" : "no",
-        static_cast<unsigned long long>(splatrender::SplatRenderer::max_splats(m_context)),
+        static_cast<unsigned long long>(mem_available_bytes() >> 20),
+        static_cast<unsigned long long>(phone_max_splats(m_context, 29)),
+        static_cast<unsigned long long>(
+            phone_max_splats(m_context, splatrender::SplatRenderer::kMaxBytesPerSplat)),
         static_cast<unsigned long long>(splatrender::SplatRenderer::max_visible(m_context)));
 
     // Controller inputs found at run time: the platform's LIGHT threshold, else ADR-0009's
@@ -432,7 +466,7 @@ splatcore::Status AndroidHost::open_scene(const std::string& path) {
     // import budget's choice), with the sidecar's masks cut the same way, and the UI shows a
     // warning (S27, owner: a peek beats a refusal; ADR-0018: the limit is memory, not a binding).
     m_file_splat_count = pack.value().header.count;
-    const std::uint64_t limit = splatrender::SplatRenderer::max_splats(
+    const std::uint64_t limit = phone_max_splats(
         m_context, splatcore::gpu_bytes_per_splat(pack.value().header, m_coverage.has_value()));
     if (limit > 0 && pack.value().header.count > limit) {
         std::vector<std::uint32_t> kept;
