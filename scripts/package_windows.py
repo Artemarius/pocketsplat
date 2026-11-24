@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build and package the Windows viewer as a release zip.
 
-    python scripts/package_windows.py [--build-dir build-release] [--version 0.3.0] [--no-build]
+    python scripts/package_windows.py [--build-dir build-release] [--version 0.4.0] [--no-build]
 
 Configures a separate build with the C++ runtime linked statically (POCKETSPLAT_STATIC_CRT, so no
 Visual C++ redistributable is needed), builds pocketsplat-viewer, checks that the exe imports no

@@ -36,7 +36,7 @@ then beetle (1.0 M splats after cleaning). The touch dots are the recording's. T
 recording, with the HUD's per-pass GPU times, is attached to the
 [0.1.0 release](../../releases/tag/v0.1.0).
 
-* **Android** (arm64, Android 13+, a Vulkan 1.3 GPU): install `pocketsplat-0.3.0.apk` from the
+* **Android** (arm64, Android 13+, a Vulkan 1.3 GPU): install `pocketsplat-0.4.0.apk` from the
   [latest release](../../releases/latest). Side-loaded, not on the Play Store. Tested on
   Snapdragon 8 Gen 3 and 8 Elite phones. The first launch opens the bundled sample.
   **Open PLY/SPZ file…** imports any 3DGS scene through the system file picker; it is cleaned and
@@ -44,7 +44,7 @@ recording, with the HUD's per-pass GPU times, is attached to the
   Ultra, and the import screen can turn it off.
   One finger orbits, a pinch zooms, two fingers pan, a double tap moves the pivot to the point
   under the finger, and **Home** returns to the start view.
-* **Windows** (10/11, a Vulkan 1.3 driver): unzip `pocketsplat-viewer-0.3.0-windows-x64.zip` from the
+* **Windows** (10/11, a Vulkan 1.3 driver): unzip `pocketsplat-viewer-0.4.0-windows-x64.zip` from the
   same release and run `pocketsplat-viewer.exe`. It uses the same renderer, import and navigation as
   the phone, opens files by drag and drop, and has its controls listed in the bundled `README.txt`.
   Tested on an RTX 3060 and an Intel UHD iGPU.
