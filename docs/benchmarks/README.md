@@ -696,7 +696,8 @@ the 750 splits it (2 × 11,141,120) and into 4 × 4,194,304.
   which itself varies between runs. ×3 in two segments is 81.7 dB at its worst pose, below this
   run's `@repeat` minimum of 92.3 dB, but the same scene's `@repeat` minimum was 82.3 dB in an
   earlier run of the same comparison (3b9c2d3, the cull's previous close-out, 81.7 dB as well).
-  No pixel moves by more than 2 LSB beyond 0.0009 % anywhere. Images cannot be bit-identical:
+  At most 0.0085 % of the pixels move by more than 2 LSB (giraffes_statue, the same share as
+  its `@repeat`). Images cannot be bit-identical:
   atomic slot order differs run to run.
 * Validation layers: 0 messages on 120-frame bench orbits with forced segments: ×3 in 2 segments
   with and without the chunk cull, stump direct SH 1 in 62 with the phone's 16-bit keys and
