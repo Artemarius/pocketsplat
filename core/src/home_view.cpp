@@ -21,13 +21,15 @@ constexpr int kEyeCandidates = 8;
 constexpr int kScoreRes = 48;
 constexpr std::size_t kScoreSamples = 100000;
 constexpr float kSharpPx = 1.0f;
-constexpr float kScoreFovRad = 1.0471976f;  // 60 deg, the app's FOV across the long side
+constexpr float kScoreFovRad = 1.0471976f;  // 60 deg: HomeViewFrame's default and the fallback
 // Ground-plane RANSAC (dominant_plane).
 constexpr std::size_t kPlaneSubset = 2048;   // points each hypothesis is scored on
 constexpr int kPlaneMinHypotheses = 400;     // the fixed count before S32
 constexpr int kPlaneMaxHypotheses = 20000;   // a miss stays below 1e-4 down to a 7.7 % share
 constexpr double kPlaneMissLog = 9.2103404;  // -ln(1e-4): accepted chance of missing the plane
 constexpr std::size_t kPlaneFinalists = 8;   // best subset hypotheses scored on every point
+constexpr float kPlaneTiltCos = 0.5f;        // a plane more than 60 deg from +y ...
+constexpr double kPlaneTiltMinShare = 0.2;   // ... needs at least this share of the points
 
 struct Sample {
     float p[3];
@@ -85,17 +87,41 @@ std::vector<Sample> take_samples(const GpuPack& pack) {
 }
 
 // What a view of `focus` from `eye` would show (ADR-0014): the sampled splats rastered nearest-first
-// into a kScoreRes^2 image as squares of their 1-sigma radius, scored as the share of pixels whose
-// front splat is fine detail (1-sigma radius <= kSharpPx). Large near splats (an eye inside or
-// against geometry, floaters in front) and empty background both score 0; a focus hidden behind
-// something (the median depth of the 4x4 centre block under 0.6 x the distance) halves the score.
+// into the frame-shaped score raster (S33: kScoreRes along the long side) as squares of their 1-sigma radius,
+// scored as the share of pixels whose front splat is fine detail (1-sigma radius <= kSharpPx). Large near
+// splats (an eye inside or against geometry, floaters in front) and empty background both score 0; a focus
+// hidden behind something (the median depth of the 4x4 centre block under 0.6 x the distance) halves the
+// score.
 struct ScoreSample {
     float p[3];
     float sigma;  // largest scale
 };
 
-float view_score(const std::vector<ScoreSample>& pts, const float* eye, const float* focus, const float* up,
-                 std::vector<float>& depth, std::vector<float>& front) {
+// The score raster in the shape of the frame the view will be shown in: kScoreRes along the long
+// side, the short side in proportion, one focal length (pixels) for both, as the renderers do.
+struct ScoreRaster {
+    int w = kScoreRes, h = kScoreRes;
+    float f = 0.0f;
+};
+
+ScoreRaster make_raster(const HomeViewFrame& frame) {
+    ScoreRaster r;
+    const float fov =
+        std::isfinite(frame.fov_long_rad) && frame.fov_long_rad > 0.01f && frame.fov_long_rad < 3.1f
+            ? frame.fov_long_rad
+            : kScoreFovRad;
+    r.f = 0.5f * static_cast<float>(kScoreRes) / std::tan(0.5f * fov);
+    const float w = frame.width, h = frame.height;
+    if (std::isfinite(w) && std::isfinite(h) && w > 0.0f && h > 0.0f) {
+        const float ratio = std::min(w, h) / std::max(w, h);
+        const int short_side = std::clamp(static_cast<int>(std::lround(ratio * kScoreRes)), 8, kScoreRes);
+        (w < h ? r.w : r.h) = short_side;
+    }
+    return r;
+}
+
+float view_score(const std::vector<ScoreSample>& pts, const ScoreRaster& raster, const float* eye,
+                 const float* focus, const float* up, std::vector<float>& depth, std::vector<float>& front) {
     float back[3] = {eye[0] - focus[0], eye[1] - focus[1], eye[2] - focus[2]};
     const float dist = std::sqrt(dot3(back, back));
     if (!(dist > 0.0f)) return 0.0f;
@@ -106,12 +132,13 @@ float view_score(const std::vector<ScoreSample>& pts, const float* eye, const fl
     normalize3(right);
     const float cam_up[3] = {back[1] * right[2] - back[2] * right[1], back[2] * right[0] - back[0] * right[2],
                              back[0] * right[1] - back[1] * right[0]};
-    const float res = static_cast<float>(kScoreRes);
-    const float f = 0.5f * res / std::tan(0.5f * kScoreFovRad);
-    depth.assign(static_cast<std::size_t>(kScoreRes * kScoreRes), std::numeric_limits<float>::infinity());
+    const int rw = raster.w, rh = raster.h;
+    const float res_x = static_cast<float>(rw), res_y = static_cast<float>(rh);
+    const float f = raster.f;
+    depth.assign(static_cast<std::size_t>(rw * rh), std::numeric_limits<float>::infinity());
     front.assign(depth.size(), std::numeric_limits<float>::infinity());
     const auto plot = [&](int x, int y, float z, float r) {
-        const std::size_t k = static_cast<std::size_t>(y * kScoreRes + x);
+        const std::size_t k = static_cast<std::size_t>(y * rw + x);
         if (z < depth[k]) {
             depth[k] = z;
             front[k] = r;
@@ -121,18 +148,18 @@ float view_score(const std::vector<ScoreSample>& pts, const float* eye, const fl
         const float rel[3] = {s.p[0] - eye[0], s.p[1] - eye[1], s.p[2] - eye[2]};
         const float z = -dot3(rel, back);
         if (!(z > 1e-3f * dist)) continue;
-        const float u = dot3(rel, right) / z * f + 0.5f * res;
-        const float v = -dot3(rel, cam_up) / z * f + 0.5f * res;
+        const float u = dot3(rel, right) / z * f + 0.5f * res_x;
+        const float v = -dot3(rel, cam_up) / z * f + 0.5f * res_y;
         const float r = s.sigma / z * f;
         if (r <= 1.5f) {
-            if (u >= 0.0f && u < res && v >= 0.0f && v < res)
+            if (u >= 0.0f && u < res_x && v >= 0.0f && v < res_y)
                 plot(static_cast<int>(u), static_cast<int>(v), z, r);
             continue;
         }
         const int x0 = std::max(0, static_cast<int>(std::floor(u - r)));
-        const int x1 = std::min(kScoreRes - 1, static_cast<int>(std::floor(u + r)));
+        const int x1 = std::min(rw - 1, static_cast<int>(std::floor(u + r)));
         const int y0 = std::max(0, static_cast<int>(std::floor(v - r)));
-        const int y1 = std::min(kScoreRes - 1, static_cast<int>(std::floor(v + r)));
+        const int y1 = std::min(rh - 1, static_cast<int>(std::floor(v + r)));
         for (int y = y0; y <= y1; ++y) {
             for (int x = x0; x <= x1; ++x) plot(x, y, z, r);
         }
@@ -143,9 +170,9 @@ float view_score(const std::vector<ScoreSample>& pts, const float* eye, const fl
     float score = static_cast<float>(sharp) / static_cast<float>(depth.size());
     float centre[16];
     int n = 0;
-    for (int y = kScoreRes / 2 - 2; y < kScoreRes / 2 + 2; ++y) {
-        for (int x = kScoreRes / 2 - 2; x < kScoreRes / 2 + 2; ++x)
-            centre[n++] = depth[static_cast<std::size_t>(y * kScoreRes + x)];
+    for (int y = rh / 2 - 2; y < rh / 2 + 2; ++y) {
+        for (int x = rw / 2 - 2; x < rw / 2 + 2; ++x)
+            centre[n++] = depth[static_cast<std::size_t>(y * rw + x)];
     }
     std::sort(centre, centre + 16);
     if (0.5f * (centre[7] + centre[8]) < 0.6f * dist) score *= 0.5f;
@@ -223,13 +250,20 @@ bool dominant_plane(const std::vector<Sample>& samples, const float* center, flo
     // The inputs' +y is up to within 90 deg (the viewer always assumed +y up): right on all 13
     // INRIA scenes, where "most splats above the plane" picks the wrong side on kitchen.
     const float sign = best_normal[1] < 0.0f ? -1.0f : 1.0f;
+    // A plane that turns the input's up by more than 60 deg must be a strong one (S33). COLMAP
+    // frames are not gravity-aligned (drjohnson's floor is 89 deg from +y and holds 30-45 % of the
+    // points), but on a lone object the best plane can be a face of the object itself: museum1's
+    // statue (84 deg, 9 %) and racoonfamily's carved stump (80 deg, 8 %), both +y-up captures.
+    // Every other plane on the 36 probe scenes is within 48 deg of +y.
+    if (sign * best_normal[1] < kPlaneTiltCos && best < kPlaneTiltMinShare * static_cast<double>(pts.size()))
+        return false;
     for (int k = 0; k < 3; ++k) normal[k] = sign * best_normal[k];
     return true;
 }
 
 }  // namespace
 
-HomeView estimate_home_view(const GpuPack& pack) {
+HomeView estimate_home_view(const GpuPack& pack, const HomeViewFrame& frame) {
     HomeView view{{0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, 1.0f, false};
     const std::vector<Sample> samples = take_samples(pack);
     if (samples.empty()) return view;
@@ -325,7 +359,9 @@ HomeView estimate_home_view(const GpuPack& pack) {
 
     // Eye (ADR-0014): of 96 candidates looking at the focus - 8 sides x 15 / 35 deg above the plane
     // x 1, 0.7, 0.5, 0.35, 0.25, 0.18 of the full distance - the one whose view shows the most fine detail
-    // (view_score); the first best in this order on a tie, so the result is deterministic.
+    // (view_score) through the frame it will be shown in (S33: a portrait phone sees ~30 deg across, so a
+    // square raster favoured views whose subject spills off the screen's sides); the first best in this
+    // order on a tie, so the result is deterministic.
     float h0[3] = {0.0f, 0.0f, 1.0f};
     if (std::fabs(dot3(h0, up)) > 0.9f) h0[0] = 1.0f, h0[2] = 0.0f;
     const float along = dot3(h0, up);
@@ -342,6 +378,7 @@ HomeView estimate_home_view(const GpuPack& pack) {
         }
     }
     std::vector<float> depth, front;
+    const ScoreRaster raster = make_raster(frame);
     float best_eye[3] = {focus[0], focus[1] + full_distance, focus[2]};
     float best_distance = full_distance;
     float best_score = -1.0f;
@@ -355,7 +392,7 @@ HomeView estimate_home_view(const GpuPack& pack) {
                 for (int c = 0; c < 3; ++c)
                     eye[c] = focus[c] +
                              distance * (ce * (std::cos(yaw) * h0[c] + std::sin(yaw) * h1[c]) + se * up[c]);
-                const float score = view_score(pts, eye, focus, up, depth, front);
+                const float score = view_score(pts, raster, eye, focus, up, depth, front);
                 if (score > best_score) {
                     best_score = score;
                     best_distance = distance;

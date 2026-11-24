@@ -118,13 +118,15 @@ class SceneLoader {
 public:
     ~SceneLoader() { join(); }
 
-    void start(const fs::path& source, const fs::path& cache_dir, std::size_t max_splats) {
+    // `frame`: the window the scene opens in; the home view is scored through it (S33).
+    void start(const fs::path& source, const fs::path& cache_dir, std::size_t max_splats,
+               const splatcore::HomeViewFrame& frame) {
         join();
         m_done = false;
         m_running = true;
         m_stage = "Opening";
-        m_thread = std::thread([this, source, cache_dir, max_splats] {
-            splatcore::Result<LoadedScene> result = load(source, cache_dir, max_splats);
+        m_thread = std::thread([this, source, cache_dir, max_splats, frame] {
+            splatcore::Result<LoadedScene> result = load(source, cache_dir, max_splats, frame);
             {
                 std::lock_guard<std::mutex> lock(m_mutex);
                 m_result.emplace(std::move(result));
@@ -160,7 +162,7 @@ private:
     }
 
     splatcore::Result<LoadedScene> load(const fs::path& source, const fs::path& cache_dir,
-                                        std::size_t max_splats) {
+                                        std::size_t max_splats, const splatcore::HomeViewFrame& frame) {
         using Out = splatcore::Result<LoadedScene>;
         LoadedScene scene;
         scene.name = platform::utf8_from_path(source.filename());
@@ -219,7 +221,7 @@ private:
             }
         }
         set_stage("Finding the home view");
-        scene.home = splatcore::estimate_home_view(scene.pack);
+        scene.home = splatcore::estimate_home_view(scene.pack, frame);
         scene.framing = splatcore::robust_framing(scene.pack);
         return Out::success(std::move(scene));
     }
@@ -511,7 +513,11 @@ int main(int argc, char** argv) {
                          " (PocketSplat opens .ply, .spz and .pspk files)";
             return;
         }
-        loader.start(path, cache_dir, max_splats);
+        int fb_w = 0, fb_h = 0;
+        glfwGetFramebufferSize(window, &fb_w, &fb_h);
+        loader.start(
+            path, cache_dir, max_splats,
+            {static_cast<float>(std::max(fb_w, 1)), static_cast<float>(std::max(fb_h, 1)), kFovLongSide});
     };
     if (scene_arg) {
         open_scene(*scene_arg);

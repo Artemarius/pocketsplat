@@ -447,7 +447,14 @@ splatcore::Status AndroidHost::open_scene(const std::string& path) {
     std::memcpy(m_target, m_framing.target, sizeof(m_target));
     // Interactive start: near the capture, looking at the main object (not the whole scene).
     const auto home_start = std::chrono::steady_clock::now();
-    m_home = splatcore::estimate_home_view(pack.value());
+    // Scored through the surface the scene opens in (S33), kept on rotation; a portrait phone
+    // shape before the first surface exists.
+    splatcore::HomeViewFrame frame{1080.0f, 2340.0f, m_fov};
+    if (m_window != nullptr) {
+        frame.width = static_cast<float>(ANativeWindow_getWidth(m_window));
+        frame.height = static_cast<float>(ANativeWindow_getHeight(m_window));
+    }
+    m_home = splatcore::estimate_home_view(pack.value(), frame);
     std::memcpy(m_eye, m_home.eye, sizeof(m_eye));
     {
         const glm::vec3 back =

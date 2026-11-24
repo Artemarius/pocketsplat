@@ -590,7 +590,12 @@ int main(int argc, char** argv) {
         if (args.yaw_deg) camera.yaw = glm::radians(*args.yaw_deg);
         if (args.pitch_deg) camera.pitch = glm::radians(*args.pitch_deg);
         if (args.home_view) {
-            const splatcore::HomeView home = splatcore::estimate_home_view(*pack);
+            // Scored through this window's frustum; the host's FOV is vertical, the frame's spans the long
+            // side.
+            const float w = static_cast<float>(args.width), h = static_cast<float>(args.height);
+            const float fov_long =
+                w > h ? 2.0f * std::atan(std::tan(0.5f * camera.fov_y) * w / h) : camera.fov_y;
+            const splatcore::HomeView home = splatcore::estimate_home_view(*pack, {w, h, fov_long});
             camera.target = glm::vec3(home.focus[0], home.focus[1], home.focus[2]);
             camera.fixed_eye = glm::vec3(home.eye[0], home.eye[1], home.eye[2]);
             camera.fixed_up = glm::vec3(home.up[0], home.up[1], home.up[2]);

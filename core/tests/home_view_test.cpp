@@ -23,8 +23,9 @@ struct Scene {
     GpuPack pack;
 };
 
-Scene make_scene(bool with_ground, bool with_wall = false, std::uint32_t seed = 12345u) {
-    const float tilt = 30.0f * kPi / 180.0f;  // frame rotated about +x
+Scene make_scene(bool with_ground, bool with_wall = false, std::uint32_t seed = 12345u,
+                 float tilt_deg = 30.0f, std::size_t ground_count = 60000) {
+    const float tilt = tilt_deg * kPi / 180.0f;  // frame rotated about +x
     const float c = std::cos(tilt), s = std::sin(tilt);
     const float offset[3] = {5.0f, -2.0f, 3.0f};
     const auto to_world = [&](float x, float y, float z, float* out) {
@@ -38,7 +39,7 @@ Scene make_scene(bool with_ground, bool with_wall = false, std::uint32_t seed = 
         return static_cast<float>(rng >> 8) / 16777216.0f;
     };
 
-    const std::size_t ground = with_ground ? 60000 : 0, object = 40000, shell = 30000;
+    const std::size_t ground = with_ground ? ground_count : 0, object = 40000, shell = 30000;
     const std::size_t wall = with_wall ? 20000 : 0;
     SplatCloud cloud;
     cloud.resize(ground + object + shell + wall, 0);
@@ -161,6 +162,56 @@ TEST(HomeView, IsDeterministic) {
         EXPECT_EQ(a.eye[c], b.eye[c]);
         EXPECT_EQ(a.up[c], b.up[c]);
     }
+}
+
+// S33: a plane more than 60 deg from the input's +y must hold >= 20 % of the points near the focus.
+// The default ground holds ~13 % of them: at the usual 30 deg tilt it is the ground, at 75 deg it
+// is treated like museum1's statue face (+y kept); a dense ground at 75 deg is a COLMAP-style
+// floor (drjohnson's is 89 deg from +y) and is kept.
+TEST(HomeView, AWeakPlaneFarFromPlusYKeepsPlusY) {
+    const Scene scene = make_scene(true, false, 12345u, 75.0f);
+    const HomeView view = estimate_home_view(scene.pack);
+    EXPECT_FALSE(view.plane_found);
+    EXPECT_FLOAT_EQ(view.up[1], 1.0f);
+}
+
+TEST(HomeView, AStrongGroundFarFromPlusYIsKept) {
+    const Scene scene = make_scene(true, false, 12345u, 75.0f, 400000);
+    const HomeView view = estimate_home_view(scene.pack);
+    ASSERT_TRUE(view.plane_found);
+    EXPECT_LT(angle_deg(view.up, scene.up), 3.0f);
+}
+
+// S33: the eye is scored through the frame the view is shown in. The default is the square 60 deg
+// frame of ADR-0014; a degenerate frame falls back to it. Focus, up and full_distance never depend
+// on the frame.
+TEST(HomeView, DefaultAndDegenerateFramesAreTheSquare) {
+    const Scene scene = make_scene(true);
+    const HomeView a = estimate_home_view(scene.pack);
+    const HomeView b = estimate_home_view(scene.pack, {640.0f, 640.0f, 1.0471976f});
+    const HomeView c = estimate_home_view(scene.pack, {0.0f, std::nanf(""), -1.0f});
+    for (int k = 0; k < 3; ++k) {
+        EXPECT_EQ(a.eye[k], b.eye[k]);
+        EXPECT_EQ(a.eye[k], c.eye[k]);
+    }
+}
+
+TEST(HomeView, APortraitFrameMovesOnlyTheEye) {
+    const Scene scene = make_scene(true, true);
+    const HomeView square = estimate_home_view(scene.pack);
+    const HomeView portrait = estimate_home_view(scene.pack, {1080.0f, 2340.0f, 1.0471976f});
+    const HomeView landscape = estimate_home_view(scene.pack, {2340.0f, 1080.0f, 1.0471976f});
+    for (int k = 0; k < 3; ++k) {
+        EXPECT_EQ(square.focus[k], portrait.focus[k]);
+        EXPECT_EQ(square.up[k], portrait.up[k]);
+        EXPECT_EQ(square.focus[k], landscape.focus[k]);
+    }
+    EXPECT_EQ(square.full_distance, portrait.full_distance);
+    // The ~30 deg across a portrait frame cannot hold the object as close as the square's 60 deg can.
+    EXPECT_GE(portrait.distance, square.distance);
+    const float d[3] = {portrait.eye[0] - portrait.focus[0], portrait.eye[1] - portrait.focus[1],
+                        portrait.eye[2] - portrait.focus[2]};
+    EXPECT_NEAR(std::sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]), portrait.distance, 1e-3f);
 }
 
 TEST(HomeView, EmptyPackGivesTheDefault) {
