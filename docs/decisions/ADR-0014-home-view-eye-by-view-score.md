@@ -5,7 +5,7 @@ with the owner's look on the phones open. The owner opened the bench scenes on t
 `2023540`, the S22 home view unchanged) and judged every home view fine. Home view at scene open
 in that session: S25U 625–1038 ms (stump 625, truck 966, counter 994, drjohnson 1038), S24U
 656–750 ms (stump, bicycle-4m).
-Amended in S33 (2026-11-24, proposed): the score raster takes the shape of the frame the view
+Amended in S33 (2026-11-24, accepted after the owner's look on the S24U): the score raster takes the shape of the frame the view
 is shown in, and a weak plane far from +y no longer sets the up axis (amendment at the end).
 
 **Supersedes**: the eye rule of ADR-0012 decision 1 ("15° above the plane, else 35°, else
@@ -66,7 +66,9 @@ show detail, not an overview of floating garbage.
   the negative-results table. The owner does not need the orientation fixed.
 * A third, 60° elevation tier: top-down ground views, see Evidence.
 
-**Amendment (S33, 2026-11-24, proposed): the frame the view is shown in, and weak tilted planes.**
+**Amendment (S33, 2026-11-24, accepted): the frame the view is shown in, and weak tilted planes.**
+Accepted by the owner after opening beetle, museum1, counter and racoonfamily on the S24U
+(APK `bd3379b`); the 20 % threshold and the raw-PLY portrait changes accepted as they are.
 
 *Context.* The S33 phone check before v0.4.0 (S24U, APK `905e9c6`): the owner found beetle's and
 museum1's start views too close, and museum1 tilted. Two causes, both older than S32
@@ -111,8 +113,9 @@ museum1's start views too close, and museum1 tilted. Two causes, both older than
   `AStrongGroundFarFromPlusYIsKept`, `DefaultAndDegenerateFramesAreTheSquare`,
   `APortraitFrameMovesOnlyTheEye`.
 * Cost: the portrait raster is 46 % of the square's pixels and projects the same splats. Open time
-  before the change, S24U: 86–199 ms (`home-view-open-s24u-905e9c6-2026-11-24.csv`). The phone
-  time of this change is still to be measured.
+  before the change, S24U: 86–199 ms (`home-view-open-s24u-905e9c6-2026-11-24.csv`). With it (APK `bd3379b`, 30 opens): 76–160 ms, median
+  100.5 ms; the app logs the portrait distances (counter 3.301, room 1.950) and no plane on
+  museum1 and racoonfamily.
 
 *Alternatives rejected* (negative-results log):
 * Moving the chosen eye back along its ray, × 1.3–2.0: poles, signs and a wall come between the
@@ -130,6 +133,6 @@ museum1's start views too close, and museum1 tilted. Two causes, both older than
   the focus and lies more than 60° from +y. `AWeakPlaneFarFromPlusYKeepsPlusY` builds exactly that
   case (a true ground at 75° with ~13 %): it now opens rolled. The 20 % line rests on one family of
   correct far-from-+y scenes (drjohnson, 30–45 %); correct grounds near +y go down to 10.5 %
-  (hornedlizard). The owner picks the threshold.
+  (hornedlizard). The owner kept 20 %.
 * museum1 now opens level but still close on one figure. Its focus is the statue's detail peak, and
   ADR-0012's distance rule is unchanged.
