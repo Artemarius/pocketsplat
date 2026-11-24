@@ -423,8 +423,9 @@ private fun ViewerScreen(
     var importRunning by remember { mutableStateOf(false) } // native import in flight
     var importStatus by remember { mutableStateOf<String?>(null) }
     var deepClean by remember { mutableStateOf(false) }
-    // SH1 palette at import (Phase 8, experimental until its ADR): off by default.
-    var shPalette by remember { mutableStateOf(false) }
+    // SH1 palette at import (Phase 8): on by default (owner's decision 2026-11-24, after gate C:
+    // preprocess no slower than direct SH 1, 30 % smaller packs, ~+4.5 s per 1 M splats on the S24U).
+    var shPalette by remember { mutableStateOf(true) }
     var budget by remember { mutableLongStateOf(1_000_000L) }
     var stagingJob by remember { mutableStateOf<Job?>(null) }
     var showLicences by remember { mutableStateOf(false) }
@@ -736,7 +737,7 @@ private fun ViewerScreen(
                     }
                     if (candidate.shDegree >= 1) {
                         OverlayButton(onClick = { shPalette = !shPalette }) {
-                            Text("SH palette (smaller, experimental): ${if (shPalette) "on" else "off"}",
+                            Text("SH palette (30 % smaller scene): ${if (shPalette) "on" else "off"}",
                                 color = Color.Cyan)
                         }
                     }
