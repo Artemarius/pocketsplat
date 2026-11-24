@@ -26,11 +26,20 @@ chunk, and the chunk cull writes the visible chunks in ascending order. Shrinkin
 alone moves nothing: `pos` and direct `sh1` hold the same limit.
 
 Facts the options depend on. `maxStorageBufferRange` is queried at run time and logged (750:
-134,217,728; 830: 2,147,483,647). Vulkan 1.3 guarantees `maxBufferSize` and
-`maxMemoryAllocationSize` ≥ 1 GiB and `bufferDeviceAddress`. The compute descriptor set binds
-12 storage buffers today, so the 750 supports at least that many per stage. Its exact
-`maxPerStageDescriptorStorageBuffers` is not on record (the public database renders its tables
-in script and could not be read). The next phone run logs it.
+134,217,728; 830: 2,147,483,647). `../benchmarks/devices.md` also records 256 B of push
+constants and 7 bound sets on both phones. Vulkan 1.3 guarantees `maxBufferSize` and
+`maxMemoryAllocationSize` ≥ 1 GiB, `maxComputeWorkGroupCount[0]` ≥ 65,535, and
+`bufferDeviceAddress`. The compute descriptor set binds 12 storage buffers today, so the 750
+supports at least that many per stage. Not on record for either phone:
+`maxPerStageDescriptorStorageBuffers`, `maxBufferSize`, `maxMemoryAllocationSize` and
+`maxComputeWorkGroupCount`. Phase 0's `vkjson` dump was not kept, and the public database renders
+its tables in script, so it could not be read. The next phone run logs them.
+
+`maxComputeWorkGroupCount[0]` matters beyond the binding. The preprocess runs one workgroup per
+visible chunk in a single dispatch, so the spec minimum, 65,535 workgroups, covers 16.78 M
+splats. The 750 never reached it (its 11.18 M limit is 43,690 chunks). The 830 ran 17.93 M
+whole in S28 (70,039 chunks), so its real limit is higher, or its driver tolerated the excess.
+Every option that keeps a single preprocess dispatch must check this limit as well.
 
 **Options**:
 
@@ -60,9 +69,10 @@ segments, so the prepare pass, sort and draw do not change. No barrier is needed
 segment dispatches, because they only append through the atomic counter. A scene of up to `S`
 splats has one segment: today's dispatch plus two push-constant values and one subtraction, so
 the "no slower at 4 M" gate should hold by construction (the S24U run below confirms it). No new bindings, features or format
-changes. Limit: memory, then the next per-splat array (`color` at 4 B: 33.5 M), then the
-32-bit splat index (2^31). One allocation per segment and array also keeps each one well under
-1 GiB.
+changes. Because every per-splat array, `color` and coverage included, is split, no binding
+limits the scene any more. Segments are also capped at `maxComputeWorkGroupCount[0]` × 256
+splats, so no dispatch can exceed that limit on any GPU. What remains is memory and the 32-bit
+splat index (2^31). One allocation per segment and array also keeps each one well under 1 GiB.
 
 (c) **Planar arrays.** Split `pos` into x[], y[], z[] and `scale_rot` and direct `sh1` into
 their three words, 4 B per array, at upload. Limit 33.5 M with no index split, +4 bindings at
@@ -90,19 +100,26 @@ the limit.
 **Decision** (proposed): (b), segments with one preprocess dispatch each.
 
 1. `splatcore` gets a pure function `plan_segments(count, max_storage_buffer_range,
-   bytes_per_splat = 12)` that returns the segment size (a multiple of 65,536 splats) and count.
-   It is unit-tested at the edges: one splat, exactly `S`, `S + 1`, the 750 and 830 ranges, and
-   a range below 65,536 × 12 B, which is rejected.
+   max_workgroup_count_x, bytes_per_splat = 12)`. It returns the segment size, a multiple of
+   65,536 splats no larger than `range / 12` or `max_workgroup_count_x × 256`, and the segment
+   count. It is unit-tested at the edges: one splat, exactly `S`, `S + 1`, the 750 and 830
+   ranges, a workgroup limit of 65,535, and a range below 65,536 × 12 B, which is rejected.
 2. The renderer splits every per-splat array at upload into per-segment buffers, writes one
    compute descriptor set per frame slot and segment, and records one indirect dispatch per
    segment. Without the chunk cull it records one direct dispatch per segment.
-   `SplatRenderer::max_splats` becomes the memory-free bound (`color`: range / 4, capped by
-   2^31 − 1), so the partial-open path (S27) only cuts above it.
-3. The chunk cull's `Push` gets the segment size in chunks. At each segment boundary in its
+3. **Above memory (open question for the owner).** Today `max_splats` turns an oversized pack
+   into a partial open (S27). With no binding limit, a pack that does not fit would instead fail
+   an allocation, or the OS would kill the app. Proposal: at open, compare the pack's GPU bytes
+   (per-splat arrays plus the visible-capacity buffers) against the device-local heap's
+   budget, and open the most important splats that fit under the same red partial-scene
+   banner. The budget comes from `VK_EXT_memory_budget` where the device has it, otherwise a
+   fixed share of the heap. The S24U runs in "What decides it" give the first real number: peak
+   PSS against splat count.
+4. The chunk cull's `Push` gets the segment size in chunks. At each segment boundary in its
    block loop it writes the finished segment's dispatch triplet and restarts compaction at the
    next segment's fixed list offset. Its `// Pass:` header and the preprocess's document the new
    contract.
-4. `pocketsplat-desktop --segment-splats N` (N a multiple of 65,536) forces small segments, so
+5. `pocketsplat-desktop --segment-splats N` (N a multiple of 65,536) forces small segments, so
    the split path runs on the RTX under validation, as `--visible-cap` does for the clip path
    (ADR-0016).
 
@@ -111,7 +128,8 @@ and `quantize-steps-fb66214-2026-11-24.csv`, summarized in `../benchmarks/README
 position and scale arrays"). `scripts/quantize_sim.py` quantizes and dequantizes the six gate-A
 packs into ordinary v3 packs and renders them against the originals. The protocol is gate A's
 (864 × 1872, 32-bit keys, no cull) plus two poses at 0.35 × the distance. A bounds-only control
-lands inside the renderer's repeat noise.
+lands inside the renderer's repeat noise. Its lowest value, beetle at 75.1 dB, equals gate A's
+`@repeat` minimum for the same pack and pose (`palette-quality-c6f0a7f-2026-11-19.csv`).
 
 * Positions at 16 bits inside tight chunk bounds: 49.3–63.0 dB at the worst pose. Half a step
   is a median 0.0002–0.0006 σ of the splat's largest axis, and more than 0.1 σ on at most 0.03 %
@@ -135,8 +153,9 @@ times do not count (CLAUDE.md §7).
    750; `scripts/tile_scene.py`, `data/derived/stress`). Each must open whole with no
    partial-scene banner. Record per-pass times, chunk-cull ms (its loop grows to 274 blocks at
    17.9 M) and peak PSS (`dumpsys meminfo`; S28: ≤ 1.18 GB at 11.18 M).
-3. The device limits nobody has on record, logged once at Vulkan start:
-   `maxPerStageDescriptorStorageBuffers`, `maxBufferSize`, `maxMemoryAllocationSize`.
+3. The device limits not on record, from `adb shell cmd gpu vkjson`, kept this time:
+   `maxPerStageDescriptorStorageBuffers`, `maxBufferSize`, `maxMemoryAllocationSize`,
+   `maxComputeWorkGroupCount`, and whether the device has `VK_EXT_memory_budget`.
 4. S25U: one segment always (2 GB range). A regression check of 1 and 2 only.
 
 Desktop gates before any phone run: `ctest` green; validation layers clean with and without

@@ -654,7 +654,10 @@ poses / worst of the two close poses:
 | stump | 4,049,567 | 91.5 / 89.7 | 83.9 / 90.5 | 63.0 / 60.5 | 47.7 / 46.8 | 47.7 / 46.8 |
 
 * **The simulation adds nothing of its own**: the control rebuilds the chunk bounds from the
-  pack's values and lands inside the renderer's repeat noise.
+  pack's values and lands inside the renderer's repeat noise. Its lowest value, beetle at 75.1 dB,
+  equals gate A's `@repeat` minimum for the same pack and pose. The close poses show content,
+  but on beetle, giraffes_statue and truck they sit inside floater clutter: harsh views, not
+  typical ones.
 * **Positions are not the risk**: 49.3–63.0 dB. Median chunks span 0.02–4.2 % of the scene
   diagonal, the widest 41–61 %. Half a step is a median 0.0002–0.0006 σ of the splat's largest
   axis, and more than 0.1 σ on at most 0.03 % of the splats. Those are tiny splats in wide

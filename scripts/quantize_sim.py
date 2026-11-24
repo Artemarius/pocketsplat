@@ -20,7 +20,7 @@ renders that with the desktop host against the untouched pack.
 
 Per variant and pose: PSNR and the share of pixels moved by more than 2 LSB against the
 reference pack (quality_ab.py's measures), at the quality_ab.py poses plus two closer ones
-(`--close`); `ref@repeat` re-renders the reference for the renderer's own noise floor. Per scene
+(off with `--no-close`); `ref@repeat` re-renders the reference for the renderer's own noise floor. Per scene
 also the size of the position step against the splats it moves, in standard deviations of the
 splat's largest axis (step / 2 = the largest per-axis error).
 
