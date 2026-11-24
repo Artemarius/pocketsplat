@@ -599,7 +599,7 @@ losses match bit for bit). Details: `docs/sh1-palette-research.md` §6.
 against the same APK with `home_view.cpp` from 5142815 (the S31 RANSAC), opened through the app's
 `open_scene` intent, 3 opens per scene, the two builds interleaved per scene with the order flipped
 every scene. `home-view-tilt-probe-0d73046-2026-11-24.csv`: desktop, the accepted plane of every
-probe scene (11 bench packs, the museum1 app pack, 24 raw public scenes).
+probe scene (11 bench packs, the museum1 app pack, 25 raw public scenes; 36 with a plane).
 
 * **Open time**: `estimate_home_view` takes 86–199 ms with the S32 RANSAC (median 119 ms) and
   95–234 ms with the S31 one (median 144.5 ms), same scenes and phone. ADR-0014's 647–1091 ms
@@ -610,14 +610,16 @@ probe scene (11 bench packs, the museum1 app pack, 24 raw public scenes).
   ~30° across: the winner was framed for a screen twice as wide. Scored through the frame (raster
   22 × 48), beetle opens on the whole car side-on, counter on the whole counter, bicycle on the
   bike and bench, museum1 on more of the statue; stump, truck and drjohnson are unchanged (owner:
-  fine). Renders at 540 × 1170, desktop, not committed (scene media policy).
+  fine). Renders at 540 × 1170, desktop, not committed (scene media policy). A landscape frame
+  (1280 × 720, the Windows viewer) scored the same way opened the truck pack on a 21.7 m floater
+  overview: only a portrait frame narrows the raster, landscape keeps the square.
 * **museum1's tilt was never caused by S32**: the old build's phone capture is tilted the same, and
   S32's "6.2° up change" compared two planes that were both a face of the statue. The probe found
   the same failure on racoonfamily: on both (+y-up captures of a lone object) the best plane near
   the focus is a face of the object, 80–85° from +y, holding 7.6–9.0 % of the points. The only
   correct planes far from +y are the drjohnson family's floors (89° from +y in COLMAP's frame,
   30.4–44.8 %); every other plane is within 48.5° of +y (stump). A plane more than 60° from +y now
-  needs ≥ 20 % of the points, else up stays +y: up is bit-identical on 32 of the 36 probe scenes and
+  needs ≥ 20 % of the points, else up stays +y: up is bit-identical on 33 of the 37 probe scenes and
   changes only on the 3 museum1 packs and racoonfamily, which now open upright.
 * Statistics that did **not** separate museum1 from correct grounds: share alone (0.090 against
   hornedlizard's correct 0.105), in-plane spread of the inliers (truck 0.11–0.26 of the radius,

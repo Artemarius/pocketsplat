@@ -80,15 +80,17 @@ museum1's start views too close, and museum1 tilted. Two causes, both older than
 
 *Decision.*
 * `estimate_home_view(pack, frame)`: `HomeViewFrame` gives the width, height and FOV across the
-  long side. The raster keeps 48 px along the long side, the short side in proportion (22 in
-  portrait), one focal length for both. Candidates, elevations, distances, the centre-block test
+  long side. A portrait frame narrows the raster to its width (22 × 48 at 1080 × 2340, one focal
+  length for both sides). A landscape frame is scored on the full 48 × 48 square: cutting the
+  square's top and bottom opened the truck pack on a 21.7 m overview of floaters at 16:9 (desktop,
+  1280 × 720), because it drops the empty-sky rows that keep the score off overviews. Candidates, elevations, distances, the centre-block test
   and tie order are unchanged. The default frame is the old square, so focus, up, `full_distance`,
   virtual capture (ADR-0015) and `splatconv` are unchanged.
   * The app passes its surface size when the scene opens (portrait 9:19.5 if no surface exists
     yet) and keeps that view on rotation. The Windows viewer passes its framebuffer, and the
     desktop host its window.
 * A plane more than 60° from +y must hold at least 20 % of the points near the focus; otherwise no
-  plane is found and up is +y. The only correct planes that far from +y on the 36 probe scenes are
+  plane is found and up is +y. The only correct planes that far from +y on the 37 probe scenes are
   the drjohnson family's floors, at 89° (COLMAP frame) with 30.4–44.8 %. Every other plane is
   within 48.5° of +y.
 
@@ -97,8 +99,14 @@ museum1's start views too close, and museum1 tilted. Two causes, both older than
   vs frame. Better: beetle (the whole car, side-on), counter (the whole counter instead of a pot
   close-up), bicycle (bike and bench), museum1 (more of the statue). Unchanged: stump, truck,
   drjohnson. The owner judged them fine.
-* Up axis over 36 scenes (`home-view-tilt-probe-0d73046-2026-11-24.csv`): bit-identical on 32.
-  Changed on the 3 museum1 packs and racoonfamily, which now open upright.
+* Up axis over 37 scenes (`home-view-tilt-probe-0d73046-2026-11-24.csv`; 36 with a plane):
+  bit-identical on 33. Changed on the 3 museum1 packs and racoonfamily, which now open upright.
+* Home distance under the square, portrait and landscape frames on all 37 scenes (desktop): with
+  the frame applied both ways, only the truck pack in landscape jumped to an overview. Portrait
+  changes stay within 0.36–2.0 × the square's distance. Raw PLYs at portrait, judged by eye: garden
+  and treehill better, room and voxel51_playroom about the same, truck.ply (the bed instead of the
+  cab) and drjohnson.ply (a corridor with a dark floater) worse. The cleaned packs of those two,
+  which are what the app imports, keep their views.
 * Tests: `HomeView.AWeakPlaneFarFromPlusYKeepsPlusY` (fails with the rule off),
   `AStrongGroundFarFromPlusYIsKept`, `DefaultAndDegenerateFramesAreTheSquare`,
   `APortraitFrameMovesOnlyTheEye`.
@@ -118,5 +126,10 @@ museum1's start views too close, and museum1 tilted. Two causes, both older than
 *Consequences.*
 * Bench runs with `--pose home` and the home-view numbers in earlier CSVs describe the square
   frame. After this change they are not like-for-like on scenes whose view moved.
+* The tilt rule turns a real ground into +y when the ground holds under 20 % of the points near
+  the focus and lies more than 60° from +y. `AWeakPlaneFarFromPlusYKeepsPlusY` builds exactly that
+  case (a true ground at 75° with ~13 %): it now opens rolled. The 20 % line rests on one family of
+  correct far-from-+y scenes (drjohnson, 30–45 %); correct grounds near +y go down to 10.5 %
+  (hornedlizard). The owner picks the threshold.
 * museum1 now opens level but still close on one figure. Its focus is the statue's detail peak, and
   ADR-0012's distance rule is unchanged.
