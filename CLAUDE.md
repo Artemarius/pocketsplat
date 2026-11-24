@@ -141,6 +141,14 @@ Environment facts learned the hard way:
 * The NDK's clang builds `splatcore` with `-Wall -Wextra -Wpedantic -Werror` and rejects what MSVC
   lets through (an unused function in an anonymous namespace): build the APK, not only the
   desktop targets, before committing a `core/` change.
+* Over Wi-Fi adb, installing the ~26 MB APK can time out (300 s) or finish after
+  `bench_android.py --apk` has launched the app, and the package update then kills it ("bench CSV
+  never appeared"). Install over USB, then bench over Wi-Fi without `--apk`.
+* Phone drivers may lack `VK_EXT_memory_budget` (the 830 does): VMA then reports 80 % of an
+  11 GB heap as available, far above what Android gives an app. Never size scenes by VMA's
+  budget alone on a phone; the Android host caps it by MemAvailable (ADR-0018). The 830 also ran
+  dispatches past its `maxComputeWorkGroupCount` (65,535) without error. Don't rely on that:
+  other drivers may drop the excess silently.
 * SuperSplat's default camera (85° FOV, full-bbox distance) is ~35–45 % cheaper per frame than our
   bench pose: cost comparisons against it use `bench_web.py --pose ours`.
 

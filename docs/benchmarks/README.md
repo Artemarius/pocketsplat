@@ -154,6 +154,9 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
 - `segments-<device>-<hash>-<date>.csv` — the per-splat arrays split into segments (ADR-0018)
   against one segment, `quality_ab.py` with `--segment-splats N`: PSNR at the six poses, pixels
   moved > 2 LSB, and the bench orbit's mean visible count, with `ref@repeat`.
+- `segments-s25u-<hash>-<date>.csv` — segments on a phone (ADR-0018): per run the build,
+  segment split, per-pass means over the first 30 s, visible mean, peak PSS and GL mtrack; the
+  header states which runs were compared frame by frame.
 - `quality-rtx3060-rungs-<date>-864x1872.csv` — image cost of the thermal controller's candidate
   rungs (cull threshold × internal-resolution scale, ADR-0009); scaled variants are upscaled
   bilinearly to 864×1872 before PSNR (`quality_ab.py --scale`).
@@ -705,6 +708,46 @@ the 750 splits it (2 × 11,141,120) and into 4 × 4,194,304.
   in 62. `ctest` 146/146, including the 4 golden-image tests.
 * GPU times in the CSV are the shared laptop's, indicative only. The deciding comparison, one
   segment against the v0.4.0 build at 4 M, is the S24U's (ADR-0018, "What decides it").
+
+## Segments on the S25U (2026-11-24, S34, ADR-0018)
+
+`segments-s25u-a344337-2026-11-24.csv`: S25U (Adreno 830), on USB power at 100 %, bench orbit at
+540 × 975, 16-bit keys, 0.1 px cull unless stated; per-pass means over the first 30 s. Not the
+deciding phone (that is the S24U, CLAUDE.md §7): these runs check correctness and memory on a
+second driver and give the S24U runs their shape.
+
+* **Device limits the design depends on** (`cmd gpu vkjson`, the app's "Vulkan ready" line):
+  `maxComputeWorkGroupCount.x` = 65,535 (the spec minimum, so the 830 splits at 16,711,680 splats
+  for its dispatches, not its 2 GB binding), no `VK_EXT_memory_budget`, `maxMemoryAllocationSize`
+  1 GiB, `maxBufferSize` 4 GB, 16.7 M storage buffers per stage, buffer device address and dynamic
+  indexing present. Recorded in `devices.md`.
+* **One segment is no slower than v0.4.0** (bicycle-4m, ABBAAB with a cool-down to thermal
+  status 0 and skin ≤ 38 °C before each run): preprocess 2.696 ms (v0.4.0, mean of 3) against
+  2.677 ms, chunk cull 0.221 against 0.220 ms, GPU frame 10.82 against 10.71 ms; run-to-run
+  spread ±0.04 ms.
+* **Two segments draw the same splats**: bicycle-4m forced into 2 × 2,097,152 against one segment,
+  per-frame visible count equal on 5,059 of 5,060 frames (frame 0 is the first readback, still
+  0 in one run). bicycle ×3 split as the 750 splits it (2 × 11,141,120) against one segment:
+  3,067 of 3,067 frames equal, preprocess 5.67 against 5.68 ms. (The forced bicycle-4m run ran
+  warm, thermal 1 throughout; its times are not a comparison.)
+* **×4 (17.93 M) in two segments against v0.4.0's one dispatch**: per-frame visible counts equal
+  on all 1,742 (no cull) and 2,374 (0.1 px) frames, preprocess 9.28 / 7.53 ms against 9.25 /
+  7.51 ms. 81 of those frames had more than 65,535 visible chunks (up to 66,265): v0.4.0's single
+  dispatch exceeded the device's workgroup limit there, and the 830's driver ran it anyway, so
+  v0.4.0 dropped nothing on this phone. Segments now stay within the limit on any driver.
+* **Memory**: peak PSS 1.03 / 1.37 / 2.13 GB at ×2 / ×3 / ×4 (v0.4.0 at ×4: 2.54 GB), GPU
+  memory (GL mtrack) 0.92 / 1.25 / 1.73 GB (v0.4.0 ×4: 1.82 GB). On the 830 the visible capacity
+  covers the whole scene, so ×4's GPU memory is 29 B per splat plus 69.8 B per visible slot; the
+  renderer's estimate became 72 B (it was 56).
+* **The memory policy, corrected on the phone**: without `VK_EXT_memory_budget` VMA reported
+  8.9 GB available (80 % of the 11.1 GB heap) against 6.0 GB MemAvailable, a limit of 123 M
+  splats nothing could hold. The Android host now budgets min(VMA, MemAvailable / 2) and counts
+  the 28 B CPU pack copy alive during upload: 23.3 M splats at 29 B on the S25U (MemAvailable
+  5.8 GB). ×4 (17.93 M, with its coverage sidecar) opens whole; a tiled ×6 (26.9 M, not kept)
+  opened as its most important 20.9 M under the partial banner, peak PSS 1.95 GB, 42 fps.
+* Process: Wi-Fi adb installs of the 26 MB APK timed out (300 s) or raced the bench's launch
+  (the package update killed the freshly started app). Installs went over USB, benches over
+  Wi-Fi.
 
 ## Negative results log
 | Date | What was tried | Result | Diagnosis |

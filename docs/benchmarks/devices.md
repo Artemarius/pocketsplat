@@ -18,6 +18,9 @@ sort and renderer designs must hold within these limits (CLAUDE.md §2.5).
 | Timestamps | supported in compute+graphics, period **52.083 ns** | supported in compute+graphics, period **52.083 ns** (but see per-pass caveat in `phase3-android.md`) |
 | maxStorageBufferRange | 128 MB | 2 GB (0x7FFFFFFF) |
 | maxPushConstantsSize | 256 B | 256 B |
+| maxComputeWorkGroupCount | not recorded | **65,535** × 3 (spec minimum; S34 `vkjson`) |
+| Storage buffers per stage / maxBufferSize / maxMemoryAllocationSize | not recorded | 16,777,216 / 4 GB / 1 GiB (S34) |
+| VK_EXT_memory_budget | not recorded | **no** (S34); buffer device address and dynamic indexing yes |
 | maxBoundDescriptorSets | 7 | 7 |
 | Timeline semaphore / sync2 / dynamic rendering | all present (1.3 core) | all present |
 | Thermal API | ThermalHAL **AIDL 3**; `dumpsys thermalservice` exposes AP/SKIN/BAT/PA temps + status; status listeners available | ThermalHAL **AIDL 3**, same surface |

@@ -1,0 +1,20 @@
+# S25U (Adreno 830, SM-S938B), 2026-11-24 S34, on USB power at 100 %, bench_android.py 540x975 16-bit keys, 60 s runs (x4/x6-a344337: 30 s); means over the first 30 s (computed frames, 10 skipped); v0.4.0 = fb66214, segments = e20461b (a344337 = + Android memory policy); peak_pss/gl_mtrack = dumpsys meminfo maxima sampled every 1-2 s; per-frame visible identity: identity-bicycle-4m 5,059 of 5,060 frames equal (frame 0 = first readback), x3-seg0 vs x3-seg11141120 3,067 of 3,067 equal, base-x4 vs new-x4 1,742 (c0) / 2,374 (c0.1) of the same equal
+group,label,apk,scene,splats,segments,segment_splats,min_contribution,frames_30s,cull_ms,preprocess_ms,sort_ms,draw_ms,gpu_ms,visible_mean,thermal_mean,peak_pss_kb,gl_mtrack_kb
+ab-bicycle-4m,run1-base,0.4.0-fb66214,bicycle-4m.sh0.pspk,4000000,,,0.1,2779,0.217,2.68,2.438,5.385,10.72,1313903,0.271,,
+ab-bicycle-4m,run2-new,0.4.0-e20461b,bicycle-4m.sh0.pspk,4000000,1,16711680,0.1,2822,0.219,2.64,2.408,5.294,10.562,1312607,0.209,,
+ab-bicycle-4m,run3-new,0.4.0-e20461b,bicycle-4m.sh0.pspk,4000000,1,16711680,0.1,2776,0.217,2.685,2.463,5.355,10.72,1313979,0.198,,
+ab-bicycle-4m,run4-base,0.4.0-fb66214,bicycle-4m.sh0.pspk,4000000,,,0.1,2731,0.224,2.717,2.467,5.504,10.912,1314987,0.398,,
+ab-bicycle-4m,run5-base,0.4.0-fb66214,bicycle-4m.sh0.pspk,4000000,,,0.1,2754,0.22,2.691,2.463,5.442,10.817,1314545,0.335,,
+ab-bicycle-4m,run6-new,0.4.0-e20461b,bicycle-4m.sh0.pspk,4000000,1,16711680,0.1,2748,0.224,2.705,2.463,5.451,10.843,1314694,0.334,,
+identity-bicycle-4m,4m-seg-default,0.4.0-e20461b,bicycle-4m.sh0.pspk,4000000,1,16711680,0.1,2835,0.215,2.635,2.397,5.252,10.499,1312172,0.253,,
+identity-bicycle-4m,4m-seg2097152,0.4.0-e20461b,bicycle-4m.sh0.pspk,4000000,2,2097152,0.1,2552,0.249,2.903,2.573,5.953,11.677,1314584,1.0,,
+large,new-x2-c0.1,0.4.0-e20461b,bicycle-x2.sh0.pspk,8966440,1,16711680,0.1,1919,0.509,4.492,3.087,7.422,15.51,1667005,0.489,1026844,918164
+large,new-x3-c0.1,0.4.0-e20461b,bicycle-x3.sh0.pspk,13449660,1,16711680,0.1,1801,0.687,5.635,3.129,7.063,16.514,1768939,0.0,1367397,1250872
+large,new-x4-c0.1,0.4.0-e20461b,bicycle-x4.sh0.pspk,17932880,2,16711680,0.1,1320,0.999,7.533,4.241,9.731,22.503,2301078,0.403,2126309,1730212
+large,new-x4-c0,0.4.0-e20461b,bicycle-x4.sh0.pspk,17932880,2,16711680,0,886,0.839,9.282,6.577,16.731,33.43,3897679,0.0,1851361,1730212
+large,base-x4-c0,0.4.0-fb66214,bicycle-x4.sh0.pspk,17932880,,,0,888,0.834,9.252,6.604,16.673,33.363,3897925,0.0,2542415,1824356
+large,base-x4-c0.1,0.4.0-fb66214,bicycle-x4.sh0.pspk,17932880,,,0.1,1325,0.978,7.508,4.257,9.669,22.413,2300451,0.403,2544609,1824040
+large,x3-seg0,0.4.0-e20461b,bicycle-x3.sh0.pspk,13449660,1,16711680,0.1,1752,0.728,5.657,3.194,7.386,16.965,1762416,0.28,,
+large,x3-seg11141120,0.4.0-e20461b,bicycle-x3.sh0.pspk,13449660,2,11141120,0.1,1738,0.737,5.673,3.229,7.473,17.112,1760908,0.337,,
+large,x4-a344337,0.4.0-a344337,bicycle-x4.sh0.pspk,17932880,2,16711680,0.1,1357,0.956,7.431,4.145,9.362,21.895,2298206,0.21,,
+large,x6-a344337,0.4.0-a344337,bicycle-x6.sh0.pspk,20901697,2,16711680,0.1,1254,1.167,8.956,4.844,8.741,23.708,2430572,0.477,,

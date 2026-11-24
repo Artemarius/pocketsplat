@@ -1,8 +1,9 @@
 # ADR-0018 — Lifting the Adreno 750's scene limit: per-splat arrays split into segments, one preprocess dispatch each
 
 **Status**: proposed (2026-11-24, S34). The owner chose option (b), segments, and the memory policy
-in Decision 3 (S34). It is implemented and checked on the desktop ("Desktop evidence"). It stays
-proposed until the S24U runs under "What decides it" are in.
+in Decision 3 (S34). It is implemented, checked on the desktop ("Desktop evidence") and on the
+S25U ("S25U evidence"), where the memory policy was corrected. It stays proposed until the
+S24U runs under "What decides it" are in.
 
 **Context**: every per-splat input array lives in one storage buffer bound whole, so each is
 capped by `maxStorageBufferRange`. On the Adreno 750 (128 MB) the widest of them, 12 B per
@@ -111,19 +112,21 @@ reporting and clip guard stay as they are.
    segment. Without the chunk cull it records one direct dispatch per segment.
 3. **Above memory: a partial open under a memory budget** (owner, S34). Without the binding
    limit, a pack that does not fit would fail an allocation, or the OS would kill the app.
-   Instead, `SplatRenderer::max_splats(context, bytes_per_splat)` is a memory bound. It takes the
-   largest device-local heap's budget minus its usage. VMA reports that from
-   `VK_EXT_memory_budget`, enabled where the device has it; without the extension VMA counts 80 %
-   of the heap minus its own allocations. From that budget it subtracts 32 MB of slack (palette,
-   chunk lists, pick buffers, UBOs) and 56 B per visible-capacity slot (record, key, value, the
-   sort's ping-pong pair, margin). It then divides by the pack's resident bytes per splat
+   Instead, `SplatRenderer::max_splats(context, bytes_per_splat, available)` is a memory bound:
+   `available` less 32 MB of slack (palette, chunk lists, pick buffers, UBOs) and 72 B per
+   visible-capacity slot (record, key, value, the sort's ping-pong pair and histograms; S25U
+   measured 69.8 B), divided by the pack's resident bytes per splat
    (`splatcore::gpu_bytes_per_splat`: 29 B for SH 0 and palette packs, 41 B for direct SH 1,
-   +4 B with coverage masks). The app asks it at open, after the previous scene is freed, and
-   opens the most important splats that fit under the same red partial-scene banner (the S27
-   path). The Windows viewer uses it, at the widest 45 B, as its import budget. The desktop dev
-   host does not cut: an oversized pack fails with an allocation error. The 32 MB, 56 B and
-   80 % are estimates; the S24U runs in "What decides it" give the first real numbers (heap
-   size, budget, peak PSS against splat count). The app now logs them at Vulkan start.
+   +4 B with coverage masks). `available` defaults to the largest device-local heap's budget
+   minus usage from VMA (`VK_EXT_memory_budget` where present, else 80 % of the heap). On a
+   phone that default is not a limit: the S25U has no `VK_EXT_memory_budget`, and VMA reported
+   8.9 GB against 6.0 GB MemAvailable. So the Android host passes min(VMA, MemAvailable / 2) and
+   adds the 28 B CPU copy of the pack that is alive during upload (S25U: 23.3 M splats at 29 B).
+   The app asks at open, after the previous scene is freed, and opens the most important splats
+   that fit under the same red partial-scene banner (the S27 path). The Windows viewer uses the
+   default, at the widest 45 B, as its import budget. The desktop dev host does not cut: an
+   oversized pack fails with an allocation error. The half of MemAvailable is a judgement, not a
+   measurement of when Android kills the app: the S25U ran 1.95–2.13 GB peak PSS without trouble.
 4. The chunk cull's `Push` gets the segment size in chunks. At each segment boundary in its
    block loop it writes the finished segment's dispatch triplet and restarts compaction at the
    next segment's fixed list offset. Its `// Pass:` header and the preprocess's document the new
@@ -142,6 +145,14 @@ palette, direct SH 1 and coverage masks. `ctest` 146/146 (4 new `PackSegments` t
 The debug APK builds (NDK clang, `-Werror`). The chunk cull closes a segment inside its existing
 end-of-block step, so its barriers are the v0.4.0 ones. The RTX's memory bound: heap 5,994 MB,
 5,222 MB available (`VK_EXT_memory_budget`) → 64.0 M splats at 29 B per splat.
+
+**S25U evidence** (`../benchmarks/segments-s25u-a344337-2026-11-24.csv`, summarized in
+`../benchmarks/README.md`, "Segments on the S25U"; not the deciding phone): one segment against
+v0.4.0 on bicycle-4m, interleaved, preprocess 2.677 against 2.696 ms and chunk cull 0.220 against
+0.221 ms. Per-frame visible counts identical for one against two segments on bicycle-4m and on
+×3 in the 750's split, and for ×4 in two segments against v0.4.0's single dispatch. That
+dispatch exceeded the 830's 65,535-workgroup limit on 81 frames and the driver ran it anyway.
+×2, ×3 and ×4 open whole; a 26.9 M tiled pack opened partially at the memory bound (20.9 M).
 
 **Evidence (desktop, simulation of (e), 2026-11-24)**: `../benchmarks/quantize-sim-fb66214-2026-11-24.csv`
 and `quantize-steps-fb66214-2026-11-24.csv`, summarized in `../benchmarks/README.md` ("Smaller
@@ -167,9 +178,9 @@ times do not count (CLAUDE.md §7).
 `-PdebuggableRelease` over the installed 0.4.0, which keeps the scenes):
 
 0. First, before any scene opens: the app's "Vulkan ready" logcat line (heap size, available
-   budget, `VK_EXT_memory_budget`, `maxComputeWorkGroupCount.x`, scene limit). A scene limit
-   below 11,184,810 at 29 B per splat would be a regression against v0.4.0. If it is, stop the
-   run and fix the memory policy first.
+   budget, `VK_EXT_memory_budget`, MemAvailable, `maxComputeWorkGroupCount.x`, scene limit). A
+   scene limit below 11,184,810 at 29 B per splat would be a regression against v0.4.0. If it
+   is, stop the run and fix the memory policy first. (S25U, S34: 23.3 M.)
 1. Gate: on bicycle-4m, preprocess and chunk-cull ms, the v0.4.0 build against the segment
    build, interleaved runs (`scripts/bench_android.py`, 540 × 975, 16-bit keys, 0.1 px cull).
    One segment must be no slower than today.
