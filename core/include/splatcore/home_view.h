@@ -25,8 +25,8 @@ namespace splatcore {
 //    of pixels whose front splat has a 1-sigma radius <= 1 px; large near splats and empty
 //    background score 0). Rendered, all 13 INRIA scenes (raw PLYs) and the 5 bench packs on the
 //    phones open on detail; ADR-0012's rule failed drjohnson and playroom (eye inside geometry)
-//    and opened truck on a far overview. S33: the raster has the shape of the frame the view is
-//    shown in (HomeViewFrame); a square one picked views a portrait phone crops at the sides.
+//    and opened truck on a far overview. S33: a portrait frame narrows the raster to its width
+//    (HomeViewFrame); a square one picked views a portrait phone crops at the sides.
 // Deterministic: the same pack always gives the same view (ties go to the first candidate).
 struct HomeView {
     float focus[3];              // orbit pivot, RUB world
@@ -37,10 +37,11 @@ struct HomeView {
     float full_distance = 1.0f;  // 2.3 x the half-detail radius (capped at the box diagonal): the
                                  // farthest candidate eye; ~1 ring radius on orbit captures (ADR-0012)
 };
-// The image the start view will be shown in: the eye candidates are scored through this frustum
-// (portrait phone: ~30 deg across, 60 deg along). The FOV spans the long side, as in the app and
-// the viewers. The default, a square at 60 deg, is the frame of ADR-0014. Focus, up and
-// full_distance do not depend on it.
+// The image the start view will be shown in. A portrait frame narrows the eye's score raster to its
+// width (phone: ~30 deg across, 60 deg along); a landscape frame is scored on the full square, the
+// frame of ADR-0014 and the default (S33: cutting the square's top and bottom opened the truck pack
+// on a floater overview). The FOV spans the long side, as in the app and the viewers. Focus, up
+// and full_distance do not depend on the frame.
 struct HomeViewFrame {
     float width = 1.0f;  // any unit; only the aspect ratio matters
     float height = 1.0f;

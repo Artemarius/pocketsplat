@@ -97,8 +97,11 @@ struct ScoreSample {
     float sigma;  // largest scale
 };
 
-// The score raster in the shape of the frame the view will be shown in: kScoreRes along the long
-// side, the short side in proportion, one focal length (pixels) for both, as the renderers do.
+// The score raster: kScoreRes along the long side, one focal length (pixels) for both sides, as the
+// renderers do. A portrait frame narrows it to the frame's width; a landscape frame keeps the full
+// square (S33). Narrowing fixed views whose subject ran off a portrait phone's sides; cutting the top
+// and bottom instead dropped the empty-sky rows that keep the score off floater overviews, and the
+// truck pack opened on a 21.7 m overview in 16:9.
 struct ScoreRaster {
     int w = kScoreRes, h = kScoreRes;
     float f = 0.0f;
@@ -115,7 +118,7 @@ ScoreRaster make_raster(const HomeViewFrame& frame) {
     if (std::isfinite(w) && std::isfinite(h) && w > 0.0f && h > 0.0f) {
         const float ratio = std::min(w, h) / std::max(w, h);
         const int short_side = std::clamp(static_cast<int>(std::lround(ratio * kScoreRes)), 8, kScoreRes);
-        (w < h ? r.w : r.h) = short_side;
+        if (w < h) r.w = short_side;
     }
     return r;
 }

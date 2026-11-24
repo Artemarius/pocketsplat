@@ -204,7 +204,9 @@ TEST(HomeView, APortraitFrameMovesOnlyTheEye) {
     for (int k = 0; k < 3; ++k) {
         EXPECT_EQ(square.focus[k], portrait.focus[k]);
         EXPECT_EQ(square.up[k], portrait.up[k]);
-        EXPECT_EQ(square.focus[k], landscape.focus[k]);
+        // A landscape frame scores on the full square (cutting its top and bottom opened the truck
+        // pack on a floater overview, S33).
+        EXPECT_EQ(square.eye[k], landscape.eye[k]);
     }
     EXPECT_EQ(square.full_distance, portrait.full_distance);
     // The ~30 deg across a portrait frame cannot hold the object as close as the square's 60 deg can.
