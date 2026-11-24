@@ -50,6 +50,9 @@ object SplatEngine {
     /** Coverage fade strength 0..1 (ADR-0013); kept across scenes, bench runs included. */
     external fun nativeSetCoverageStrength(handle: Long, strength: Float)
 
+    /** Testing only (ADR-0018): segment size for scenes opened from now on; 0 = the device's own. */
+    external fun nativeSetSegmentSplats(handle: Long, splats: Int)
+
     /** Platform thermal sample, about once a second while resumed; true = the quality rung changed. */
     external fun nativeThermalTick(handle: Long): Boolean
 

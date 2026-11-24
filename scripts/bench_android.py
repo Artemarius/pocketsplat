@@ -231,6 +231,8 @@ def bench_scene(scene: str, args, build: str) -> bool:
         suffix += f"-cov{args.coverage_strength:g}"
     if args.pose == "home":
         suffix += "-home"
+    if args.segment_splats:  # forced segments (ADR-0018 testing); the CSV header records the split
+        suffix += f"-seg{args.segment_splats}"
     tag = f"{args.device}-{build}-{stem}{suffix}"
     device_csv = f"files/bench/bench-{stem}-{args.key_bits}bit.csv"
 
@@ -263,6 +265,8 @@ def bench_scene(scene: str, args, build: str) -> bool:
               "--es", "bench_pose", args.pose]
     if args.width and args.height:  # e.g. a web viewer's canvas size, for like-for-like pixels
         extras += ["--ei", "bench_width", str(args.width), "--ei", "bench_height", str(args.height)]
+    if args.segment_splats:
+        extras += ["--ei", "segment_splats", str(args.segment_splats)]
     adb("shell", "am", "start", "-n", ACTIVITY, *extras, serial=serial)
     print(f"[{scene}] running {args.seconds} s (key_bits {args.key_bits}, "
           + ("quality controller" if args.controller else f"min_contribution {args.min_contribution:g}")
@@ -350,6 +354,9 @@ def main() -> int:
     parser.add_argument("--coverage-strength", type=float, default=0.0,
                         help="coverage fade strength 0..1 (ADR-0013); the scene needs its "
                              "<stem>.pscov sidecar in files/scenes (--push it)")
+    parser.add_argument("--segment-splats", type=int, default=0,
+                        help="testing (ADR-0018): split the scene into segments of N splats (a "
+                             "multiple of 65,536), so the multi-segment path runs on any scene")
     parser.add_argument("--pose", default="orbit", choices=["orbit", "home"],
                         help="orbit: full turn about +y around the framing box every 600 frames (every run "
                              "before S26); home: +-30 deg triangle-wave swing about the scene's start view, "

@@ -112,6 +112,9 @@ class RenderEngine {
     private var fadeReleaseNanos = 0L
     private var appliedStrength = -1f
 
+    /** Testing only (ADR-0018): split scenes opened after this into segments of `splats`. */
+    fun setSegmentSplats(splats: Int) = handler.post { SplatEngine.nativeSetSegmentSplats(handle, splats) }
+
     /** Backside fade strength: 0 = unchanged, 1 = splats seen from unobserved directions vanish. */
     fun setCoverageStrength(strength: Float) = handler.post {
         fadeStrength = strength

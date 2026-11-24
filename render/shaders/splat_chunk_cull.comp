@@ -68,25 +68,7 @@ void main() {
     vec4 r3 = vec4(proj_view[0][3], proj_view[1][3], proj_view[2][3], proj_view[3][3]);
     vec4 planes[6] = vec4[6](r3 + r0, r3 - r0, r3 + r1, r3 - r1, r2, r3 - r2);
 
-    uint segment = 0u;
     for (uint start = 0u; start < push.chunk_count; start += 256u) {
-        // A block never straddles segments (segment_chunks is a multiple of 256), and segments
-        // are crossed one at a time: close the finished one and start compacting at the next
-        // one's fixed list offset. `start` is uniform, so is this branch.
-        uint block_segment = start / push.segment_chunks;
-        if (block_segment != segment) {
-            if (lid == 0u) {
-                uint m = s_written - s_segment_begin;
-                cull_dispatch[3u * segment] = m;
-                cull_dispatch[3u * segment + 1u] = 1u;
-                cull_dispatch[3u * segment + 2u] = 1u;
-                s_total += m;
-                s_written = block_segment * push.segment_chunks;
-                s_segment_begin = s_written;
-            }
-            barrier();
-            segment = block_segment;
-        }
         uint c = start + lid;
         bool visible = false;
         if (c < push.chunk_count) {
@@ -130,15 +112,33 @@ void main() {
         }
         if (visible) chunk_list[s_written + s_scan[lid] - 1u] = c;
         barrier();
-        if (lid == 0u) s_written += s_scan[255u];
+        if (lid == 0u) {
+            s_written += s_scan[255u];
+            // A block never straddles segments (segment_chunks is a multiple of 256). When the
+            // next block starts a segment, close this one and continue compacting at the next
+            // one's fixed list offset - in the same thread and before the same barrier as the
+            // count update, so segments add no barrier and no control flow around one.
+            uint next = start + 256u;
+            if (next < push.chunk_count && next % push.segment_chunks == 0u) {
+                uint g = next / push.segment_chunks - 1u;
+                uint m = s_written - s_segment_begin;
+                cull_dispatch[3u * g] = m;
+                cull_dispatch[3u * g + 1u] = 1u;
+                cull_dispatch[3u * g + 2u] = 1u;
+                s_total += m;
+                s_written = next;
+                s_segment_begin = next;
+            }
+        }
         barrier();
     }
 
     if (lid == 0u) {
+        uint g = (push.chunk_count - 1u) / push.segment_chunks;  // the last segment
         uint m = s_written - s_segment_begin;
-        cull_dispatch[3u * segment] = m;
-        cull_dispatch[3u * segment + 1u] = 1u;
-        cull_dispatch[3u * segment + 2u] = 1u;
+        cull_dispatch[3u * g] = m;
+        cull_dispatch[3u * g + 1u] = 1u;
+        cull_dispatch[3u * g + 2u] = 1u;
         visible_chunks = s_total + m;
     }
 }

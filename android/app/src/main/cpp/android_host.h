@@ -93,6 +93,9 @@ public:
     // Coverage fade (ADR-0013) strength, 0..1; kept across scenes, effective for scenes with a
     // <stem>.pscov sidecar next to the pack (has_coverage), bench runs included.
     void set_coverage_strength(float strength);
+    // Testing only (ADR-0018): segment size for scenes opened from now on (a multiple of
+    // splatcore::kSegmentGranule); 0 = the device's own.
+    void set_segment_splats(std::uint32_t splats) { m_segment_splats = splats; }
     bool has_coverage() const { return m_renderer_ready ? m_splats.has_coverage() : m_coverage.has_value(); }
     // Where the open scene's sidecar came from (splatcore::CaptureSource: 0 capture cameras,
     // 1 inferred room, 2 inferred object), -1 without one.
@@ -203,6 +206,7 @@ private:
     std::optional<splatcore::GpuPack> m_pack;              // held until the renderer can be created
     std::optional<std::vector<std::uint32_t>> m_coverage;  // the pack's sidecar masks, likewise
     float m_coverage_strength = 0.0f;
+    std::uint32_t m_segment_splats = 0;  // set_segment_splats (testing)
     int m_coverage_source = -1;
     std::string m_scene_name;  // file name of the open scene (trace header)
     splatcore::SceneFraming m_framing{{0.0f, 0.0f, 0.0f}, 1.0f};

@@ -75,7 +75,7 @@ Result<GpuPack> parse_pack(const std::vector<std::uint8_t>& bytes);
 // The `max_count` most important splats of `pack` - the same choice as prune_budget: importance
 // = alpha x (sx sy + sy sz + sz sx), ties filled in pack order - kept in pack order, so chunks
 // stay spatially compact; the chunk cull bounds and the AABB are rebuilt as build_pack does. For
-// opening a scene larger than the GPU can draw (the Adreno 750: 11,184,810 splats). `kept`, if
+// opening a scene larger than the GPU's memory budget holds (SplatRenderer::max_splats, ADR-0018). `kept`, if
 // given, receives each kept splat's index in `pack`, to select the same entries of per-splat
 // sidecars. A palette is kept whole (indices stay valid). A pack within the limit is returned
 // unchanged (kept = 0..count-1).

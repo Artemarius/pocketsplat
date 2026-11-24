@@ -489,7 +489,8 @@ splatcore::Status AndroidHost::open_scene(const std::string& path) {
 splatcore::Status AndroidHost::ensure_renderer() {
     using splatcore::Status;
     if (m_renderer_ready || !m_pack.has_value() || !m_swapchain_ready) return Status::success();
-    Status s = m_splats.init(m_context, *m_pack, m_swapchain.format(), m_coverage ? &*m_coverage : nullptr);
+    Status s = m_splats.init(m_context, *m_pack, m_swapchain.format(), m_coverage ? &*m_coverage : nullptr, 0,
+                             m_segment_splats);
     if (!s.ok()) return s;
     m_splats.set_coverage_strength(m_coverage_strength);
     if (!m_bench_active) {
@@ -514,6 +515,7 @@ void AndroidHost::write_trace_scene() {
             << ", sh=" << m_splats.sh_degree() << ", sh1_palette=" << m_splats.sh1_palette()
             << ", visible_capacity=" << m_splats.visible_capacity()
             << ", storage_buffer_range=" << m_context.max_storage_buffer_range()
+            << ", segments=" << m_splats.segment_count() << ", segment_splats=" << m_splats.segment_splats()
             << ", resolution=" << m_swapchain.extent().width << "x" << m_swapchain.extent().height << "\n";
 }
 
@@ -939,6 +941,7 @@ std::string AndroidHost::stop_bench() {
         << ", sh=" << m_splats.sh_degree() << ", sh1_palette=" << m_splats.sh1_palette()
         << ", visible_capacity=" << m_splats.visible_capacity()
         << ", storage_buffer_range=" << m_context.max_storage_buffer_range()
+        << ", segments=" << m_splats.segment_count() << ", segment_splats=" << m_splats.segment_splats()
         << ", resolution=" << m_swapchain.extent().width << "x" << m_swapchain.extent().height
         << ", key_bits=" << m_bench_config.key_bits
         << ", min_contribution=" << m_bench_config.min_contribution

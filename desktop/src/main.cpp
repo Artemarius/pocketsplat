@@ -517,6 +517,16 @@ int main(int argc, char** argv) {
     }
     if (args.list_gpus) return 0;
     std::printf("device: %s%s\n", context.device_name(), args.validation ? " (validation on)" : "");
+    // Scene-size limits (ADR-0018): a GPU memory bound, taken before the scene is allocated.
+    std::printf(
+        "memory: device-local heap %llu MB, available %llu MB (VK_EXT_memory_budget %s) -> scene limit "
+        "%llu splats at 29 B, %llu at 45 B; maxStorageBufferRange %u, maxComputeWorkGroupCount.x %u\n",
+        static_cast<unsigned long long>(context.device_local_heap_size() >> 20),
+        static_cast<unsigned long long>(context.device_local_available() >> 20),
+        context.has_memory_budget_ext() ? "yes" : "no",
+        static_cast<unsigned long long>(splatrender::SplatRenderer::max_splats(context, 29)),
+        static_cast<unsigned long long>(splatrender::SplatRenderer::max_splats(context)),
+        context.max_storage_buffer_range(), context.max_compute_workgroup_count_x());
 
     VkSurfaceKHR surface = VK_NULL_HANDLE;
     if (glfwCreateWindowSurface(context.instance(), window, nullptr, &surface) != VK_SUCCESS) {

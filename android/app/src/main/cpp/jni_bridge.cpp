@@ -163,6 +163,13 @@ JNIEXPORT void JNICALL Java_com_pocketsplat_app_SplatEngine_nativeSetCoverageStr
     host_of(handle)->set_coverage_strength(strength);
 }
 
+// Testing only (ADR-0018): segment size for scenes opened from now on; 0 = the device's own.
+JNIEXPORT void JNICALL Java_com_pocketsplat_app_SplatEngine_nativeSetSegmentSplats(JNIEnv*, jobject,
+                                                                                   jlong handle,
+                                                                                   jint splats) {
+    host_of(handle)->set_segment_splats(splats > 0 ? static_cast<std::uint32_t>(splats) : 0u);
+}
+
 // About once a second while resumed; true = the quality rung changed (redraw).
 JNIEXPORT jboolean JNICALL Java_com_pocketsplat_app_SplatEngine_nativeThermalTick(JNIEnv*, jobject,
                                                                                   jlong handle) {

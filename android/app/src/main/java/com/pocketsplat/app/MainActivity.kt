@@ -133,6 +133,9 @@ class MainActivity : ComponentActivity() {
             if (scriptedFade) intent.getFloatExtra("coverage_strength", 0f).coerceIn(0f, 1f) else kDefaultBacksideFade
         engine.setFadeWhileMoving(!scriptedFade)
         engine.setCoverageStrength(coverageStrength)
+        // Testing only (ADR-0018): segment_splats = a multiple of 65,536 forces the multi-segment
+        // path on small scenes (posted before any scene opens). The bench CSV header records it.
+        intent.getIntExtra("segment_splats", 0).takeIf { it > 0 }?.let { engine.setSegmentSplats(it) }
         setContent {
             MaterialTheme {
                 ViewerScreen(
@@ -943,7 +946,7 @@ private fun PartialSceneBanner(shown: Long, total: Long, compact: Boolean) {
     Box(outer) {
         Text(
             if (compact) "PARTIAL SCENE: $percent % of its splats"
-            else "PARTIAL SCENE: %,d of %,d splats (%d %%), the most important ones. This GPU draws at most %,d: import the scene again with a budget to see all of it."
+            else "PARTIAL SCENE: %,d of %,d splats (%d %%), the most important ones. This GPU's memory holds at most %,d: import the scene again with a budget to see all of it."
                 .format(shown, total, percent, shown),
             color = Color(0xFFFF3B30),
             style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
