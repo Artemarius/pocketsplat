@@ -55,11 +55,12 @@ struct Args {
     std::uint64_t frames = 0;        // 0 = run until the window closes
     int width = 1600;
     int height = 900;
-    int sh = 1;                     // SH truncation target for .ply/.spz inputs above it
-    int key_bits = 32;              // depth sort key width (16 = faster, quantized)
-    float min_contribution = 0.0f;  // contribution cull threshold in pixels (0 = off)
-    std::uint32_t visible_cap = 0;  // --visible-cap: force a smaller visible capacity (clip testing)
-    bool clip_floor = true;         // --no-clip-floor: clip without the contribution floor (A/B)
+    int sh = 1;                        // SH truncation target for .ply/.spz inputs above it
+    int key_bits = 32;                 // depth sort key width (16 = faster, quantized)
+    float min_contribution = 0.0f;     // contribution cull threshold in pixels (0 = off)
+    std::uint32_t visible_cap = 0;     // --visible-cap: force a smaller visible capacity (clip testing)
+    std::uint32_t segment_splats = 0;  // --segment-splats: force small segments (ADR-0018 testing)
+    bool clip_floor = true;            // --no-clip-floor: clip without the contribution floor (A/B)
     splatrender::SplatRenderer::DrawMode draw_mode = splatrender::SplatRenderer::kDefaultDrawMode;
     splatrender::SplatRenderer::DrawProbe draw_probe = splatrender::SplatRenderer::DrawProbe::kNone;
     float dist_scale = 1.0f;                  // camera distance multiplier (<1 = zoomed in)
@@ -121,6 +122,8 @@ bool parse_args(int argc, char** argv, Args& args) {
             args.clip_floor = false;
         } else if (arg == "--visible-cap" && i + 1 < argc) {
             args.visible_cap = static_cast<std::uint32_t>(std::strtoul(argv[++i], nullptr, 10));
+        } else if (arg == "--segment-splats" && i + 1 < argc) {
+            args.segment_splats = static_cast<std::uint32_t>(std::strtoul(argv[++i], nullptr, 10));
         } else if (arg == "--min-contribution" && i + 1 < argc) {
             args.min_contribution = static_cast<float>(std::atof(argv[++i]));
         } else if (arg == "--draw-mode" && i + 1 < argc) {
@@ -227,7 +230,8 @@ bool parse_args(int argc, char** argv, Args& args) {
                 "       [--draw-probe none|seq|tiny|clip|noblend|nofrag|copy]\n"
                 "       [--home-view] [--look-from x,y,z --look-at x,y,z [--up x,y,z]] [--pick x,y]\n"
                 "       [--coverage file.pscov | --no-coverage] [--coverage-strength S]\n"
-                "       [--coverage-angles full,zero] [--visible-cap N] [--no-clip-floor]\n");
+                "       [--coverage-angles full,zero] [--visible-cap N] [--no-clip-floor]\n"
+                "       [--segment-splats N (a multiple of 65536)]\n");
             return false;
         }
     }
@@ -541,7 +545,10 @@ int main(int argc, char** argv) {
         }
         if (s.ok() && pack) {
             s = splats.init(context, *pack, swapchain.format(), coverage ? &*coverage : nullptr,
-                            args.visible_cap);
+                            args.visible_cap, args.segment_splats);
+            if (s.ok() && splats.segment_count() > 1) {
+                std::printf("%u segments of %u splats\n", splats.segment_count(), splats.segment_splats());
+            }
             if (s.ok() && splats.visible_capacity() < splats.splat_count()) {
                 std::printf("visible capacity %u of %u splats (maxStorageBufferRange %u)\n",
                             splats.visible_capacity(), splats.splat_count(),

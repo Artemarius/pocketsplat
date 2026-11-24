@@ -380,5 +380,68 @@ TEST(PackPalette, SubsetKeepsThePaletteWholeAndTheIndices) {
     EXPECT_TRUE(parse_pack(sub.serialize()).ok());
 }
 
+// ADR-0018: segment plans at the edges.
+constexpr std::uint64_t kAdreno750Range = 134217728;   // 128 MB
+constexpr std::uint64_t kAdreno830Range = 2147483647;  // 2 GB - 1
+constexpr std::uint64_t kSpecMinWorkgroups = 65535;
+
+TEST(PackSegments, Adreno750SplitsAtAWholeNumberOfGranules) {
+    // 128 MB / 12 B = 11,184,810 splats -> 170 granules of 65,536 = 11,141,120.
+    Result<SegmentPlan> one = plan_segments(11141120, kAdreno750Range, kSpecMinWorkgroups);
+    ASSERT_TRUE(one.ok()) << one.error();
+    EXPECT_EQ(one.value().segment_splats, 11141120u);
+    EXPECT_EQ(one.value().segment_splats % kSegmentGranule, 0u);
+    EXPECT_EQ(one.value().segment_count, 1u);
+    Result<SegmentPlan> two = plan_segments(11141121, kAdreno750Range, kSpecMinWorkgroups);
+    ASSERT_TRUE(two.ok());
+    EXPECT_EQ(two.value().segment_count, 2u);
+    Result<SegmentPlan> single = plan_segments(1, kAdreno750Range, kSpecMinWorkgroups);
+    ASSERT_TRUE(single.ok());
+    EXPECT_EQ(single.value().segment_count, 1u);
+    // bicycle x4 (17.93 M): two segments on the 750.
+    EXPECT_EQ(plan_segments(17932420, kAdreno750Range, kSpecMinWorkgroups).value().segment_count, 2u);
+}
+
+TEST(PackSegments, TheDispatchLimitCapsWideBindings) {
+    // The 830's 2 GB binding holds 178 M splats, but 65,535 workgroups of 256 splats are 16.78 M:
+    // 255 granules = 16,711,680.
+    Result<SegmentPlan> plan = plan_segments(17932420, kAdreno830Range, kSpecMinWorkgroups);
+    ASSERT_TRUE(plan.ok());
+    EXPECT_EQ(plan.value().segment_splats, 16711680u);
+    EXPECT_EQ(plan.value().segment_count, 2u);
+    // A GPU reporting a larger dispatch limit keeps one segment.
+    EXPECT_EQ(plan_segments(17932420, kAdreno830Range, 0x7fffffffu).value().segment_count, 1u);
+}
+
+TEST(PackSegments, ForcedSizesAndRejections) {
+    Result<SegmentPlan> forced =
+        plan_segments(300000, kAdreno750Range, kSpecMinWorkgroups, 12, kSegmentGranule);
+    ASSERT_TRUE(forced.ok());
+    EXPECT_EQ(forced.value().segment_splats, kSegmentGranule);
+    EXPECT_EQ(forced.value().segment_count, 5u);  // 4 full + 37,856
+    EXPECT_FALSE(plan_segments(300000, kAdreno750Range, kSpecMinWorkgroups, 12, kSegmentGranule + 256).ok());
+    EXPECT_FALSE(
+        plan_segments(300000, kAdreno750Range, kSpecMinWorkgroups, 12, 171ull * kSegmentGranule).ok());
+    EXPECT_FALSE(plan_segments(0, kAdreno750Range, kSpecMinWorkgroups).ok());
+    EXPECT_FALSE(plan_segments(kMaxGpuSplats + 1, kAdreno830Range, 0x7fffffffu).ok());
+    EXPECT_FALSE(
+        plan_segments(1000, kSegmentGranule * 12 - 1, kSpecMinWorkgroups).ok());  // under one granule
+    EXPECT_TRUE(plan_segments(1000, kSegmentGranule * 12, kSpecMinWorkgroups).ok());
+}
+
+TEST(PackSegments, MemoryBound) {
+    PackHeader header;
+    header.sh_degree = 0;
+    EXPECT_EQ(gpu_bytes_per_splat(header, false), 29u);
+    header.sh_degree = 1;
+    EXPECT_EQ(gpu_bytes_per_splat(header, false), 41u);  // direct SH1
+    EXPECT_EQ(gpu_bytes_per_splat(header, true), 45u);
+    header.palette_flags = 4096;
+    EXPECT_EQ(gpu_bytes_per_splat(header, false), 29u);  // a palette is shared
+    EXPECT_EQ(max_splats_for_memory(1000, 100, 30), 30u);
+    EXPECT_EQ(max_splats_for_memory(100, 100, 30), 0u);
+    EXPECT_EQ(max_splats_for_memory(1ull << 50, 0, 1), kMaxGpuSplats);
+}
+
 }  // namespace
 }  // namespace splatcore

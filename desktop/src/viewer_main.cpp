@@ -493,7 +493,8 @@ int main(int argc, char** argv) {
     Trackball camera;
     SceneLoader loader;
     const fs::path cache_dir = platform::import_cache_dir();
-    // Largest scene this GPU can hold: each per-splat array lives in one storage buffer bound whole.
+    // Largest scene this GPU can hold: a memory bound at the widest per-splat size (ADR-0018), taken
+    // before any scene is loaded; it caps imports (the budget prune).
     const std::size_t max_splats = static_cast<std::size_t>(splatrender::SplatRenderer::max_splats(context));
     bool has_scene = false;
     std::string scene_name, scene_note, load_error;

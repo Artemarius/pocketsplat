@@ -382,4 +382,50 @@ GpuPack subset_pack(const GpuPack& pack, std::size_t max_count, std::vector<std:
     return out;
 }
 
+Result<SegmentPlan> plan_segments(std::uint64_t count, std::uint64_t max_binding_bytes,
+                                  std::uint64_t max_workgroups_x, std::uint32_t bytes_per_splat,
+                                  std::uint64_t forced) {
+    using R = Result<SegmentPlan>;
+    if (count == 0) return R::failure("cannot plan segments for an empty scene");
+    if (count > kMaxGpuSplats) {
+        return R::failure("the scene has " + std::to_string(count) +
+                          " splats, the renderer indexes at most " + std::to_string(kMaxGpuSplats));
+    }
+    if (bytes_per_splat == 0) return R::failure("bytes per splat must be positive");
+    const std::uint64_t by_binding = max_binding_bytes / bytes_per_splat;
+    const std::uint64_t by_dispatch = max_workgroups_x * kPackChunkSize;
+    std::uint64_t size =
+        std::min({by_binding, by_dispatch, kMaxGpuSplats}) / kSegmentGranule * kSegmentGranule;
+    if (size == 0) {
+        return R::failure("this GPU cannot hold one segment of " + std::to_string(kSegmentGranule) +
+                          " splats (maxStorageBufferRange " + std::to_string(max_binding_bytes) +
+                          ", maxComputeWorkGroupCount " + std::to_string(max_workgroups_x) + ")");
+    }
+    if (forced != 0) {
+        if (forced % kSegmentGranule != 0 || forced > size) {
+            return R::failure("a forced segment size must be a multiple of " +
+                              std::to_string(kSegmentGranule) + " up to " + std::to_string(size) + ", got " +
+                              std::to_string(forced));
+        }
+        size = forced;
+    }
+    SegmentPlan plan;
+    plan.segment_splats = static_cast<std::uint32_t>(size);
+    plan.segment_count = static_cast<std::uint32_t>((count + size - 1) / size);
+    return R::success(plan);
+}
+
+std::uint64_t gpu_bytes_per_splat(const PackHeader& header, bool coverage) {
+    std::uint64_t bytes = 12 + 12 + 4 + 1;  // pos, scale_rot, color, chunk bounds + list (rounded up)
+    if (header.sh_degree >= 1 && header.palette_count() == 0) bytes += 12;
+    if (coverage) bytes += 4;
+    return bytes;
+}
+
+std::uint64_t max_splats_for_memory(std::uint64_t budget_bytes, std::uint64_t fixed_bytes,
+                                    std::uint64_t bytes_per_splat) {
+    if (bytes_per_splat == 0 || fixed_bytes >= budget_bytes) return 0;
+    return std::min((budget_bytes - fixed_bytes) / bytes_per_splat, kMaxGpuSplats);
+}
+
 }  // namespace splatcore

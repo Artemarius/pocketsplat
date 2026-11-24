@@ -12,15 +12,17 @@
 //          margins cover the renderer's unorm8 alpha (+0.5/255, times s_max^2 <= (min AABB
 //          extent / 6)^2 because the AABB is centers +- 3*s_max) and fp16 log-scales (x1.04). So
 //          the cull is conservative: it removes only splats the preprocess would cull itself.
-// Outputs: chunk_list[0..m) = indices of the chunks intersecting the view frustum in ASCENDING
-//          order (a shared-memory prefix scan compacts each 256-chunk block in order — keeping
-//          the Morton-coherent memory access pattern of the preprocess costs ~0.3 ms/frame at
-//          1 M all-visible on the RTX 3060 if the order is scrambled), counter.visible_chunks =
-//          m (trailing HUD read), cull_dispatch = {m, 1, 1} — the preprocess runs one
-//          256-thread workgroup per visible chunk.
+// Outputs: per segment g (push.segment_chunks chunks each, a multiple of 256; ADR-0018): the
+//          indices of g's chunks intersecting the view frustum, in ASCENDING order, at
+//          chunk_list[g * segment_chunks ..) (a shared-memory prefix scan compacts each 256-chunk
+//          block in order - keeping the Morton-coherent memory access pattern of the preprocess
+//          costs ~0.3 ms/frame at 1 M all-visible on the RTX 3060 if the order is scrambled), and
+//          cull_dispatch[3g..3g+2] = {m_g, 1, 1}: the preprocess dispatch of segment g runs one
+//          256-thread workgroup per visible chunk. counter.visible_chunks = sum of m_g (trailing
+//          HUD read). One segment (most scenes) is the single list and dispatch of before.
 // Sync:    caller clears the counter before this pass and barriers these writes before the
 //          preprocess's chunk_list read and indirect-dispatch read. Dispatched as a single
-//          workgroup looping over all chunks (~120 iterations at the 8 M-splat import cap):
+//          workgroup looping over all chunks, 256 per iteration (171 at 11.18 M, 274 at 17.9 M):
 //          shared memory and barrier() only — no cross-workgroup coordination (CLAUDE.md §2).
 
 layout(local_size_x = 256) in;
@@ -36,20 +38,27 @@ layout(std140, set = 0, binding = 8) uniform Camera {
 
 layout(std430, set = 0, binding = 9) readonly buffer Chunks { float chunks[]; };
 layout(std430, set = 0, binding = 10) writeonly buffer ChunkList { uint chunk_list[]; };
-layout(std430, set = 0, binding = 11) writeonly buffer CullDispatch { uint gx; uint gy; uint gz; };
+layout(std430, set = 0, binding = 11) writeonly buffer CullDispatch { uint cull_dispatch[]; };  // 3 per segment
 
 layout(push_constant) uniform Push {
     uint chunk_count;
     float min_contribution;  // the preprocess's threshold (already viewport-scaled); 0 = off
     float near_clip;
+    uint segment_chunks;  // chunks per segment, a multiple of 256
 } push;
 
 shared uint s_scan[256];
-shared uint s_written;
+shared uint s_written;        // next chunk_list entry
+shared uint s_segment_begin;  // the current segment's first chunk_list entry
+shared uint s_total;          // visible chunks of the finished segments
 
 void main() {
     uint lid = gl_LocalInvocationID.x;
-    if (lid == 0u) s_written = 0u;
+    if (lid == 0u) {
+        s_written = 0u;
+        s_segment_begin = 0u;
+        s_total = 0u;
+    }
 
     // Gribb-Hartmann frustum planes from the rows of proj_view (column-major mat4, so row i is
     // (M[0][i], M[1][i], M[2][i], M[3][i])). Vulkan depth range [0,1]: near plane is row 2 alone.
@@ -59,7 +68,25 @@ void main() {
     vec4 r3 = vec4(proj_view[0][3], proj_view[1][3], proj_view[2][3], proj_view[3][3]);
     vec4 planes[6] = vec4[6](r3 + r0, r3 - r0, r3 + r1, r3 - r1, r2, r3 - r2);
 
+    uint segment = 0u;
     for (uint start = 0u; start < push.chunk_count; start += 256u) {
+        // A block never straddles segments (segment_chunks is a multiple of 256), and segments
+        // are crossed one at a time: close the finished one and start compacting at the next
+        // one's fixed list offset. `start` is uniform, so is this branch.
+        uint block_segment = start / push.segment_chunks;
+        if (block_segment != segment) {
+            if (lid == 0u) {
+                uint m = s_written - s_segment_begin;
+                cull_dispatch[3u * segment] = m;
+                cull_dispatch[3u * segment + 1u] = 1u;
+                cull_dispatch[3u * segment + 2u] = 1u;
+                s_total += m;
+                s_written = block_segment * push.segment_chunks;
+                s_segment_begin = s_written;
+            }
+            barrier();
+            segment = block_segment;
+        }
         uint c = start + lid;
         bool visible = false;
         if (c < push.chunk_count) {
@@ -108,9 +135,10 @@ void main() {
     }
 
     if (lid == 0u) {
-        visible_chunks = s_written;
-        gx = s_written;
-        gy = 1u;
-        gz = 1u;
+        uint m = s_written - s_segment_begin;
+        cull_dispatch[3u * segment] = m;
+        cull_dispatch[3u * segment + 1u] = 1u;
+        cull_dispatch[3u * segment + 2u] = 1u;
+        visible_chunks = s_total + m;
     }
 }

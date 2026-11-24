@@ -1,11 +1,14 @@
 #version 460
 // Pass: splat cull + preprocess (compacting)
-// Inputs:  pack SSBOs (pos, scale_rot, color, sh1), camera UBO, push constants; sh1 holds
+// Inputs:  one segment's pack SSBOs (pos, scale_rot, color, sh1, coverage: splats
+//          [push.splat_base, push.splat_base + push.count) of the pack, ADR-0018; the host
+//          dispatches this pass once per segment), camera UBO, push constants; sh1 holds
 //          one entry per splat, or with push.sh1_palette != 0 the palette entries, selected by
 //          scale_rot word 2's high 16 bits (pack v3, docs/formats.md §3); with
 //          push.use_chunk_cull != 0 also chunk_list from the chunk-cull pass, and the dispatch
-//          is indirect with one 256-thread workgroup per visible chunk (workgroup size ==
-//          kPackChunkSize, asserted host-side).
+//          is indirect with one 256-thread workgroup per visible chunk of the segment, read from
+//          chunk_list[push.list_base + workgroup] (workgroup size == kPackChunkSize, asserted
+//          host-side).
 // Outputs: for each VISIBLE splat, a compacted slot s = atomicAdd(visible_count):
 //          records[s] (32-byte oriented-quad draw record: center px, two half-axis vectors px,
 //          packed color, sigma-units support cutoff), keys[s] (depth sort key, 32- or 16-bit
@@ -15,7 +18,8 @@
 //          splat's opacity is first scaled by the coverage fade (coverage[], ADR-0013).
 //          visible_count counts every visible splat; only slots < push.capacity are written
 //          (records, keys and values hold the visible capacity, not the scene - ADR-0016).
-// Sync:    caller clears the counter, then barriers chunk cull -> preprocess ->
+// Sync:    caller clears the counter, then barriers chunk cull -> preprocess (all segments;
+//          none between segment dispatches: they only append through the atomic counter) ->
 //          prepare_indirect -> sort -> draw. Slot order within equal depths is
 //          non-deterministic (atomic compaction); the sort re-establishes draw order.
 //
@@ -61,6 +65,8 @@ layout(push_constant) uniform Push {
     float coverage_cos_zero;  // cos of the angle beyond which it does not match at all
     uint capacity;            // record / key slots (visible capacity); later appends only count
     uint sh1_palette;         // 1 = sh1[] is a palette indexed by scale_rot word 2 >> 16
+    uint list_base;           // the segment's first chunk_list entry
+    uint splat_base;          // the segment's first splat in the pack (chunk_list holds pack chunks)
 } push;
 
 const float kShC1 = 0.4886025119029199;  // sqrt(3 / (4*pi))
@@ -97,10 +103,11 @@ float coverage_match(uint mask, vec3 dir) {
 }
 
 void main() {
-    // With chunk cull, workgroup w handles the 256 splats of chunk chunk_list[w]; the tail chunk
-    // may be partial, caught by the count check below.
+    // With chunk cull, workgroup w handles the 256 splats of chunk chunk_list[list_base + w];
+    // idx is the splat's index in this segment's arrays. The tail chunk may be partial, caught by
+    // the count check below.
     uint idx = push.use_chunk_cull != 0u
-                   ? chunk_list[gl_WorkGroupID.x] * 256u + gl_LocalInvocationID.x
+                   ? chunk_list[push.list_base + gl_WorkGroupID.x] * 256u + gl_LocalInvocationID.x - push.splat_base
                    : gl_GlobalInvocationID.x;
     if (idx >= push.count) return;
 

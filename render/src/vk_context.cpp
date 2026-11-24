@@ -155,11 +155,14 @@ splatcore::Status Context::init(const ContextCreateInfo& info) {
         return Status::failure("no suitable Vulkan 1.3 device: " + physical_result.error().message());
     }
 
-    auto device_result = vkb::DeviceBuilder(*physical_result).build();
+    // Optional (EXT, multi-vendor): lets VMA report the OS's real budget for the scene-size limit.
+    vkb::PhysicalDevice physical = *physical_result;
+    m_memory_budget_ext = physical.enable_extension_if_present(VK_EXT_MEMORY_BUDGET_EXTENSION_NAME);
+    auto device_result = vkb::DeviceBuilder(physical).build();
     if (!device_result) {
         return Status::failure("device creation failed: " + device_result.error().message());
     }
-    m_physical_device = physical_result->physical_device;
+    m_physical_device = physical.physical_device;
     m_device = device_result->device;
     volkLoadDevice(m_device);
 
@@ -182,6 +185,7 @@ splatcore::Status Context::init(const ContextCreateInfo& info) {
         (properties13.requiredSubgroupSizeStages & VK_SHADER_STAGE_COMPUTE_BIT) != 0;
     m_timestamp_period_ns = properties.limits.timestampPeriod;
     m_max_storage_buffer_range = properties.limits.maxStorageBufferRange;
+    m_max_workgroup_count_x = properties.limits.maxComputeWorkGroupCount[0];
     std::snprintf(m_device_name, sizeof(m_device_name), "%s", properties.deviceName);
 
     VmaVulkanFunctions functions{};
@@ -193,6 +197,7 @@ splatcore::Status Context::init(const ContextCreateInfo& info) {
     allocator_info.instance = m_instance;
     allocator_info.vulkanApiVersion = VK_API_VERSION_1_3;
     allocator_info.pVulkanFunctions = &functions;
+    if (m_memory_budget_ext) allocator_info.flags |= VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
     if (vmaCreateAllocator(&allocator_info, &m_allocator) != VK_SUCCESS) {
         return Status::failure("VMA allocator creation failed");
     }
@@ -220,6 +225,36 @@ void Context::destroy() {
         vkDestroyInstance(m_instance, nullptr);
         m_instance = VK_NULL_HANDLE;
     }
+}
+
+std::uint32_t Context::largest_device_local_heap() const {
+    const VkPhysicalDeviceMemoryProperties* memory = nullptr;
+    vmaGetMemoryProperties(m_allocator, &memory);
+    std::uint32_t best = 0;
+    VkDeviceSize best_size = 0;
+    for (std::uint32_t h = 0; h < memory->memoryHeapCount; ++h) {
+        const VkMemoryHeap& heap = memory->memoryHeaps[h];
+        if ((heap.flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) != 0 && heap.size > best_size) {
+            best = h;
+            best_size = heap.size;
+        }
+    }
+    return best;
+}
+
+std::uint64_t Context::device_local_heap_size() const {
+    if (m_allocator == VK_NULL_HANDLE) return 0;
+    const VkPhysicalDeviceMemoryProperties* memory = nullptr;
+    vmaGetMemoryProperties(m_allocator, &memory);
+    return memory->memoryHeaps[largest_device_local_heap()].size;
+}
+
+std::uint64_t Context::device_local_available() const {
+    if (m_allocator == VK_NULL_HANDLE) return 0;
+    VmaBudget budgets[VK_MAX_MEMORY_HEAPS] = {};
+    vmaGetHeapBudgets(m_allocator, budgets);
+    const VmaBudget& budget = budgets[largest_device_local_heap()];
+    return budget.budget > budget.usage ? budget.budget - budget.usage : 0;
 }
 
 }  // namespace splatrender

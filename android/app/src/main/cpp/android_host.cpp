@@ -184,11 +184,19 @@ splatcore::Status AndroidHost::init() {
     if (s.ok()) s = m_timer.init(m_context);
     if (!s.ok()) return s;
     m_ring_ready = true;
-    // Size limits come from this device's Vulkan limits at run time (ADR-0016), never a table.
-    LOGI("Vulkan ready: %s, maxStorageBufferRange %u B -> scene limit %llu splats, visible capacity %llu",
-         m_context.device_name(), m_context.max_storage_buffer_range(),
-         static_cast<unsigned long long>(splatrender::SplatRenderer::max_splats(m_context)),
-         static_cast<unsigned long long>(splatrender::SplatRenderer::max_visible(m_context)));
+    // Size limits come from this device's Vulkan limits and memory budget at run time (ADR-0016,
+    // ADR-0018), never a table. The scene limit is a memory bound at the widest per-splat size.
+    LOGI(
+        "Vulkan ready: %s, maxStorageBufferRange %u B, maxComputeWorkGroupCount.x %u, device-local heap "
+        "%llu MB, available %llu MB (VK_EXT_memory_budget %s) -> scene limit %llu splats (45 B), visible "
+        "capacity %llu",
+        m_context.device_name(), m_context.max_storage_buffer_range(),
+        m_context.max_compute_workgroup_count_x(),
+        static_cast<unsigned long long>(m_context.device_local_heap_size() >> 20),
+        static_cast<unsigned long long>(m_context.device_local_available() >> 20),
+        m_context.has_memory_budget_ext() ? "yes" : "no",
+        static_cast<unsigned long long>(splatrender::SplatRenderer::max_splats(m_context)),
+        static_cast<unsigned long long>(splatrender::SplatRenderer::max_visible(m_context)));
 
     // Controller inputs found at run time: the platform's LIGHT threshold, else ADR-0009's
     // (40 C - 15) / 30 for the Samsung skin sensor, and the highest kgsl clock.
@@ -420,11 +428,12 @@ splatcore::Status AndroidHost::open_scene(const std::string& path) {
             }
         }
     }
-    // A scene larger than the GPU can draw opens as its most important splats (the import budget's
-    // choice), with the sidecar's masks cut the same way, and the UI shows a warning (S27, owner:
-    // a peek beats a refusal).
+    // A scene larger than the GPU's memory budget holds opens as its most important splats (the
+    // import budget's choice), with the sidecar's masks cut the same way, and the UI shows a
+    // warning (S27, owner: a peek beats a refusal; ADR-0018: the limit is memory, not a binding).
     m_file_splat_count = pack.value().header.count;
-    const std::uint64_t limit = splatrender::SplatRenderer::max_splats(m_context);
+    const std::uint64_t limit = splatrender::SplatRenderer::max_splats(
+        m_context, splatcore::gpu_bytes_per_splat(pack.value().header, m_coverage.has_value()));
     if (limit > 0 && pack.value().header.count > limit) {
         std::vector<std::uint32_t> kept;
         splatcore::GpuPack partial =
@@ -434,7 +443,7 @@ splatcore::Status AndroidHost::open_scene(const std::string& path) {
             for (std::size_t k = 0; k < kept.size(); ++k) masks[k] = (*m_coverage)[kept[k]];
             m_coverage = std::move(masks);
         }
-        LOGI("scene has %u splats, this GPU draws at most %llu: opening the most important ones",
+        LOGI("scene has %u splats, this GPU's memory budget holds %llu: opening the most important ones",
              pack.value().header.count, static_cast<unsigned long long>(limit));
         pack = splatcore::Result<splatcore::GpuPack>::success(std::move(partial));
     }

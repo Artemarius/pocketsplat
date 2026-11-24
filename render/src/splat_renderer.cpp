@@ -45,12 +45,15 @@ struct PreprocessPush {
     float coverage_cos_zero;
     std::uint32_t capacity;     // record / key slots: appends at or beyond it are counted, not written
     std::uint32_t sh1_palette;  // 1 = sh1 holds palette entries indexed by scale_rot word 2 >> 16
+    std::uint32_t list_base;    // the segment's first chunk_list entry (ADR-0018)
+    std::uint32_t splat_base;   // the segment's first splat in the pack
 };
 
 struct ChunkCullPush {
     std::uint32_t chunk_count;
     float min_contribution;  // the preprocess's viewport-scaled threshold; 0 = no chunk bound test
     float near_clip;
+    std::uint32_t segment_chunks;  // chunks per segment, a multiple of 256 (ADR-0018)
 };
 
 struct PreparePush {
@@ -99,9 +102,22 @@ void memory_barrier(VkCommandBuffer cmd, VkPipelineStageFlags2 src_stage, VkAcce
 
 }  // namespace
 
+std::uint64_t SplatRenderer::max_splats(const Context& context, std::uint64_t bytes_per_splat) {
+    // count * bytes_per_splat + min(count, max_visible) * kBytesPerVisibleSlot + slack <= available.
+    const std::uint64_t available = context.device_local_available();
+    if (available <= kFixedSlackBytes) return 0;
+    const std::uint64_t budget = available - kFixedSlackBytes;
+    const std::uint64_t visible = max_visible(context);
+    std::uint64_t n = splatcore::max_splats_for_memory(budget, 0, bytes_per_splat + kBytesPerVisibleSlot);
+    if (n > visible) {
+        n = splatcore::max_splats_for_memory(budget, visible * kBytesPerVisibleSlot, bytes_per_splat);
+    }
+    return n;
+}
+
 splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack& pack, VkFormat color_format,
                                       const std::vector<std::uint32_t>* coverage,
-                                      std::uint32_t visible_capacity) {
+                                      std::uint32_t visible_capacity, std::uint32_t segment_splats) {
     using splatcore::Status;
     m_context = &context;
     if (coverage != nullptr && coverage->size() != pack.header.count) {
@@ -121,15 +137,14 @@ splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack
     m_sh1_scale = pack.header.sh1_scale;
     m_sh1_palette = pack.header.palette_count();
     if (m_count == 0) return Status::failure("cannot render an empty pack");
-    // Each per-splat array lives in one storage buffer bound whole, so the widest (12 B per splat)
-    // caps the scene by the device's descriptor range (Adreno 750: 128 MB -> 11,184,810 splats);
-    // the 32 B draw records hold only a frame's visible splats, up to the visible capacity.
-    const std::uint64_t max_splats = SplatRenderer::max_splats(context);
-    if (m_count > max_splats) {
-        return Status::failure("the scene has " + std::to_string(m_count) +
-                               " splats, this GPU draws at most " + std::to_string(max_splats) +
-                               " (maxStorageBufferRange): import it again with a smaller budget");
-    }
+    // The per-splat arrays are split into segments that each fit one binding and one dispatch
+    // (ADR-0018); the 32 B draw records hold only a frame's visible splats, up to the visible
+    // capacity. Memory is the host's limit (max_splats, checked before opening).
+    splatcore::Result<splatcore::SegmentPlan> plan = splatcore::plan_segments(
+        m_count, context.max_storage_buffer_range(), context.max_compute_workgroup_count_x(),
+        kSegmentBytesPerSplat, segment_splats);
+    if (!plan) return Status::failure(plan.error());
+    m_segment_splats = plan.value().segment_splats;
     m_capacity = static_cast<std::uint32_t>(std::min<std::uint64_t>(m_count, max_visible(context)));
     if (visible_capacity > 0) m_capacity = std::min(m_capacity, visible_capacity);
     if (pack.header.chunk_size != splatcore::kPackChunkSize) {
@@ -139,30 +154,39 @@ splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack
     std::memcpy(m_aabb_max, pack.header.aabb_max, sizeof(m_aabb_max));
 
     const VkBufferUsageFlags storage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-    Status s = create_device_buffer(context, pack.positions.data(), pack.positions.size() * sizeof(float),
-                                    storage, m_positions);
-    if (s.ok()) {
-        s = create_device_buffer(context, pack.scale_rot.data(),
-                                 pack.scale_rot.size() * sizeof(std::uint32_t), storage, m_scale_rot);
-    }
-    if (s.ok()) {
-        s = create_device_buffer(context, pack.color.data(), pack.color.size() * sizeof(std::uint32_t),
-                                 storage, m_color);
-    }
-    if (s.ok()) {
-        // Degree 0 has no SH data; bind a 4-byte dummy so the descriptor stays valid.
-        static const std::uint32_t kDummy = 0;
-        const void* sh_data = pack.sh1.empty() ? &kDummy : static_cast<const void*>(pack.sh1.data());
-        const VkDeviceSize sh_size =
-            pack.sh1.empty() ? sizeof(std::uint32_t) : pack.sh1.size() * sizeof(std::uint32_t);
-        s = create_device_buffer(context, sh_data, sh_size, storage, m_sh1);
-    }
-    if (s.ok()) {
-        static const std::uint32_t kNoCoverage = 0;
-        const void* data = m_has_coverage ? static_cast<const void*>(coverage->data()) : &kNoCoverage;
-        const VkDeviceSize size =
-            m_has_coverage ? coverage->size() * sizeof(std::uint32_t) : sizeof(std::uint32_t);
-        s = create_device_buffer(context, data, size, storage, m_coverage);
+    const bool direct_sh1 = !pack.sh1.empty() && !pack.has_palette();
+    static const std::uint32_t kDummy = 0;
+    // Shared by every segment: the SH1 palette, or a 4-byte dummy (SH 0, or direct SH1 which is
+    // per segment); the coverage dummy for scenes without masks. Descriptors must stay valid.
+    Status s = direct_sh1 || pack.sh1.empty()
+                   ? create_device_buffer(context, &kDummy, sizeof(kDummy), storage, m_sh1)
+                   : create_device_buffer(context, pack.sh1.data(), pack.sh1.size() * sizeof(std::uint32_t),
+                                          storage, m_sh1);
+    if (s.ok()) s = create_device_buffer(context, &kDummy, sizeof(kDummy), storage, m_coverage);
+    m_segments.resize(plan.value().segment_count);
+    for (std::size_t g = 0; g < m_segments.size() && s.ok(); ++g) {
+        Segment& seg = m_segments[g];
+        seg.first = static_cast<std::uint32_t>(g) * m_segment_splats;
+        seg.count = std::min(m_segment_splats, m_count - seg.first);
+        const std::size_t first = seg.first, n = seg.count;
+        s = create_device_buffer(context, pack.positions.data() + 3 * first, 3 * n * sizeof(float), storage,
+                                 seg.positions);
+        if (s.ok()) {
+            s = create_device_buffer(context, pack.scale_rot.data() + 3 * first,
+                                     3 * n * sizeof(std::uint32_t), storage, seg.scale_rot);
+        }
+        if (s.ok()) {
+            s = create_device_buffer(context, pack.color.data() + first, n * sizeof(std::uint32_t), storage,
+                                     seg.color);
+        }
+        if (s.ok() && direct_sh1) {
+            s = create_device_buffer(context, pack.sh1.data() + 3 * first, 3 * n * sizeof(std::uint32_t),
+                                     storage, seg.sh1);
+        }
+        if (s.ok() && m_has_coverage) {
+            s = create_device_buffer(context, coverage->data() + first, n * sizeof(std::uint32_t), storage,
+                                     seg.coverage);
+        }
     }
     if (s.ok()) {
         s = m_records.init(context.allocator(), VkDeviceSize{m_capacity} * kRecordBytes, storage);
@@ -182,7 +206,8 @@ splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack
                               storage);
     }
     if (s.ok()) {
-        s = m_cull_dispatch.init(context.allocator(), 3 * sizeof(std::uint32_t),
+        s = m_cull_dispatch.init(context.allocator(),
+                                 VkDeviceSize{3} * sizeof(std::uint32_t) * m_segments.size(),
                                  storage | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT);
     }
     if (s.ok()) {
@@ -266,43 +291,41 @@ splatcore::Status SplatRenderer::init(Context& context, const splatcore::GpuPack
     if (s.ok()) s = m_copy_layout.init(context.device(), copy_bindings);
     if (!s.ok()) return s;
 
-    // Sets: compute per slot, prepare, draw, pick, and DrawProbe::kSortedCopy's copy + draw sets
-    // (allocated and written when the probe is first asked for).
+    // Sets: compute per slot and segment, prepare, draw, pick, and DrawProbe::kSortedCopy's copy +
+    // draw sets (allocated and written when the probe is first asked for).
+    const auto compute_sets = static_cast<std::uint32_t>(kFramesInFlight * m_segments.size());
     const VkDescriptorPoolSize pool_sizes[] = {
-        {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 12 * kFramesInFlight + 4 + 3 + 5 + 4 + 3},
-        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, kFramesInFlight}};
-    s = m_pool.init(context.device(), pool_sizes, kFramesInFlight + 5);
+        {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 12 * compute_sets + 4 + 3 + 5 + 4 + 3},
+        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, compute_sets}};
+    s = m_pool.init(context.device(), pool_sizes, compute_sets + 5);
     if (!s.ok()) return s;
-    for (std::uint32_t f = 0; f < kFramesInFlight; ++f) {
-        splatcore::Result<VkDescriptorSet> set = m_pool.allocate(m_compute_layout.handle());
-        if (!set) return Status::failure(set.error());
-        m_compute_sets[f] = set.value();
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                m_positions.handle());
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                m_scale_rot.handle());
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                m_color.handle());
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                m_sh1.handle());
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 4, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                m_records.handle());
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 5, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                m_keys.handle());
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 6, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                m_values.handle());
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 7, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                m_counter.handle());
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 8, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                m_camera[f].handle());
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 9, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                m_chunks.handle());
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 10, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                m_chunk_list.handle());
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 11, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                m_cull_dispatch.handle());
-        write_buffer_descriptor(context.device(), m_compute_sets[f], 12, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                m_coverage.handle());
+    for (Segment& seg : m_segments) {
+        for (std::uint32_t f = 0; f < kFramesInFlight; ++f) {
+            splatcore::Result<VkDescriptorSet> set = m_pool.allocate(m_compute_layout.handle());
+            if (!set) return Status::failure(set.error());
+            seg.sets[f] = set.value();
+            // Bindings 0-3 and 12 are the segment's per-splat arrays; the rest are shared.
+            const VkBuffer buffers[] = {
+                seg.positions.handle(),
+                seg.scale_rot.handle(),
+                seg.color.handle(),
+                seg.sh1.handle() != VK_NULL_HANDLE ? seg.sh1.handle() : m_sh1.handle(),
+                m_records.handle(),
+                m_keys.handle(),
+                m_values.handle(),
+                m_counter.handle(),
+                m_camera[f].handle(),
+                m_chunks.handle(),
+                m_chunk_list.handle(),
+                m_cull_dispatch.handle(),
+                seg.coverage.handle() != VK_NULL_HANDLE ? seg.coverage.handle() : m_coverage.handle()};
+            for (std::uint32_t b = 0; b < 13; ++b) {
+                write_buffer_descriptor(
+                    context.device(), seg.sets[f], b,
+                    b == 8 ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                    buffers[b]);
+            }
+        }
     }
     {
         splatcore::Result<VkDescriptorSet> set = m_pool.allocate(m_prepare_layout.handle());
@@ -528,9 +551,10 @@ bool SplatRenderer::record_compute(VkCommandBuffer cmd, std::uint32_t slot, GpuT
     if (m_chunk_cull) {
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_chunk_cull_pipe.handle());
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_chunk_cull_pipe.layout(), 0, 1,
-                                &m_compute_sets[slot], 0, nullptr);
+                                &m_segments[0].sets[slot], 0, nullptr);
         const ChunkCullPush cull_push{m_chunk_count,
-                                      m_chunk_contribution_cull ? scaled_min_contribution : 0.0f, kNearClip};
+                                      m_chunk_contribution_cull ? scaled_min_contribution : 0.0f, kNearClip,
+                                      m_segment_splats / splatcore::kPackChunkSize};
         vkCmdPushConstants(cmd, m_chunk_cull_pipe.layout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(cull_push),
                            &cull_push);
         vkCmdDispatch(cmd, 1, 1, 1);
@@ -540,11 +564,11 @@ bool SplatRenderer::record_compute(VkCommandBuffer cmd, std::uint32_t slot, GpuT
     }
     if (timer != nullptr) timer->stamp(cmd, slot);  // boundary: chunk cull / preprocess
 
+    // One dispatch per segment (ADR-0018), each with its own set of per-splat arrays; they only
+    // append through the shared atomic counter, so no barrier between them.
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_preprocess.handle());
-    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_preprocess.layout(), 0, 1,
-                            &m_compute_sets[slot], 0, nullptr);
-    const PreprocessPush push{
-        m_count,
+    PreprocessPush push{
+        0,
         m_sh_degree,
         m_sh1_scale,
         kNearClip,
@@ -557,12 +581,22 @@ bool SplatRenderer::record_compute(VkCommandBuffer cmd, std::uint32_t slot, GpuT
         m_coverage_cos_full,
         m_coverage_cos_zero,
         m_capacity,
-        m_sh1_palette != 0 ? 1u : 0u};
-    vkCmdPushConstants(cmd, m_preprocess.layout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(push), &push);
-    if (m_chunk_cull) {
-        vkCmdDispatchIndirect(cmd, m_cull_dispatch.handle(), 0);
-    } else {
-        vkCmdDispatch(cmd, (m_count + kWorkgroupSize - 1) / kWorkgroupSize, 1, 1);
+        m_sh1_palette != 0 ? 1u : 0u,
+        0,
+        0};
+    for (std::size_t g = 0; g < m_segments.size(); ++g) {
+        const Segment& seg = m_segments[g];
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_preprocess.layout(), 0, 1,
+                                &seg.sets[slot], 0, nullptr);
+        push.count = seg.count;
+        push.list_base = seg.first / splatcore::kPackChunkSize;
+        push.splat_base = seg.first;
+        vkCmdPushConstants(cmd, m_preprocess.layout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(push), &push);
+        if (m_chunk_cull) {
+            vkCmdDispatchIndirect(cmd, m_cull_dispatch.handle(), VkDeviceSize{3} * sizeof(std::uint32_t) * g);
+        } else {
+            vkCmdDispatch(cmd, (seg.count + kWorkgroupSize - 1) / kWorkgroupSize, 1, 1);
+        }
     }
     memory_barrier(cmd, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
                    VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT,
@@ -787,9 +821,8 @@ void SplatRenderer::destroy() {
     m_compute_layout.destroy();
     m_prepare_layout.destroy();
     m_draw_layout.destroy();
-    m_positions.destroy();
-    m_scale_rot.destroy();
-    m_color.destroy();
+    m_segments.clear();
+    m_segment_splats = 0;
     m_sh1.destroy();
     m_coverage.destroy();
     m_records.destroy();

@@ -46,6 +46,14 @@ public:
     const char* device_name() const { return m_device_name; }
     // Largest range a single storage-buffer descriptor may cover (128 MB on Adreno 750).
     std::uint32_t max_storage_buffer_range() const { return m_max_storage_buffer_range; }
+    // Most workgroups one dispatch may launch along x (spec minimum 65,535).
+    std::uint32_t max_compute_workgroup_count_x() const { return m_max_workgroup_count_x; }
+    // Device-local memory the app may still allocate: the largest device-local heap's budget minus
+    // its usage (VMA: VK_EXT_memory_budget where the device has it, else 80 % of the heap size
+    // minus VMA's own allocations). Changes as memory is allocated and freed; ADR-0018.
+    std::uint64_t device_local_available() const;
+    std::uint64_t device_local_heap_size() const;  // that heap's size
+    bool has_memory_budget_ext() const { return m_memory_budget_ext; }
     // Smallest subgroup any compute dispatch may run with (1.3 core; Adreno 64, NVIDIA 32, Intel 8).
     std::uint32_t min_subgroup_size() const { return m_min_subgroup_size; }
     std::uint32_t max_subgroup_size() const { return m_max_subgroup_size; }
@@ -75,6 +83,9 @@ private:
     VmaAllocator m_allocator = VK_NULL_HANDLE;
     float m_timestamp_period_ns = 0.0f;
     std::uint32_t m_max_storage_buffer_range = 0;
+    std::uint32_t m_max_workgroup_count_x = 0;
+    bool m_memory_budget_ext = false;
+    std::uint32_t largest_device_local_heap() const;
     std::uint32_t m_min_subgroup_size = 0;
     std::uint32_t m_max_subgroup_size = 0;
     bool m_compute_subgroup_size_control = false;

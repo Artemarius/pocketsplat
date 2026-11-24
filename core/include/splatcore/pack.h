@@ -81,4 +81,37 @@ Result<GpuPack> parse_pack(const std::vector<std::uint8_t>& bytes);
 // unchanged (kept = 0..count-1).
 GpuPack subset_pack(const GpuPack& pack, std::size_t max_count, std::vector<std::uint32_t>* kept = nullptr);
 
+// GPU segments (ADR-0018). A storage buffer is bound whole and capped by the device's
+// maxStorageBufferRange (Adreno 750: 128 MB), so the renderer splits every per-splat array into
+// segments of `segment_splats` splats, each in its own buffers with one preprocess dispatch.
+// Segments hold whole 256-chunk blocks (kSegmentGranule splats) so the chunk cull, which walks
+// the chunks 256 at a time, starts each segment's visible-chunk list at a fixed offset.
+inline constexpr std::uint32_t kSegmentGranule = kPackChunkSize * kPackChunkSize;  // 65,536 splats
+inline constexpr std::uint64_t kMaxGpuSplats = 0x7fffffffu;  // splat indices and counts are uint32
+
+struct SegmentPlan {
+    std::uint32_t segment_splats = 0;  // splats per segment (the last may hold fewer)
+    std::uint32_t segment_count = 0;
+};
+
+// The largest multiple of kSegmentGranule whose widest per-splat array (`bytes_per_splat`) fits
+// one binding of `max_binding_bytes` and whose chunks fit one dispatch of `max_workgroups_x`
+// workgroups (one 256-splat chunk each), and the segments `count` splats need. `forced` (a
+// multiple of kSegmentGranule, at most that size) replaces it - testing only. Fails for an empty
+// scene, more than kMaxGpuSplats splats, a device too small for one granule, or a bad `forced`.
+Result<SegmentPlan> plan_segments(std::uint64_t count, std::uint64_t max_binding_bytes,
+                                  std::uint64_t max_workgroups_x, std::uint32_t bytes_per_splat = 12,
+                                  std::uint64_t forced = 0);
+
+// Resident GPU bytes per splat of a pack's per-splat data: pos + scale_rot + color (28 B), direct
+// SH1 (12 B; a palette is shared and counted separately), the optional coverage mask (4 B), and
+// one byte for the per-chunk bounds and list (32 B per 256 splats, rounded up).
+std::uint64_t gpu_bytes_per_splat(const PackHeader& header, bool coverage);
+
+// The most splats whose per-splat data (`bytes_per_splat`) fits `budget_bytes` after
+// `fixed_bytes` (buffers sized independently of the scene), capped by kMaxGpuSplats; 0 when the
+// fixed part alone exceeds the budget.
+std::uint64_t max_splats_for_memory(std::uint64_t budget_bytes, std::uint64_t fixed_bytes,
+                                    std::uint64_t bytes_per_splat);
+
 }  // namespace splatcore

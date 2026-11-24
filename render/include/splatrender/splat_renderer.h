@@ -46,18 +46,27 @@ public:
     SplatRenderer(const SplatRenderer&) = delete;
     SplatRenderer& operator=(const SplatRenderer&) = delete;
 
-    // Size limits. Every per-splat array lives in one storage buffer bound whole, so each is capped
-    // by maxStorageBufferRange (Adreno 750: 128 MB). The widest per-splat input arrays (positions,
-    // scale_rot, SH1) take 12 B per splat: the most splats a scene may have (750: 11,184,810).
+    // Size limits. A storage buffer is bound whole and capped by maxStorageBufferRange (Adreno
+    // 750: 128 MB), so the per-splat arrays are split into segments (ADR-0018,
+    // splatcore::plan_segments): each segment's arrays are their own buffers, bound in their own
+    // descriptor set, with one preprocess dispatch each; a scene of one segment (750: up to
+    // 11,141,120 splats) runs exactly one dispatch as before. No binding limits the scene, so
+    // max_splats is a memory bound: what the device-local heap can still hold (VMA budget) at
+    // `bytes_per_splat` (splatcore::gpu_bytes_per_splat; default: the widest, direct SH1 with
+    // coverage), after the visible-capacity buffers and a fixed slack. It depends on what is
+    // allocated when it is asked: hosts ask before opening a scene, with the previous one freed.
     // The 32 B draw records, the sort keys/values and the sort's scratch hold only the splats
     // visible in a frame, up to the visible capacity: min(splat count, range / 32) (750:
     // 4,194,304). A frame with more visible splats draws the first `capacity` the preprocess
     // appends (an arbitrary subset) and reports the rest in last_clipped_count (ADR-0016).
     static constexpr std::uint32_t kRecordBytes = 32;
-    static constexpr std::uint32_t kMaxBytesPerSplat = 12;  // widest per-splat input array
-    static std::uint64_t max_splats(const Context& context) {
-        return std::min<std::uint64_t>(context.max_storage_buffer_range() / kMaxBytesPerSplat, kMaxCount);
-    }
+    static constexpr std::uint32_t kSegmentBytesPerSplat = 12;  // widest per-splat array (one binding)
+    static constexpr std::uint64_t kMaxBytesPerSplat = 45;      // gpu_bytes_per_splat, direct SH1 + coverage
+    // Per visible slot: record 32 B, key + value 8 B, the sort's ping-pong key + value 8 B, margin.
+    static constexpr std::uint64_t kBytesPerVisibleSlot = 56;
+    static constexpr std::uint64_t kFixedSlackBytes = 32ull << 20;  // palette, chunk lists, pick, UBOs
+    static std::uint64_t max_splats(const Context& context,
+                                    std::uint64_t bytes_per_splat = kMaxBytesPerSplat);
     static std::uint64_t max_visible(const Context& context) {
         return context.max_storage_buffer_range() / kRecordBytes;
     }
@@ -65,10 +74,11 @@ public:
     // `coverage`: optional per-splat observed-direction masks (splatcore/coverage.h, pack order,
     // one per splat) for the coverage fade; without them set_coverage_strength has no effect.
     // `visible_capacity`: 0 = min(splat count, max_visible); a smaller value forces the clip path
-    // (testing and benching only).
+    // (testing and benching only). `segment_splats`: 0 = the device's segment size; a smaller
+    // multiple of splatcore::kSegmentGranule forces the multi-segment path (testing only).
     splatcore::Status init(Context& context, const splatcore::GpuPack& pack, VkFormat color_format,
                            const std::vector<std::uint32_t>* coverage = nullptr,
-                           std::uint32_t visible_capacity = 0);
+                           std::uint32_t visible_capacity = 0, std::uint32_t segment_splats = 0);
     void destroy();
 
     // 32 (exact float depth order) or 16 (2 sort passes, log depth quantized over the frame's
@@ -200,6 +210,8 @@ public:
     std::uint32_t splat_count() const { return m_count; }
     std::uint32_t visible_capacity() const { return m_capacity; }
     std::uint32_t chunk_count() const { return m_chunk_count; }
+    std::uint32_t segment_count() const { return static_cast<std::uint32_t>(m_segments.size()); }
+    std::uint32_t segment_splats() const { return m_segment_splats; }
     std::uint32_t sh_degree() const { return m_sh_degree; }
     std::uint32_t sh1_palette() const { return m_sh1_palette; }  // palette entries; 0 = direct SH1
     // Visible counts of a recently completed frame (trail by the frames in flight); HUD only.
@@ -222,7 +234,6 @@ public:
 
 private:
     Context* m_context = nullptr;
-    static constexpr std::uint64_t kMaxCount = 0x7fffffffu;  // splat indices and counts are uint32
     std::uint32_t m_count = 0;
     std::uint32_t m_capacity = 0;  // draw records / sort elements: visible splats drawn per frame
     std::uint32_t m_chunk_count = 0;
@@ -253,12 +264,23 @@ private:
     std::uint32_t m_last_visible = 0;
     std::uint32_t m_last_visible_chunks = 0;
 
-    Buffer m_positions, m_scale_rot, m_color, m_sh1, m_records;
-    Buffer m_coverage;                 // per-splat masks, or a 4-byte dummy
+    // One segment of the per-splat arrays (ADR-0018): splats [first, first + count) of the pack.
+    // sh1 holds the segment's direct SH1 (empty with a palette or at SH 0: m_sh1 is bound);
+    // coverage its masks (empty without: m_coverage's dummy is bound).
+    struct Segment {
+        std::uint32_t first = 0, count = 0;
+        Buffer positions, scale_rot, color, sh1, coverage;
+        VkDescriptorSet sets[kFramesInFlight] = {};  // compute set per frame slot
+    };
+    std::vector<Segment> m_segments;
+    std::uint32_t m_segment_splats = 0;
+    Buffer m_sh1;       // the SH1 palette, or a 4-byte dummy (direct SH1 is per segment)
+    Buffer m_coverage;  // 4-byte dummy for scenes without masks
+    Buffer m_records;
     Buffer m_keys, m_values;           // sort key/index pairs for visible splats (m_capacity each)
     Buffer m_chunks;                   // pack chunk cull AABBs + importance_max (7 floats each)
     Buffer m_chunk_list;               // visible chunk indices, written by the chunk cull
-    Buffer m_cull_dispatch;            // VkDispatchIndirectCommand for the preprocess
+    Buffer m_cull_dispatch;            // VkDispatchIndirectCommand per segment for the preprocess
     Buffer m_counter;                  // {visible splats, visible chunks}, device-local
     Buffer m_sort_dispatch;            // VkDispatchIndirectCommand for the sort block passes
     Buffer m_draw_cmd;                 // VkDraw(Indexed)IndirectCommand for m_draw_mode (5 uints)
@@ -271,7 +293,6 @@ private:
     bool m_readback_pending[kFramesInFlight] = {};  // a snapshot copy was recorded on this slot
     DescriptorSetLayout m_compute_layout, m_prepare_layout, m_draw_layout;
     DescriptorPool m_pool;
-    VkDescriptorSet m_compute_sets[kFramesInFlight] = {};
     VkDescriptorSet m_prepare_set = VK_NULL_HANDLE;
     VkDescriptorSet m_draw_set = VK_NULL_HANDLE;
     Pipeline m_chunk_cull_pipe, m_preprocess, m_prepare;
