@@ -50,7 +50,7 @@ a new document.
   once they exist as committed CSVs under `benchmarks/`.
 * **One topic, one home**: formats live in `formats.md`, not scattered in code comments; the code
   comment points at the doc section, not the other way round.
-* **ADR numbering** is monotonic (`ADR-0018` is next); status is `proposed` (design written and
+* **ADR numbering** is monotonic (`ADR-0019` is next); status is `proposed` (design written and
   measured, not yet implemented or reviewed — may still change), `accepted`, or `superseded by
   ADR-NNNN`. Small reversible choices don't need an ADR — anything that would surprise a
   contributor six months later does.
