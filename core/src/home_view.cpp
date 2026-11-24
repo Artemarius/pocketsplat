@@ -22,6 +22,12 @@ constexpr int kScoreRes = 48;
 constexpr std::size_t kScoreSamples = 100000;
 constexpr float kSharpPx = 1.0f;
 constexpr float kScoreFovRad = 1.0471976f;  // 60 deg, the app's FOV across the long side
+// Ground-plane RANSAC (dominant_plane).
+constexpr std::size_t kPlaneSubset = 2048;   // points each hypothesis is scored on
+constexpr int kPlaneMinHypotheses = 400;     // the fixed count before S32
+constexpr int kPlaneMaxHypotheses = 20000;   // a miss stays below 1e-4 down to a 7.7 % share
+constexpr double kPlaneMissLog = 9.2103404;  // -ln(1e-4): accepted chance of missing the plane
+constexpr std::size_t kPlaneFinalists = 8;   // best subset hypotheses scored on every point
 
 struct Sample {
     float p[3];
@@ -148,32 +154,69 @@ float view_score(const std::vector<ScoreSample>& pts, const float* eye, const fl
 
 // Dominant plane through opaque samples within `radius` of `center`: RANSAC on inlier count.
 // Returns false when no plane holds at least 5 % of them.
+//
+// A random triple lies on the plane with probability w^3 for an inlier share w. Real scenes have
+// w = 8-60 % (S32: museum1 8 %, giraffes_statue and bonsai 12 %), so a fixed 400 hypotheses
+// missed the plane up to 83 % of the time, and a few-ulp change of the input (another platform's
+// libm in a test scene) flipped the result. Hypotheses are scored on a fixed subset of the points,
+// until a miss is unlikely for the best subset share seen so far, and the best few are scored
+// again on every point.
 bool dominant_plane(const std::vector<Sample>& samples, const float* center, float radius, float* normal) {
     std::vector<const Sample*> pts;
     for (const Sample& s : samples) {
         if (s.alpha > 0.5f && dist2(s.p, center) < radius * radius) pts.push_back(&s);
     }
     if (pts.size() < 64) return false;
-    Random rng;
+    std::vector<const Sample*> subset;
+    const std::size_t stride = std::max<std::size_t>(1, pts.size() / kPlaneSubset);
+    for (std::size_t i = 0; i < pts.size(); i += stride) subset.push_back(pts[i]);
     const float tol = 0.01f * radius;
-    std::size_t best = 0;
-    float best_normal[3] = {0.0f, 1.0f, 0.0f};
-    for (int it = 0; it < 400; ++it) {
+    const auto count_inliers = [tol](const std::vector<const Sample*>& set, const float* n, float offset) {
+        std::size_t inliers = 0;
+        for (const Sample* s : set) inliers += std::fabs(dot3(n, s->p) - offset) < tol ? 1u : 0u;
+        return inliers;
+    };
+    struct Hypothesis {
+        std::size_t inliers;  // on the subset
+        float n[3];
+        float offset;
+    };
+    std::vector<Hypothesis> finalists;  // by subset count, descending; ties keep the earlier first
+    Random rng;
+    double best_share_cubed = 0.0;
+    for (int it = 0; it < kPlaneMaxHypotheses; ++it) {
+        // Stop once (1 - w^3)^it <= kPlaneMiss, with -ln(1 - x) >= x (no libm call, so every
+        // platform stops at the same hypothesis).
+        if (it >= kPlaneMinHypotheses && static_cast<double>(it) * best_share_cubed >= kPlaneMissLog) break;
         const float* a = pts[rng.next() % pts.size()]->p;
         const float* b = pts[rng.next() % pts.size()]->p;
         const float* c = pts[rng.next() % pts.size()]->p;
         const float ab[3] = {b[0] - a[0], b[1] - a[1], b[2] - a[2]};
         const float ac[3] = {c[0] - a[0], c[1] - a[1], c[2] - a[2]};
-        float n[3] = {ab[1] * ac[2] - ab[2] * ac[1], ab[2] * ac[0] - ab[0] * ac[2],
-                      ab[0] * ac[1] - ab[1] * ac[0]};
-        if (dot3(n, n) < 1e-20f) continue;
-        normalize3(n);
-        const float offset = dot3(n, a);
-        std::size_t inliers = 0;
-        for (const Sample* s : pts) inliers += std::fabs(dot3(n, s->p) - offset) < tol ? 1u : 0u;
+        Hypothesis h{
+            0,
+            {ab[1] * ac[2] - ab[2] * ac[1], ab[2] * ac[0] - ab[0] * ac[2], ab[0] * ac[1] - ab[1] * ac[0]},
+            0.0f};
+        if (dot3(h.n, h.n) < 1e-20f) continue;
+        normalize3(h.n);
+        h.offset = dot3(h.n, a);
+        h.inliers = count_inliers(subset, h.n, h.offset);
+        if (finalists.size() == kPlaneFinalists && h.inliers <= finalists.back().inliers) continue;
+        const auto at = std::find_if(finalists.begin(), finalists.end(),
+                                     [&h](const Hypothesis& f) { return f.inliers < h.inliers; });
+        finalists.insert(at, h);
+        if (finalists.size() > kPlaneFinalists) finalists.pop_back();
+        const double share =
+            static_cast<double>(finalists.front().inliers) / static_cast<double>(subset.size());
+        best_share_cubed = share * share * share;
+    }
+    std::size_t best = 0;
+    float best_normal[3] = {0.0f, 1.0f, 0.0f};
+    for (const Hypothesis& h : finalists) {
+        const std::size_t inliers = count_inliers(pts, h.n, h.offset);
         if (inliers > best) {
             best = inliers;
-            for (int k = 0; k < 3; ++k) best_normal[k] = n[k];
+            for (int k = 0; k < 3; ++k) best_normal[k] = h.n[k];
         }
     }
     if (best * 20 < pts.size()) return false;

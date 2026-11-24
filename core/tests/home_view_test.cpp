@@ -23,7 +23,7 @@ struct Scene {
     GpuPack pack;
 };
 
-Scene make_scene(bool with_ground, bool with_wall = false) {
+Scene make_scene(bool with_ground, bool with_wall = false, std::uint32_t seed = 12345u) {
     const float tilt = 30.0f * kPi / 180.0f;  // frame rotated about +x
     const float c = std::cos(tilt), s = std::sin(tilt);
     const float offset[3] = {5.0f, -2.0f, 3.0f};
@@ -32,7 +32,7 @@ Scene make_scene(bool with_ground, bool with_wall = false) {
         out[1] = c * y - s * z + offset[1];
         out[2] = s * y + c * z + offset[2];
     };
-    std::uint32_t rng = 12345u;
+    std::uint32_t rng = seed;
     const auto uniform = [&rng]() {  // [0, 1)
         rng = rng * 1664525u + 1013904223u;
         return static_cast<float>(rng >> 8) / 16777216.0f;
@@ -132,6 +132,18 @@ TEST(HomeView, PicksTheSideWhoseViewShowsDetail) {
                           view.focus[2] - walled.object[2]};
     EXPECT_LT(std::sqrt(off[0] * off[0] + off[1] * off[1] + off[2] * off[2]), 0.3f);
     EXPECT_LT(side(view), 0.5f);
+}
+
+// The walled scene's ground holds only ~13 % of the points near the focus, so a random triple lies
+// on it with p ~ 0.0023. The fixed 400 hypotheses before S32 missed it ~40 % of the time, and a few-ulp
+// change of the scene (arm64's libm) flipped the up axis. Every draw of the scene must find it.
+TEST(HomeView, FindsALowShareGroundOnEveryDraw) {
+    for (const std::uint32_t seed : {1u, 2u, 3u, 4u, 5u}) {
+        const Scene walled = make_scene(true, true, seed);
+        const HomeView view = estimate_home_view(walled.pack);
+        ASSERT_TRUE(view.plane_found) << "seed " << seed;
+        EXPECT_LT(angle_deg(view.up, walled.up), 3.0f) << "seed " << seed;
+    }
 }
 
 TEST(HomeView, WithoutAPlaneUpIsPlusY) {
