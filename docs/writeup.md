@@ -46,7 +46,8 @@ Four things make a phone different from the desktop GPU that 3DGS renderers are 
 There are also hard limits. The Adreno 750 allows 128 MB per storage-buffer binding. With 32-byte
 draw records for every splat, that capped a scene at 4,194,304 splats. Sizing the records for the
 splats visible in a frame instead (ADR-0016) moved the cap to the 12-byte per-splat arrays, at
-11,184,810 splats.
+11,184,810 splats. Splitting those arrays into segments, each in its own buffers with one
+preprocess dispatch (ADR-0018), removed that cap as well: memory limits a scene now.
 
 The frame I ended up with is GPU-driven after the first pass:
 
@@ -301,9 +302,12 @@ Negative results are recorded with the measurement and a diagnosis, 31 of them i
 
 ## 8. Limits, and what's next
 
-* **Scene size:** 11,184,810 splats per scene on the Adreno 750, and 4,194,304 drawn per frame,
-  both from its 128 MB storage-buffer range. A wider view raises the contribution cull until it
-  fits (ADR-0016). The 830's range is 2 GB, so memory is its only limit.
+* **Scene size:** memory, on both phones. The per-splat arrays are split into segments that fit
+  the 750's 128 MB storage-buffer range (ADR-0018); one segment does the same GPU work as the
+  unsplit arrays did, and 13.4 M- and 17.9 M-splat test scenes open whole on the S24 Ultra. The
+  750 still draws at most 4,194,304 splats per frame; a wider view raises the contribution cull
+  until it fits (ADR-0016). The phone's import reads only the SH bands it keeps, which halved its
+  peak memory, and refuses sources larger than half the free memory allows.
 * **Spherical harmonics:** degree 0 and 1 only. This is deliberate: degree 3 would quadruple the
   per-splat colour data on a bandwidth-bound GPU.
 * **GPUs:** measured on two Adreno phones only. Mali and Xclipse are untested. The sort is written

@@ -36,7 +36,7 @@ then beetle (1.0 M splats after cleaning). The touch dots are the recording's. T
 recording, with the HUD's per-pass GPU times, is attached to the
 [0.1.0 release](../../releases/tag/v0.1.0).
 
-* **Android** (arm64, Android 13+, a Vulkan 1.3 GPU): install `pocketsplat-0.4.0.apk` from the
+* **Android** (arm64, Android 13+, a Vulkan 1.3 GPU): install `pocketsplat-0.5.0.apk` from the
   [latest release](../../releases/latest). Side-loaded, not on the Play Store. Tested on
   Snapdragon 8 Gen 3 and 8 Elite phones. The first launch opens the bundled sample.
   **Open PLY/SPZ file…** imports any 3DGS scene through the system file picker; it is cleaned and
@@ -44,7 +44,7 @@ recording, with the HUD's per-pass GPU times, is attached to the
   Ultra, and the import screen can turn it off.
   One finger orbits, a pinch zooms, two fingers pan, a double tap moves the pivot to the point
   under the finger, and **Home** returns to the start view.
-* **Windows** (10/11, a Vulkan 1.3 driver): unzip `pocketsplat-viewer-0.4.0-windows-x64.zip` from the
+* **Windows** (10/11, a Vulkan 1.3 driver): unzip `pocketsplat-viewer-0.5.0-windows-x64.zip` from the
   same release and run `pocketsplat-viewer.exe`. It uses the same renderer, import and navigation as
   the phone, opens files by drag and drop, and has its controls listed in the bundled `README.txt`.
   Tested on an RTX 3060 and an Intel UHD iGPU.
@@ -266,12 +266,16 @@ resolution as a thermal rung (no power saved), and copying draw records into sor
 
 ## Known limitations
 
-* **Scene size on the Adreno 750**: at most 11,184,810 splats per scene: its 128 MB storage-buffer
-  range over the 12 B per-splat arrays. A larger pack opens as its most important 11.18 M splats
-  under a red "partial scene" warning. At most 4,194,304 splats are drawn per frame (32 B draw
-  records); a wider view raises the contribution cull until it fits and says so in yellow. Both
-  limits come from the GPU's Vulkan limits at run time. The 830 (2 GB range) is limited by memory
-  only: a 17.9 M-splat test scene ran at 2.0 GB.
+* **Scene size is limited by memory.** The per-splat arrays are split into segments that each fit
+  the GPU's storage-buffer range (ADR-0018), so the Adreno 750's 128 MB no longer caps a scene:
+  the S24 Ultra opens 13.4 M- and 17.9 M-splat test scenes whole (51 and 40 fps on the bench
+  orbit, peak 1.0 and 1.2 GB). A pack larger than half the phone's free memory allows opens as
+  its most important splats under a red "partial scene" warning (S24 Ultra at 3.7 GB free: 27.7 M
+  splats). The Adreno 750 draws at most 4,194,304 splats per frame (32 B draw records); a wider
+  view raises the contribution cull until it fits and says so in yellow.
+* **Import on the phone** refuses sources larger than half the free memory at 170 B per splat
+  (S24 Ultra about 11 M, S25 Ultra about 17 M splats); `splatconv import` makes the same pack
+  on a desktop.
 * **SH degree 0 and 1 only**, by design: higher degrees are truncated on import.
 * **SH palette**: a palette scene renders a few dB below direct SH 1 (41.8 dB at the worst pose of
   the hardest test scene; SH 0 is at 29.6–38.7 dB). Import with the palette off for the exact

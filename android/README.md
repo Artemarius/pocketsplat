@@ -63,7 +63,7 @@ background thread: the full `docs/cleaning.md` pipeline (SOR floater removal is 
 (500K/1M/2M/all, default 1M), Morton reorder, pack. The resulting `.pspk` lands in
 `files/scenes/` — so the import runs once and re-opening is instant. SH bands above 1 are
 dropped while the file is read. Inputs larger than half the phone's free memory at 170 B per
-splat are refused (logcat "import limit"; S24U ~10.9 M, S25U ~17 M); convert those with
+splat are refused (logcat "import limit"; S24U about 11 M, S25U about 17 M); convert those with
 `splatconv` on a desktop.
 Tapping a `.ply`/`.spz` already in the scene list routes through the same import flow.
 
