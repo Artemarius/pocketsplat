@@ -1,10 +1,10 @@
 # ADR-0018 — Lifting the Adreno 750's scene limit: per-splat arrays split into segments, one preprocess dispatch each
 
-**Status**: proposed (2026-11-24, S34). The owner chose option (b), segments, and the memory policy
-in Decision 3 (S34). It is implemented, checked on the desktop ("Desktop evidence") and on the
-S25U ("S25U evidence"), where the memory policy was corrected, and on the S24U ("S24U
-evidence"), where the Phase 9 gate is met (bcf3553 removed a chunk-cull cost the first S24U
-run found). Ready for the owner's acceptance.
+**Status**: accepted (2026-11-25, S34). The owner chose option (b), segments, and the memory policy
+in Decision 3, and accepted the ADR once the phone results were in. It is implemented, checked on
+the desktop ("Desktop evidence") and on the S25U ("S25U evidence"), where the memory policy was
+corrected, and on the S24U ("S24U evidence"), where the Phase 9 gate is met (bcf3553 removed a
+chunk-cull cost the first S24U run found). Supersedes ADR-0016's Decision 2.
 
 **Context**: every per-splat input array lives in one storage buffer bound whole, so each is
 capped by `maxStorageBufferRange`. On the Adreno 750 (128 MB) the widest of them, 12 B per

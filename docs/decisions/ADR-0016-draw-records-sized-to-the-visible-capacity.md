@@ -2,7 +2,9 @@
 
 **Status**: accepted (2026-11-06, S28). Implemented, measured on the desktop and on both phones
 (Evidence); the owner reviewed the phone results and the app ("everything is great") and asked
-for the release (v0.3.0).
+for the release (v0.3.0). Decision 2 (scene limit = range / 12) superseded by ADR-0018
+(2026-11-25): the per-splat arrays are split into segments and memory limits a scene; the
+visible capacity, clip reporting and clip guard stand.
 
 **Context**: every per-splat array lives in one storage buffer bound whole, so each is capped
 by `maxStorageBufferRange`. The widest was the draw records, 32 B per splat and sized for every
