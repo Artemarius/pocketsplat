@@ -2,8 +2,9 @@
 
 **Status**: proposed (2026-11-24, S34). The owner chose option (b), segments, and the memory policy
 in Decision 3 (S34). It is implemented, checked on the desktop ("Desktop evidence") and on the
-S25U ("S25U evidence"), where the memory policy was corrected. It stays proposed until the
-S24U runs under "What decides it" are in.
+S25U ("S25U evidence"), where the memory policy was corrected, and on the S24U ("S24U
+evidence"), where the gate is met except a 0.017 ms chunk-cull cost; bcf3553 removes its likely
+cause and waits for one S24U re-run before this ADR goes to the owner for acceptance.
 
 **Context**: every per-splat input array lives in one storage buffer bound whole, so each is
 capped by `maxStorageBufferRange`. On the Adreno 750 (128 MB) the widest of them, 12 B per
@@ -145,6 +146,15 @@ palette, direct SH 1 and coverage masks. `ctest` 146/146 (4 new `PackSegments` t
 The debug APK builds (NDK clang, `-Werror`). The chunk cull closes a segment inside its existing
 end-of-block step, so its barriers are the v0.4.0 ones. The RTX's memory bound: heap 5,994 MB,
 5,222 MB available (`VK_EXT_memory_budget`) → 64.0 M splats at 29 B per splat.
+
+**S24U evidence** (`../benchmarks/segments-s24u-a344337-2026-11-25.csv`, `../benchmarks/README.md`
+"Segments on the S24U"): gate 0 passes (27.7 M splats at 29 B). bicycle ×3 (13.45 M) and ×4
+(17.93 M) open whole in two segments, no clipping at 0.1 px, 51 and 40 fps, peak PSS 1.04 and
+1.23 GB. One against two segments on bicycle-4m: per-frame visible counts equal from frame 2 on
+(4,792 frames). One segment against v0.4.0, interleaved, all at thermal status 0: preprocess
+4.039 against 4.001 ms, inside the run-to-run spread; chunk cull 0.257 against 0.240 ms in every
+pair (+0.017 ms). bcf3553 replaces the cull's per-block modulo with register bookkeeping
+(desktop: identical visible counts, validation clean); the S24U re-run of that pair is open.
 
 **S25U evidence** (`../benchmarks/segments-s25u-a344337-2026-11-24.csv`, summarized in
 `../benchmarks/README.md`, "Segments on the S25U"; not the deciding phone): one segment against

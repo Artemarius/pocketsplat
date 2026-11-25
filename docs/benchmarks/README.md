@@ -154,7 +154,7 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
 - `segments-<device>-<hash>-<date>.csv` — the per-splat arrays split into segments (ADR-0018)
   against one segment, `quality_ab.py` with `--segment-splats N`: PSNR at the six poses, pixels
   moved > 2 LSB, and the bench orbit's mean visible count, with `ref@repeat`.
-- `segments-s25u-<hash>-<date>.csv` — segments on a phone (ADR-0018): per run the build,
+- `segments-s24u-<hash>-<date>.csv`, `segments-s25u-<hash>-<date>.csv` — segments on a phone (ADR-0018): per run the build,
   segment split, per-pass means over the first 30 s, visible mean, peak PSS and GL mtrack; the
   header states which runs were compared frame by frame.
 - `quality-rtx3060-rungs-<date>-864x1872.csv` — image cost of the thermal controller's candidate
@@ -708,6 +708,30 @@ the 750 splits it (2 × 11,141,120) and into 4 × 4,194,304.
   in 62. `ctest` 146/146, including the 4 golden-image tests.
 * GPU times in the CSV are the shared laptop's, indicative only. The deciding comparison, one
   segment against the v0.4.0 build at 4 M, is the S24U's (ADR-0018, "What decides it").
+
+## Segments on the S24U: the Phase 9 gate (2026-11-25, S34, ADR-0018)
+
+`segments-s24u-a344337-2026-11-25.csv`: S24U (Adreno 750), on USB power, bench orbit at
+540 × 975, 16-bit keys, 0.1 px cull, cooled to thermal status 0 and skin ≤ 36 °C before every
+run; per-pass means over the first 30 s. All runs at thermal status 0.
+
+* **Device** (`cmd gpu vkjson`, "Vulkan ready"): 128 MB binding, `maxComputeWorkGroupCount.x`
+  65,535, no `VK_EXT_memory_budget` (VMA: 8.9 GB "available"), MemAvailable 3.7 GB → scene
+  limit 27.7 M splats at 29 B under the Android policy (gate 0 passes: ≥ 11,184,810).
+* **Scenes above 11.18 M open whole** (the gate): bicycle ×3 (13,449,660) and ×4 (17,932,880)
+  in two segments of 11,141,120, no clipped splat at 0.1 px; 51.2 and 39.8 fps, peak PSS 1.04
+  and 1.23 GB. S28's v0.3.0 cut both at 11.18 M. ×2 (one segment): 59.7 fps, 0.76 GB.
+* **Two segments draw the same splats on the 750's compiler**: bicycle-4m in one segment
+  against two (2 × 2,097,152), per-frame visible counts equal on 4,792 of 4,794 frames; the two
+  that differ are frames 0–1, where one run's snapshot still held the first count.
+* **One segment against v0.4.0 at 4 M** (ABBAAB): preprocess 4.039 against 4.001 ms (+0.9 %,
+  inside v0.4.0's own 3.87–4.15 ms spread), GPU frame 11.83 against 11.53 ms (spread 11.1–12.1).
+  The chunk cull was 0.257 against 0.240 ms, higher in all three pairs (+0.017 ms, +7 %); on the
+  S25U it was equal. Most likely cause: thread 0's per-block integer modulo, which the other 255
+  threads wait for at the barrier. bcf3553 removes the division (registers only); its S24U
+  re-run is pending.
+* Each adb install asked for Play Protect's security check on the S24U (held one install
+  ~12 minutes until answered); the A/B's four installs are the cost of interleaving.
 
 ## Segments on the S25U (2026-11-24, S34, ADR-0018)
 

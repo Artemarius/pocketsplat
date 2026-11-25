@@ -1,0 +1,13 @@
+# S24U (Adreno 750, SM-S928B), 2026-11-25 S34, USB power (73 %), bench_android.py 540x975 16-bit keys 0.1 px cull, 60 s runs, cooled to thermal 0 / skin <= 36 C before each; means over the first 30 s (computed frames, 10 skipped); v0.4.0 = fb66214, segments = a344337 (before bcf3553 removed the chunk cull division); id-seg1 vs id-seg2: per-frame visible equal on 4,792 of 4,794 frames (frames 0-1 = first readbacks); peak_pss = dumpsys meminfo TOTAL PSS max, sampled ~1/s
+label,apk,scene,splats,segments,segment_splats,visible_capacity,min_contribution,frames_30s,cull_ms,preprocess_ms,sort_ms,draw_ms,gpu_ms,visible_mean,clipped_max,thermal_mean,peak_pss_kb
+ab1-base,0.4.0-fb66214,bicycle-4m.sh0.pspk,4000000,,,4000000,0.1,2498,0.244,4.148,2.791,4.736,11.919,1315061,0,0.0,799667
+ab2-new,0.4.0-a344337,bicycle-4m.sh0.pspk,4000000,1,11141120,4000000,0.1,2465,0.26,4.155,2.807,4.862,12.083,1315329,0,0.0,713764
+ab3-new,0.4.0-a344337,bicycle-4m.sh0.pspk,4000000,1,11141120,4000000,0.1,2547,0.257,4.006,2.702,4.72,11.685,1314583,0,0.0,702918
+ab4-base,0.4.0-fb66214,bicycle-4m.sh0.pspk,4000000,,,4000000,0.1,2679,0.232,3.873,2.598,4.41,11.113,1315076,0,0.0,800408
+ab5-base,0.4.0-fb66214,bicycle-4m.sh0.pspk,4000000,,,4000000,0.1,2578,0.244,3.983,2.665,4.65,11.541,1314620,0,0.0,800785
+ab6-new,0.4.0-a344337,bicycle-4m.sh0.pspk,4000000,1,11141120,4000000,0.1,2540,0.253,3.957,2.846,4.664,11.72,1314582,0,0.0,795782
+id-seg1,0.4.0-a344337,bicycle-4m.sh0.pspk,4000000,1,11141120,4000000,0.1,2491,0.275,4.069,2.875,4.733,11.952,1315158,0,0.0,703460
+id-seg2,0.4.0-a344337,bicycle-4m.sh0.pspk,4000000,2,2097152,4000000,0.1,2511,0.261,4.048,2.754,4.794,11.856,1314852,0,0.0,877987
+big-x2,0.4.0-a344337,bicycle-x2.sh0.pspk,8966440,1,11141120,4194304,0.1,1781,0.582,6.346,3.403,6.36,16.692,1652748,0,0.0,758474
+big-x3,0.4.0-a344337,bicycle-x3.sh0.pspk,13449660,2,11141120,4194304,0.1,1525,0.873,8.163,3.701,6.749,19.485,1757296,0,0.0,1042937
+big-x4,0.4.0-a344337,bicycle-x4.sh0.pspk,17932880,2,11141120,4194304,0.1,1185,1.147,10.657,4.757,8.526,25.087,2307312,0,0.0,1225305
