@@ -59,6 +59,10 @@ void main() {
         s_segment_begin = 0u;
         s_total = 0u;
     }
+    // Thread 0's own segment bookkeeping (registers, no integer division: on the Adreno 750 a
+    // per-block modulo here cost 0.017 ms of the cull at 4 M splats, S34).
+    uint segment = 0u;
+    uint boundary = push.segment_chunks;  // first chunk of the next segment
 
     // Gribb-Hartmann frustum planes from the rows of proj_view (column-major mat4, so row i is
     // (M[0][i], M[1][i], M[2][i], M[3][i])). Vulkan depth range [0,1]: near plane is row 2 alone.
@@ -119,26 +123,26 @@ void main() {
             // one's fixed list offset - in the same thread and before the same barrier as the
             // count update, so segments add no barrier and no control flow around one.
             uint next = start + 256u;
-            if (next < push.chunk_count && next % push.segment_chunks == 0u) {
-                uint g = next / push.segment_chunks - 1u;
+            if (next == boundary && next < push.chunk_count) {
                 uint m = s_written - s_segment_begin;
-                cull_dispatch[3u * g] = m;
-                cull_dispatch[3u * g + 1u] = 1u;
-                cull_dispatch[3u * g + 2u] = 1u;
+                cull_dispatch[3u * segment] = m;
+                cull_dispatch[3u * segment + 1u] = 1u;
+                cull_dispatch[3u * segment + 2u] = 1u;
                 s_total += m;
                 s_written = next;
                 s_segment_begin = next;
+                segment += 1u;
+                boundary += push.segment_chunks;
             }
         }
         barrier();
     }
 
     if (lid == 0u) {
-        uint g = (push.chunk_count - 1u) / push.segment_chunks;  // the last segment
-        uint m = s_written - s_segment_begin;
-        cull_dispatch[3u * g] = m;
-        cull_dispatch[3u * g + 1u] = 1u;
-        cull_dispatch[3u * g + 2u] = 1u;
+        uint m = s_written - s_segment_begin;  // the last segment
+        cull_dispatch[3u * segment] = m;
+        cull_dispatch[3u * segment + 1u] = 1u;
+        cull_dispatch[3u * segment + 2u] = 1u;
         visible_chunks = s_total + m;
     }
 }
