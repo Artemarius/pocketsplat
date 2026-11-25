@@ -3,6 +3,7 @@
 #include <android/log.h>
 #include <dlfcn.h>
 
+#include "mem_info.h"
 #include "splatcore/coverage.h"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -45,27 +46,9 @@ std::int32_t read_gpu_mhz() {
     return mhz;
 }
 
-// Scene-size limit on a phone (ADR-0018). GPU memory is system RAM here, and Adreno drivers may
-// lack VK_EXT_memory_budget (the 830 does): VMA then guesses 80 % of an 11 GB heap, far more than
-// the system can give (S25U: 8.9 GB "available" against 6.0 GB MemAvailable). So the budget is
-// the smaller of VMA's and half of MemAvailable, and each splat also counts the 28 B CPU copy of
-// the pack that is alive while it uploads (freed after). 0 when /proc/meminfo is unreadable:
-// VMA's figure alone then.
-std::uint64_t mem_available_bytes() {
-    std::FILE* f = std::fopen("/proc/meminfo", "r");
-    if (f == nullptr) return 0;
-    char key[64];
-    unsigned long long kb = 0, found = 0;
-    while (std::fscanf(f, "%63s %llu kB", key, &kb) == 2) {
-        if (std::strcmp(key, "MemAvailable:") == 0) {
-            found = kb;
-            break;
-        }
-    }
-    std::fclose(f);
-    return found * 1024ull;
-}
-
+// Scene-size limit on a phone (ADR-0018): the smaller of VMA's budget and half of MemAvailable
+// (mem_info.h), and each splat also counts the 28 B CPU copy of the pack that is alive while it
+// uploads (freed after). VMA's figure alone when /proc/meminfo is unreadable.
 constexpr std::uint64_t kCpuPackBytesPerSplat = 28;  // pos + scale_rot + color, alive during upload
 
 std::uint64_t phone_max_splats(const splatrender::Context& context, std::uint64_t gpu_bytes_per_splat) {

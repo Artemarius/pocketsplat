@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -203,6 +204,36 @@ TEST(SceneImportTest, PlyDegree2EndToEnd) {
     EXPECT_EQ(probe.value().kind, "pspk");
     EXPECT_EQ(probe.value().count, 32u);
     EXPECT_EQ(probe.value().sh_degree, 1);
+}
+
+// SH is truncated while reading (92 instead of 236 B per splat at degree 3); a splat whose only
+// non-finite value sits in a discarded band is still dropped, as when import read every band.
+TEST(SceneImportTest, Degree3TruncatedOnReadStillDropsNonFiniteTail) {
+    const fs::path src = temp_file("import3.ply");
+    const fs::path dst = temp_file("import3.pspk");
+    std::string bytes = ply_bytes(32, 3);
+    const std::size_t header = bytes.find("end_header\n") + 11;
+    const std::size_t row_floats = 3 + 3 + 45 + 1 + 3 + 4;
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    std::memcpy(bytes.data() + header + (5 * row_floats + 6 + 44) * sizeof(float), &nan, sizeof(float));
+    write_bytes(src, bytes);
+
+    Result<ImportReport> report = import_scene(src, dst, ImportOptions{});
+    fs::remove(src);
+    fs::remove(dst);
+    ASSERT_TRUE(report.ok()) << report.error();
+    EXPECT_EQ(report.value().input_count, 32u);
+    EXPECT_EQ(report.value().count, 31u);  // the band-3 NaN splat, dropped by drop_invalid
+    EXPECT_EQ(report.value().sh_degree, 1);
+    const auto& ops = report.value().ops;
+    auto truncate =
+        std::find_if(ops.begin(), ops.end(), [](const CleanOpStats& s) { return s.op == "truncate_sh"; });
+    ASSERT_NE(truncate, ops.end());
+    EXPECT_EQ(truncate->params, "degree 3 -> 1 (on read)");
+    auto invalid =
+        std::find_if(ops.begin(), ops.end(), [](const CleanOpStats& s) { return s.op == "drop_invalid"; });
+    ASSERT_NE(invalid, ops.end());
+    EXPECT_EQ(invalid->removed, 1u);
 }
 
 TEST(SceneImportTest, BudgetPrune) {

@@ -22,6 +22,7 @@
 #include "splatcore/palette.h"
 #include "splatcore/ply_io.h"
 #include "splatcore/quality_controller.h"
+#include "splatcore/scene_import.h"
 #include "splatcore/scene_load.h"
 #include "splatcore/spz_io.h"
 #include "splatcore/stats.h"
@@ -84,6 +85,16 @@ void print_usage() {
                  "      --no-morton      skip the Morton reorder\n"
                  "      --report FILE    also write the JSON report to FILE\n"
                  "      --in-coords / --out-coords as for convert\n"
+                 "\n"
+                 "  splatconv import <in.ply|in.spz> <out.pspk> [options]\n"
+                 "      The app's import (splatcore::import_scene): the same guards, cleaning,\n"
+                 "      SH truncation, budget, palette and pack as on the phone.\n"
+                 "      --budget N        keep the N most important splats (default 1000000;\n"
+                 "                        0 = all)\n"
+                 "      --sh 0|1          SH target (default 1)\n"
+                 "      --sh1-palette K   train a K-entry SH1 palette (the app uses 4096)\n"
+                 "      --refuse-above N  refuse sources above N splats (default: the library's)\n"
+                 "      --deep-clean      SOR floater removal (the app's Deep clean option)\n"
                  "\n"
                  "  splatconv pack <in.ply|in.spz> <out.pspk> [options]\n"
                  "      Build the GPU pack (docs/formats.md §3): Morton reorder (unless\n"
@@ -217,6 +228,8 @@ struct Options {
     int sor_k = 16;
     float sor_m = 2.0f;
     std::size_t budget = 1000000;
+    std::optional<std::uint64_t> refuse_above;  // import: override ImportOptions::refuse_above
+    bool deep_clean = false;                    // import: SOR floater removal, as the app's option
     bool no_sor = false;
     bool no_needle_clamp = false;
     bool no_morton = false;
@@ -273,6 +286,8 @@ bool parse_options(int argc, char** argv, int start, Options& options) {
         };
         if (arg == "--no-sor") {
             options.no_sor = true;
+        } else if (arg == "--deep-clean") {
+            options.deep_clean = true;
         } else if (arg == "--no-morton") {
             options.no_morton = true;
         } else if (arg == "--dump-header") {
@@ -360,6 +375,10 @@ bool parse_options(int argc, char** argv, int start, Options& options) {
             auto v = value("--budget");
             if (!v) return false;
             options.budget = static_cast<std::size_t>(std::stoull(*v));
+        } else if (arg == "--refuse-above") {
+            auto v = value("--refuse-above");
+            if (!v) return false;
+            options.refuse_above = std::stoull(*v);
         } else if (arg == "--target-fps") {
             auto v = value("--target-fps");
             if (!v) return false;
@@ -606,6 +625,33 @@ int cmd_clean(const Options& options) {
             return 1;
         }
     }
+    return 0;
+}
+
+// The app's import path on the desktop (same function, same defaults), e.g. to measure its peak
+// memory or to make the pack a phone would make.
+int cmd_import(const Options& options) {
+    splatcore::ImportOptions import;
+    import.sh_target = options.sh.value_or(1);
+    import.max_splats = options.budget;
+    import.sh1_palette = options.sh1_palette;
+    import.deep_clean = options.deep_clean;
+    if (options.refuse_above) import.refuse_above = *options.refuse_above;
+    const auto t0 = std::chrono::steady_clock::now();
+    splatcore::Result<splatcore::ImportReport> report =
+        splatcore::import_scene(options.positional[1], options.positional[2], import);
+    if (!report) {
+        std::fprintf(stderr, "splatconv: %s\n", report.error().c_str());
+        return 1;
+    }
+    const double wall_s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+    const splatcore::ImportReport& r = report.value();
+    std::fprintf(
+        g_json,
+        "{\n  \"input\": \"%s\",\n  \"output\": \"%s\",\n  \"input_count\": %llu,\n  \"count\": %u,\n"
+        "  \"sh_degree\": %d,\n  \"palette_count\": %u,\n  \"wall_s\": %.2f\n}\n",
+        options.positional[1].c_str(), options.positional[2].c_str(),
+        static_cast<unsigned long long>(r.input_count), r.count, r.sh_degree, r.palette_count, wall_s);
     return 0;
 }
 
@@ -1072,6 +1118,7 @@ int main(int argc, char** argv) {
         return cmd_pack_dump_header(options.positional[1]);
     }
     if (command == "pack" && options.positional.size() == 3) return cmd_pack(options);
+    if (command == "import" && options.positional.size() == 3) return cmd_import(options);
     if (command == "coverage" && options.positional.size() >= 3 && options.positional.size() <= 6)
         return cmd_coverage(options);
     if (command == "replay" && options.positional.size() == 2) return cmd_replay(options);

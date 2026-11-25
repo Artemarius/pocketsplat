@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <fstream>
 #include <istream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -165,7 +166,7 @@ Result<ColumnMap> resolve_columns(const PlyHeader& header) {
 
 }  // namespace
 
-Result<SplatCloud> read_ply(std::istream& in) {
+Result<SplatCloud> read_ply(std::istream& in, const PlyReadOptions& options) {
     using R = Result<SplatCloud>;
     Result<PlyHeader> header = parse_header(in);
     if (!header) return R::failure(header.error());
@@ -174,10 +175,12 @@ Result<SplatCloud> read_ply(std::istream& in) {
     const ColumnMap& map = columns.value();
     const std::size_t count = header.value().count;
     const std::size_t ncols = header.value().properties.size();
-    const int rest_per_channel = sh_rest_coeffs(map.sh_degree);
+    const int file_rest = sh_rest_coeffs(map.sh_degree);  // per channel, in the file
+    const int degree = std::clamp(options.max_sh_degree, 0, map.sh_degree);
+    const int rest_per_channel = sh_rest_coeffs(degree);  // per channel, kept
 
     SplatCloud cloud;
-    cloud.resize(count, map.sh_degree);
+    cloud.resize(count, degree);
 
     constexpr std::size_t kChunkRows = 65536;
     std::vector<float> buffer(std::min(kChunkRows, count == 0 ? std::size_t{1} : count) * ncols);
@@ -203,7 +206,14 @@ Result<SplatCloud> read_ply(std::istream& in) {
             float* dst = cloud.sh.data() + 3 * static_cast<std::size_t>(rest_per_channel) * i;
             for (int ch = 0; ch < 3; ++ch) {
                 for (int k = 0; k < rest_per_channel; ++k) {
-                    dst[k * 3 + ch] = row[map.rest[static_cast<std::size_t>(ch) * rest_per_channel + k]];
+                    dst[k * 3 + ch] = row[map.rest[static_cast<std::size_t>(ch) * file_rest + k]];
+                }
+                if (options.mark_discarded_nonfinite) {
+                    for (int k = rest_per_channel; k < file_rest; ++k) {
+                        if (!std::isfinite(row[map.rest[static_cast<std::size_t>(ch) * file_rest + k]])) {
+                            cloud.opacities[i] = std::numeric_limits<float>::quiet_NaN();
+                        }
+                    }
                 }
             }
         }
@@ -219,10 +229,10 @@ Result<SplatCloud> read_ply(std::istream& in) {
     return R::success(std::move(cloud));
 }
 
-Result<SplatCloud> read_ply(const std::filesystem::path& path) {
+Result<SplatCloud> read_ply(const std::filesystem::path& path, const PlyReadOptions& options) {
     std::ifstream file(path, std::ios::binary);
     if (!file) return Result<SplatCloud>::failure("cannot open '" + path.string() + "'");
-    return read_ply(file);
+    return read_ply(file, options);
 }
 
 Result<PlyInfo> probe_ply(std::istream& in) {

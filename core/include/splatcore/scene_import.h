@@ -29,12 +29,23 @@ Result<SceneProbe> probe_scene(const std::filesystem::path& path);
 // and file); kPalette is numbered last because hosts pass the ordinal across JNI.
 enum class ImportStage { kRead, kClean, kSor, kPack, kWrite, kPalette };
 
+// Peak memory of import_scene per INPUT splat (the whole source is read before the budget
+// prune, so a budget does not lower it): PLY at SH target 1 with the 4,096-entry palette,
+// budget "all", bicycle 6.13 M at SH 3: 158 B (969 MB) on the desktop, the same with deep clean
+// (970 MB); 295 B (1,811 MB) before SH was truncated while reading (S34). 170 B keeps a margin.
+inline constexpr std::uint64_t kImportPeakBytesPerSplat = 170;
+
+// The largest source (in splats) whose import fits `available_bytes`.
+inline std::uint64_t import_limit_for_memory(std::uint64_t available_bytes) {
+    return available_bytes / kImportPeakBytesPerSplat;
+}
+
 struct ImportOptions {
     int sh_target = 1;                 // truncate SH above this degree (0 or 1)
     bool deep_clean = false;           // run SOR floater removal (seconds to minutes at 1M+)
     std::size_t max_splats = 1000000;  // prune_budget bound; 0 disables the budget prune
-    // Hard guard on the probed input count, checked before anything is allocated: a mobile host
-    // cannot hold the float expansion of a 10M+ capture (~240 B/splat at SH 3).
+    // Hard guard on the probed input count, checked before anything is allocated. Hosts with a
+    // memory figure pass import_limit_for_memory() instead of the fixed default (the app does).
     std::uint64_t refuse_above = 8000000;
     // Called from the importing thread as each stage begins; return false to cancel the import at
     // the next stage boundary (the ops themselves are not interruptible). Null = never cancel.

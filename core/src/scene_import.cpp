@@ -134,7 +134,14 @@ Result<ImportReport> import_scene(const fs::path& src, const fs::path& dst, cons
     const auto cancelled = [] { return R::failure("import cancelled"); };
 
     if (!step(ImportStage::kRead)) return cancelled();
-    Result<SplatCloud> read = probe.value().kind == "spz" ? read_spz(src) : read_ply(src);
+    // A PLY keeps only the target's SH bands while it is read (ply_io.h): a degree 3 capture then
+    // holds 92 instead of 236 B per splat. Rows with non-finite discarded coefficients are
+    // marked for drop_invalid, so the pack is byte-identical to reading everything.
+    PlyReadOptions ply_options;
+    ply_options.max_sh_degree = options.sh_target;
+    ply_options.mark_discarded_nonfinite = true;
+    const int source_degree = probe.value().sh_degree;
+    Result<SplatCloud> read = probe.value().kind == "spz" ? read_spz(src) : read_ply(src, ply_options);
     if (!read) return R::failure(read.error());
     SplatCloud& cloud = read.value();
     if (probe.value().kind != "spz") {
@@ -154,7 +161,13 @@ Result<ImportReport> import_scene(const fs::path& src, const fs::path& dst, cons
         if (!step(ImportStage::kSor)) return cancelled();
         report.ops.push_back(remove_floaters_sor(cloud));
     }
-    report.ops.push_back(truncate_sh(cloud, options.sh_target));
+    if (source_degree > cloud.sh_degree) {  // truncated while reading (PLY)
+        report.ops.push_back({"truncate_sh", cloud.count, 0,
+                              "degree " + std::to_string(source_degree) + " -> " +
+                                  std::to_string(cloud.sh_degree) + " (on read)"});
+    } else {
+        report.ops.push_back(truncate_sh(cloud, options.sh_target));
+    }
     if (options.max_splats > 0) report.ops.push_back(prune_budget(cloud, options.max_splats));
     if (cloud.count == 0) return R::failure("no splats survived cleaning");
 

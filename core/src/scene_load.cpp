@@ -29,7 +29,9 @@ Result<GpuPack> load_scene_pack(const std::filesystem::path& path, int sh_target
         return parse_pack(bytes);
     }
 
-    Result<SplatCloud> cloud = ext == ".spz" ? read_spz(path) : read_ply(path);
+    PlyReadOptions ply_options;  // keep only the target's SH bands while reading (ply_io.h)
+    ply_options.max_sh_degree = sh_target;
+    Result<SplatCloud> cloud = ext == ".spz" ? read_spz(path) : read_ply(path, ply_options);
     if (!cloud) return R::failure(cloud.error());
     if (ext != ".spz") {
         // PLY interchange files carry the training convention (RDF); the runtime is RUB.

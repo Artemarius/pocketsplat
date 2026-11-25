@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "android_host.h"
+#include "mem_info.h"
 #include "splatcore/capture.h"
 #include "splatcore/scene_import.h"
 #include "splatcore/scene_load.h"
@@ -252,6 +253,15 @@ JNIEXPORT jstring JNICALL Java_com_pocketsplat_app_SplatEngine_nativeImportScene
     options.sh_target = static_cast<int>(sh_target);
     options.deep_clean = deep_clean == JNI_TRUE;
     options.max_splats = max_splats > 0 ? static_cast<std::size_t>(max_splats) : 0;
+    // The source must fit half of MemAvailable at the import's measured peak per input splat
+    // (scene_import.h), the share the scene-open limit uses (ADR-0018); the fixed 8 M default only
+    // when /proc/meminfo is unreadable. S24U at 3.7 GB MemAvailable: ~10.9 M splats.
+    if (const std::uint64_t available = pocketsplat::mem_available_bytes(); available > 0) {
+        options.refuse_above = splatcore::import_limit_for_memory(available / 2);
+    }
+    __android_log_print(ANDROID_LOG_INFO, "PocketSplat", "import limit %llu splats (MemAvailable %llu MB)",
+                        static_cast<unsigned long long>(options.refuse_above),
+                        static_cast<unsigned long long>(pocketsplat::mem_available_bytes() >> 20));
     // Stage timings for logcat ("import timing"): scripted imports (bench) read them from there.
     using Clock = std::chrono::steady_clock;
     const Clock::time_point import_start = Clock::now();

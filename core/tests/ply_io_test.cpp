@@ -2,10 +2,14 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <cstring>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "splatcore/cleaning.h"
 
 namespace splatcore {
 namespace {
@@ -292,6 +296,73 @@ TEST(PlyWriter, RejectsInconsistentSizes) {
     cloud.positions.pop_back();
     std::ostringstream out(std::ios::binary);
     EXPECT_FALSE(write_ply(cloud, out).ok());
+}
+
+// Truncation while reading keeps exactly what truncate_sh keeps after a full read.
+TEST(PlyReader, TruncatesShOnReadLikeTruncateSh) {
+    PlyBuilder b;
+    b.count = 70000;  // more than one 65,536-row read chunk
+    b.degree = 3;
+    const std::string bytes = b.bytes();
+    for (int target : {0, 1, 2}) {
+        Result<SplatCloud> full = read_from_string(bytes);
+        ASSERT_TRUE(full.ok()) << full.error();
+        truncate_sh(full.value(), target);
+        PlyReadOptions options;
+        options.max_sh_degree = target;
+        std::istringstream in(bytes, std::ios::binary);
+        Result<SplatCloud> on_read = read_ply(in, options);
+        ASSERT_TRUE(on_read.ok()) << on_read.error();
+        const SplatCloud& a = full.value();
+        const SplatCloud& r = on_read.value();
+        EXPECT_EQ(r.sh_degree, target);
+        EXPECT_EQ(r.count, a.count);
+        EXPECT_EQ(r.positions, a.positions);
+        EXPECT_EQ(r.log_scales, a.log_scales);
+        EXPECT_EQ(r.rotations, a.rotations);
+        EXPECT_EQ(r.opacities, a.opacities);
+        EXPECT_EQ(r.dc, a.dc);
+        EXPECT_EQ(r.sh, a.sh);
+    }
+    // A target above the file's degree reads the file's degree.
+    PlyReadOptions options;
+    options.max_sh_degree = 3;
+    b.degree = 1;
+    std::istringstream in(b.bytes(), std::ios::binary);
+    Result<SplatCloud> cloud = read_ply(in, options);
+    ASSERT_TRUE(cloud.ok());
+    EXPECT_EQ(cloud.value().sh_degree, 1);
+}
+
+// A non-finite coefficient in a discarded band marks the row (NaN opacity) only when asked, so
+// import_scene's drop_invalid still removes it as it did with the bands kept.
+TEST(PlyReader, MarksRowsWithNonFiniteDiscardedCoefficients) {
+    PlyBuilder b;
+    b.count = 4;
+    b.degree = 3;
+    b.with_normals = false;
+    std::string bytes = b.bytes();
+    const std::size_t header = b.header().size();
+    // Row 2, channel 1 (G), coefficient 14 (band 3): column x y z, f_dc x3, then f_rest planar.
+    const std::size_t column = 3 + 3 + static_cast<std::size_t>(b.rest_per_channel()) + 14;
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    std::memcpy(bytes.data() + header + (2 * b.row_floats() + column) * sizeof(float), &nan, sizeof(float));
+
+    PlyReadOptions options;
+    options.max_sh_degree = 1;
+    {
+        std::istringstream in(bytes, std::ios::binary);
+        Result<SplatCloud> cloud = read_ply(in, options);
+        ASSERT_TRUE(cloud.ok());
+        for (std::size_t i = 0; i < 4; ++i) EXPECT_TRUE(std::isfinite(cloud.value().opacities[i])) << i;
+    }
+    options.mark_discarded_nonfinite = true;
+    {
+        std::istringstream in(bytes, std::ios::binary);
+        Result<SplatCloud> cloud = read_ply(in, options);
+        ASSERT_TRUE(cloud.ok());
+        for (std::size_t i = 0; i < 4; ++i) EXPECT_EQ(std::isfinite(cloud.value().opacities[i]), i != 2) << i;
+    }
 }
 
 }  // namespace
