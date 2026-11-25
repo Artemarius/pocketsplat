@@ -30,7 +30,7 @@ jobs:
         run: ctest --test-dir build --output-on-failure
 
   android:
-    name: Android app (debug, unsigned release key)
+    name: Android app (debug APK)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
