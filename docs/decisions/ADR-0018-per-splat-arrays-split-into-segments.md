@@ -3,8 +3,8 @@
 **Status**: proposed (2026-11-24, S34). The owner chose option (b), segments, and the memory policy
 in Decision 3 (S34). It is implemented, checked on the desktop ("Desktop evidence") and on the
 S25U ("S25U evidence"), where the memory policy was corrected, and on the S24U ("S24U
-evidence"), where the gate is met except a 0.017 ms chunk-cull cost; bcf3553 removes its likely
-cause and waits for one S24U re-run before this ADR goes to the owner for acceptance.
+evidence"), where the Phase 9 gate is met (bcf3553 removed a chunk-cull cost the first S24U
+run found). Ready for the owner's acceptance.
 
 **Context**: every per-splat input array lives in one storage buffer bound whole, so each is
 capped by `maxStorageBufferRange`. On the Adreno 750 (128 MB) the widest of them, 12 B per
@@ -154,7 +154,10 @@ end-of-block step, so its barriers are the v0.4.0 ones. The RTX's memory bound: 
 (4,792 frames). One segment against v0.4.0, interleaved, all at thermal status 0: preprocess
 4.039 against 4.001 ms, inside the run-to-run spread; chunk cull 0.257 against 0.240 ms in every
 pair (+0.017 ms). bcf3553 replaces the cull's per-block modulo with register bookkeeping
-(desktop: identical visible counts, validation clean); the S24U re-run of that pair is open.
+(desktop: identical visible counts, validation clean). Re-run on the S24U in GPU cycles (the
+phone clocked the new builds lower, so ms mislead): chunk cull 228.4 / 229.0 k cycles against
+v0.4.0's 228–230 k (a344337: 236–239 k), preprocess 3,693–3,704 k against 3,723–3,901 k
+(`../benchmarks/segments-cull-s24u-939e28a-2026-11-25.csv`). One segment does v0.4.0's work.
 
 **S25U evidence** (`../benchmarks/segments-s25u-a344337-2026-11-24.csv`, summarized in
 `../benchmarks/README.md`, "Segments on the S25U"; not the deciding phone): one segment against

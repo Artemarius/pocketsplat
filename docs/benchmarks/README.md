@@ -154,6 +154,8 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
 - `segments-<device>-<hash>-<date>.csv` — the per-splat arrays split into segments (ADR-0018)
   against one segment, `quality_ab.py` with `--segment-splats N`: PSNR at the six poses, pixels
   moved > 2 LSB, and the bench orbit's mean visible count, with `ref@repeat`.
+- `segments-cull-s24u-<hash>-<date>.csv` — the S24U chunk-cull A/B before and after bcf3553,
+  per pass in ms and in thousands of GPU cycles (ms × kgsl clock).
 - `segments-s24u-<hash>-<date>.csv`, `segments-s25u-<hash>-<date>.csv` — segments on a phone (ADR-0018): per run the build,
   segment split, per-pass means over the first 30 s, visible mean, peak PSS and GL mtrack; the
   header states which runs were compared frame by frame.
@@ -727,9 +729,14 @@ run; per-pass means over the first 30 s. All runs at thermal status 0.
 * **One segment against v0.4.0 at 4 M** (ABBAAB): preprocess 4.039 against 4.001 ms (+0.9 %,
   inside v0.4.0's own 3.87–4.15 ms spread), GPU frame 11.83 against 11.53 ms (spread 11.1–12.1).
   The chunk cull was 0.257 against 0.240 ms, higher in all three pairs (+0.017 ms, +7 %); on the
-  S25U it was equal. Most likely cause: thread 0's per-block integer modulo, which the other 255
-  threads wait for at the barrier. bcf3553 removes the division (registers only); its S24U
-  re-run is pending.
+  S25U it was equal. Cause: thread 0's per-block integer modulo, which the other 255 threads wait
+  for at the barrier. bcf3553 removes the division (registers only).
+* **Re-run with the fix** (`segments-cull-s24u-939e28a-2026-11-25.csv`, both sessions, per-pass
+  GPU cycles = ms × kgsl clock): the S24U clocked the new builds lower (923–947 MHz against
+  938–985 MHz for v0.4.0), so milliseconds mislead; draw, whose code is unchanged, takes
+  4,336–4,481 k cycles on every build. Chunk cull: v0.4.0 228–230 k cycles, a344337 236–239 k
+  (+3.5 %, the modulo), 939e28a 228.4 / 229.0 k: the fix restores v0.4.0's work. Preprocess:
+  v0.4.0 3,723–3,901 k, 939e28a 3,693–3,704 k. One segment does v0.4.0's work: the gate is met.
 * Each adb install asked for Play Protect's security check on the S24U (held one install
   ~12 minutes until answered); the A/B's four installs are the cost of interleaving.
 
