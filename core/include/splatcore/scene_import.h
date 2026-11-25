@@ -31,8 +31,9 @@ enum class ImportStage { kRead, kClean, kSor, kPack, kWrite, kPalette };
 
 // Peak memory of import_scene per INPUT splat (the whole source is read before the budget
 // prune, so a budget does not lower it): PLY at SH target 1 with the 4,096-entry palette,
-// budget "all", bicycle 6.13 M at SH 3: 158 B (969 MB) on the desktop, the same with deep clean
-// (970 MB); 295 B (1,811 MB) before SH was truncated while reading (S34). 170 B keeps a margin.
+// budget "all", bicycle 6.13 M at SH 3: 166 B (969 MiB) on the desktop, the same with deep clean
+// (970 MiB); 310 B (1,811 MiB) before SH was truncated while reading. S25U, 9.92 M at SH 3: 133 B
+// (S34). 170 B covers both.
 inline constexpr std::uint64_t kImportPeakBytesPerSplat = 170;
 
 // The largest source (in splats) whose import fits `available_bytes`.

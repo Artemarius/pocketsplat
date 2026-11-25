@@ -154,6 +154,9 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
 - `segments-<device>-<hash>-<date>.csv` — the per-splat arrays split into segments (ADR-0018)
   against one segment, `quality_ab.py` with `--segment-splats N`: PSNR at the six poses, pixels
   moved > 2 LSB, and the bench orbit's mean visible count, with `ref@repeat`.
+- `import-memory-<hash>-<date>.csv` — peak memory of the import pipeline per input splat, on the
+  desktop (`splatconv import`) and on a phone (scripted import), before and after SH truncation
+  while reading.
 - `segments-cull-s24u-<hash>-<date>.csv` — the S24U chunk-cull A/B before and after bcf3553,
   per pass in ms and in thousands of GPU cycles (ms × kgsl clock).
 - `segments-s24u-<hash>-<date>.csv`, `segments-s25u-<hash>-<date>.csv` — segments on a phone (ADR-0018): per run the build,
@@ -710,6 +713,23 @@ the 750 splits it (2 × 11,141,120) and into 4 × 4,194,304.
   in 62. `ctest` 146/146, including the 4 golden-image tests.
 * GPU times in the CSV are the shared laptop's, indicative only. The deciding comparison, one
   segment against the v0.4.0 build at 4 M, is the S24U's (ADR-0018, "What decides it").
+
+## Import memory: SH dropped while reading, a memory-aware cap (2026-11-25, S34)
+
+`import-memory-bdc7953-2026-11-25.csv`. With the 750's scene limit lifted, the phone's fixed
+import refusal above 8 M splats became the next limit. Its cause was the reader holding all SH
+bands (236 B per splat at SH 3) until truncation late in the pipeline.
+
+* **SH truncated while reading** (bdc7953, `read_ply` `max_sh_degree`): the desktop import of
+  bicycle (6.13 M, SH 3, palette 4,096, budget all) peaks at 969 MiB instead of 1,811 MiB (166
+  instead of 310 B per input splat); deep clean adds nothing (970 MiB). The pack is byte-identical
+  to before: a row whose discarded coefficients are not finite gets a NaN opacity, so
+  drop_invalid still removes it.
+* **Cap** = half of MemAvailable / 170 B per input splat, in place of 8 M (desktop 166 B, S25U
+  133 B); a budget does not lower the peak, since the whole source is read first.
+* **S25U**: a tiled stump ×2 (9.92 M splats, SH 3; above the old cap) imported in 32.1 s
+  (palette 26.9 s of it) to 8,099,138 splats at SH 1 and opened; peak PSS 1,260 MiB = 133 B per
+  input splat, under the cap's 170 B. Its cap at 5.6 GB MemAvailable: 17.2 M.
 
 ## Segments on the S24U: the Phase 9 gate (2026-11-25, S34, ADR-0018)
 

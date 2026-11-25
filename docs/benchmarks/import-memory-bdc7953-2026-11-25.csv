@@ -1,0 +1,6 @@
+# import_scene peak memory (S34). Desktop: splatconv import (= the app's import_scene), Windows peak working set (MiB), idle priority, laptop wall times indicative only. Phone: the app's scripted import (import_src intent), dumpsys meminfo TOTAL PSS max sampled ~1/s (1,290,707 kB), S25U on USB power. All: SH target 1, palette 4096 (e-means, 3 epochs), budget all.
+host,build,source,source_splats,source_sh,deep_clean,sh_truncated_on_read,peak_mib,peak_bytes_per_input_splat,output_splats,wall_s,pack_identical_to_before
+desktop-rtx3060-laptop,fb66214-tree (before),bicycle.ply (INRIA; local only),6131954,3,no,no,1811,310,4483232,55.2,
+desktop-rtx3060-laptop,bdc7953,bicycle.ply (INRIA; local only),6131954,3,no,yes,969,166,4483232,67.1,yes
+desktop-rtx3060-laptop,bdc7953,bicycle.ply (INRIA; local only),6131954,3,yes,yes,970,166,4483220,234.3,
+s25u,bdc7953,stump.ply x2 tiled (INRIA; local only; synthetic),9923594,3,no,yes,1260,133,8099138,32.1,
