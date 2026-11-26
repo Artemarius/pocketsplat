@@ -108,3 +108,26 @@ in pack v2, and the header had one reserved word.
   scenes imported with the palette.
 * Not adopted: a training cap of 64 points per entry, which cuts training work to 1–4 % but raises
   the loss by 6–8 % (image cost not measured), and per-budget k.
+
+**Amendment (S36, 2026-11-26, accepted by the owner; S24U import check pending): palette size by
+the imported splat count.** Imports train **16,384 entries up to 1,000,000 splats and 4,096 above**
+(`splatcore::sh1_palette_for_count`, resolved inside `import_scene` after cleaning and the budget
+prune; the app, the Windows viewer and `splatconv import --sh1-palette auto` use it). This replaces
+"k 4,096 at every import budget" in Decision 4; trainer, epochs and format are unchanged.
+
+*Evidence* (`docs/palette-size.md`, CSVs `palette-size-*-2026-11-26`):
+* Image: e-means-3, six scenes, three paired seeds. At the app's home view 16,384 entries gain
+  +0.96 to +2.55 dB worst pose over 4,096 on every scene, all 180 paired poses positive, seed spread
+  ≤ 0.27 dB; +1.11 dB on a 1 M stump import. The gain does not grow with scene size (museum1
+  0.31 M: +1.35 dB; stump 4.05 M: +0.96 dB).
+* Training time, S24 Ultra (deciding, cool start, battery): hornedlizard 0.76 M 3.8 → 16.9 s, stump
+  4.05 M 20.8 → 96.2 s (4.6×, ending at thermal status 2). Cost grows with the count, gain does not:
+  the threshold keeps the extra time at about 15 s for the default 1 M budget and spares large
+  "all" imports the 96 s.
+* Rendering, S25 Ultra, ABBA: at 4.05 M preprocess +2 to +4 % (both orders), frame up to +1.7 %;
+  at 1 M no difference resolved. Scenes above 1 M keep 4,096 entries, so their cost is unchanged.
+
+*Consequences.* Scenes of up to 1 M splats imported from now on carry a 192 KB palette instead of
+48 KB (+147 KB per pack). Earlier imports are not redone (no viewer cache bump). Still to measure:
+the app's palette stage at 1 M with 16,384 entries on the S24U (estimated ~20 s against 4.5 s), and
+gate C at 1 M on the S24U; a threshold change follows if the import turns out much slower.
