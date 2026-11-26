@@ -11,8 +11,8 @@ on all six test scenes and every seed, and as much at the standard quality poses
 grow with scene size, but the training time grows with it: **4.4–4.6× the palette time** of 4,096
 entries on the S24 Ultra, **96 s instead of 21 s for a 4.05 M scene**. Rendering cost, S25 Ultra
 in ABBA order: preprocess +2 to +4 %, frame up to +1.7 % at 4.05 M splats, nothing resolved at 1 M;
-gate C on the S24 Ultra is not measured. The default stays at 4,096 until the owner decides
-(ADR-0017 amendment).
+gate C on the S24 Ultra is not measured. **Decision (owner, 2026-11-26): imports train 16,384
+entries up to 1 M splats and 4,096 above** (ADR-0017 amendment, `splatcore::sh1_palette_for_count`).
 
 ## 1. Protocol
 
@@ -139,12 +139,13 @@ S25 Ultra, preprocess and GPU frame in ms (run 1 / run 2), and the change of the
 * For scale, ADR-0017's gate C found the 4,096-entry palette 2–4 % faster than direct SH 1 in
   preprocess (S24U and S25U). A 16,384-entry table costs about that much back at 4.05 M on the S25U.
 
-## 5. Open, for the owner's decision
+## 5. Decision and what is still open
 
-* Not measured: gate C on the S24 Ultra (the deciding phone; the S25U result above is the only
-  render-cost evidence), and the palette stage inside a full app import at k 16,384 (predicted from
-  the trainer ratio above).
-* The choice: k 16,384 for every import (+1 to +2.6 dB at the home view, +1.1 dB on a 1 M stump
-  import; S24U palette time ×4.4–4.6, about 96 s for 4.05 M splats with the phone reaching thermal
-  status 2), for imports up to some splat count (the gain per second of training is largest on
-  small scenes, where the extra time is a few seconds), or 4,096 everywhere. Any change amends ADR-0017's "k 4,096 at every import budget".
+The owner chose the rule by splat count (ADR-0017 amendment, S36): **16,384 entries up to 1,000,000
+imported splats, 4,096 above.** The gain is the same at every size, the training time grows with
+the count: below the threshold the larger palette adds about 15 s to an import on the S24U, above
+it the 4.6× training (96 s for 4.05 M, thermal status 2) is not worth the same +1 dB.
+
+Still to measure on the S24 Ultra: the app's palette stage at 1 M with 16,384 entries (estimated
+~20 s from the trainer ratio, against 4.5 s at 4,096) and gate C at 1 M. A threshold change follows
+if the import is much slower than estimated.
