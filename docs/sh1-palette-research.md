@@ -494,8 +494,8 @@ the import toggle.
 ### Phase 10: palette size (2026-11-26)
 
 16,384 entries against the import's 4,096, e-means-3, six scenes, three paired seeds, measured at the
-app's home view as well as the gate A poses: +0.9 to +2.6 dB at the home view on every scene, ×4–5
-palette training time on the phones, preprocess +3–6 % on the S25U. Full write-up, figures and the
+app's home view as well as the gate A poses: +0.9 to +2.6 dB at the home view on every scene, ×4.4–5.8
+palette training time on the phones, preprocess +2.5 to +5.9 % on the S25U (one run per pack). Full write-up, figures and the
 pending S24U rows: [palette-size.md](palette-size.md).
 
 ## 7. Negative results

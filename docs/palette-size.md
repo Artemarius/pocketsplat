@@ -8,8 +8,9 @@ their training time, first for "all" imports (no splat budget), where scenes are
 
 **The result in one line**: 16,384 entries gain **+0.9 to +2.6 dB at the view the app opens with**,
 on all six test scenes and every seed, and as much at the standard quality poses. The gain does not
-grow with scene size, but the training time grows with it: about **4–5× the palette time** of
-4,096 entries, on both phones. Rendering cost: preprocess +3–6 %, frame +1–2 % on the S25 Ultra.
+grow with scene size, but the training time grows with it: about **4.4–5.8× the palette time** of
+4,096 entries, on both phones. Rendering cost: preprocess +2.5 to +5.9 %, frame +0.6 to +2.3 % on the
+S25 Ultra (one run per pack).
 S24 Ultra stump timings and gate C are pending (§4). The default stays at 4,096 until the owner
 decides (ADR-0017 amendment).
 
@@ -19,8 +20,7 @@ Six scenes from 0.31 M to 4.05 M splats, e-means with 3 epochs (the import's tra
 Each 16,384-entry palette is paired with the 4,096-entry palette of the same seed. All renders are
 864 × 1872 (the phone's portrait frame), compared against the scene's direct SH 1 pack (no palette)
 with 32-bit sort keys and no contribution cull. Training on the desktop used 4 threads at idle
-priority (the palette depends on the thread count); the 4,096-entry packs came out byte-identical to
-the ones the earlier Phase 10 sweep built.
+priority; both sizes used the same thread count.
 
 Two sets of views:
 
@@ -57,8 +57,12 @@ entries. n / k is the number of splats per palette entry at 16,384.
 * **The gain does not grow with scene size.** museum1 (19 splats per entry) gains +1.35 dB, stump
   (247 per entry) +0.96. Training work grows with the splat count, so the price per dB is lowest on
   small scenes. A rule by imported splat count fits the data better than "only for all imports".
-* hornedlizard is an SPZ import with only 106 K distinct SH1 vectors among 765 K splats: 860–892 of
+* hornedlizard is an SPZ import with only 106 K distinct SH1 vectors among 765 K splats: 859–892 of
   its 16,384 entries stay unused, and it still gains most.
+* **At the default 1 M budget** the gain is the same size: stump imported with `splatconv import
+  --budget 1000000` (the app's import, seed 1), against the direct 1 M import at the home view,
+  50.99 → 52.10 dB worst pose (+1.11), 51.95 → 52.81 mean (+0.86); one seed
+  (`benchmarks/palette-size-home-1m-52e8ed1-2026-11-26.csv`).
 * SH 0 (no SH1 at all) is at 29.6–38.7 dB worst pose: both palette sizes are far above it and above
   the 40 dB bar.
 * Pack size: +147 KB (12 B per extra entry), nothing per splat.
@@ -84,19 +88,23 @@ rendered pixels under the error maps (`scripts/make_palette_error_media.py`).
 ## 3. Training time
 
 Palette training plus the final assignment of every splat, e-means 3 epochs, 8 threads, NEON kernel,
-seed 1, two runs each (`benchmarks/palette-size-trainers-s24u-f3c295b-2026-11-26.csv`,
+seed 1, two back-to-back runs per call after a cool start (`benchmarks/palette-size-trainers-s24u-f3c295b-2026-11-26.csv`,
 `…-s25u-f3c295b-2026-11-26.csv`, `scripts/palette_trainers.py run --adb`). Losses and dead entries
-match the desktop's bit for bit. The work is 4× the point–centroid pairs.
+match the desktop's (4 threads) to the six printed digits. The work is 4× the point–centroid pairs.
+Ratios are of the first (cool) runs; the second run of a call starts warm.
 
-| Phone | Scene | k 4,096 | k 16,384 | Ratio |
-|---|---|---|---|---|
-| S24 Ultra (deciding) | hornedlizard 0.76 M | 3.4 / 4.5 s | 15.1 / 16.7 s | 4.0× |
-| S24 Ultra | stump 4.05 M | (19.6 s at import, ADR-0017) | pending | — |
-| S25 Ultra | hornedlizard 0.76 M | 2.1 / 2.2 s | 12.2 / 11.5 s | 5.5× |
-| S25 Ultra | stump 4.05 M | 13.0 / 13.7 s | 59.8 / 70.1 s | 4.9× |
+| Phone | Power | Scene | k 4,096 | k 16,384 | Ratio, first runs |
+|---|---|---|---|---|---|
+| S24 Ultra (deciding) | battery | hornedlizard 0.76 M | 3.4 / 4.5 s | 15.1 / 16.7 s | 4.4× |
+| S24 Ultra | | stump 4.05 M | (19.6 s at import, ADR-0017, charging) | pending | — |
+| S25 Ultra | charging | hornedlizard 0.76 M | 2.1 / 2.2 s | 12.2 / 11.5 s | 5.8× |
+| S25 Ultra | charging | stump 4.05 M | 13.0 / 13.7 s | 59.8 / 70.1 s | 4.6× |
 
-* The time grows slightly faster than the pairs: the 16,384-entry table is 590 KB instead of 147 KB
-  and no longer sits in a core's L2. The second S25U stump run reached thermal status 1 (skin 40 °C).
+* Above 4× on every first run. The 16,384-entry table is 590 KB instead of 147 KB and may no
+  longer fit a core's L2, but heat is a second candidate (not separated here): each call's second
+  run is slower, and the second S25U stump run at k 16,384 reached thermal status 1 (skin 40 °C).
+* The S24U hornedlizard rows ran on battery, S31's (3.1 s) on the charger: the pending S24U rows
+  should all share one power state.
 * Predicted from the S24U's pair rate (pending measurement): a 1 M import's palette stage from 4.5 s
   to about 19 s, a 4.05 M "all" import's from 19.6 s to about 80 s.
 
@@ -116,15 +124,13 @@ import` (the app's import), the APK unchanged (debuggable 0.4.0-bdc7953).
 | S25 Ultra | 4.05 M | min 4–5 | 3.786 | 3.954 (+4.4 %) | 13.91 | 14.23 (+2.3 %) | 71.8 → 70.2 |
 | S24 Ultra (deciding) | | | pending | | | | |
 
-* Preprocess is 3–6 % slower in all four windows. One run each, and the 16,384-entry run of each
-  pair came second (skin 0.2–1.2 °C warmer at the end), so part of it may be heat. S31's repeated
-  S24U runs differed by 1.5 %.
-* For scale: the palette saved 2–4 % of preprocess against direct SH 1 in ADR-0017's gate C. At
-  16,384 entries that saving is about used up; the frame cost stays within 2.3 %.
+* Preprocess is 2.5–5.9 % slower in all four windows. One run each, and the 16,384-entry run of
+  each pair came second (skin 0.2–1.2 °C warmer at the end), so part of it may be heat. S31's
+  repeated S24U runs differed by 1.5 %. The S24U runs should alternate the order (ABBA).
 
 ## 5. Open, for the owner's decision
 
 * S24 Ultra: stump training time and gate C (both packs, both sizes), then this table is complete.
-* The choice: k 16,384 for every import (+1 to +2.6 dB at the home view, palette time ×4–5), for
-  imports up to some splat count (the gain per second of training is largest on small scenes), or
-  4,096 everywhere. Any change amends ADR-0017's "k 4,096 at every import budget".
+* The choice: k 16,384 for every import (+1 to +2.6 dB at the home view, +1.1 dB on a 1 M stump
+  import; palette time ×4.4–5.8), for imports up to some splat count (the gain per second of training
+  is largest on small scenes), or 4,096 everywhere. Any change amends ADR-0017's "k 4,096 at every import budget".

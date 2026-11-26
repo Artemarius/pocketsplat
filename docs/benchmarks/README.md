@@ -199,6 +199,7 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
   the same packs at the app's home view (`scripts/palette_home_ab.py`): per scene, k and seed the
   PSNR min / mean over ten poses (home view swung 0, ±12.5°, ±25° about the up axis, at distance × 1
   and × 0.6; `poses` lists them as swing/distance) and every pose's PSNR in `psnr_per_pose_db`.
+- `palette-size-home-1m-<hash>-<date>.csv`: stump imported at the default 1 M budget (`splatconv import`), the k 4,096 and 16,384 import packs against the direct 1 M import at the home view, seed 1.
 - `palette-size-trainers-<device>-<hash>-<date>.csv` — the `palette-trainers` columns for e-means-3
   at k 4,096 and 16,384 on the phones (`palette_trainers.py run --adb`, 2 repeats, cool start);
   `label` says whether the phone was on the charger or on battery.
