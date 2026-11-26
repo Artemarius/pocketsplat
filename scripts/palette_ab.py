@@ -23,6 +23,7 @@ Usage:
       --splatconv build/tools/splatconv/Release/splatconv.exe \\
       --scene museum1=bench-out/palette/src/museum1.sh1.clean.ply \\
       --k 1024 4096 16384 65536 --epochs 25 --seed 1 \\
+      [--trainer emeans --epochs 3 --seed 1 2 3] \\
       --work bench-out/palette --csv docs/benchmarks/palette-quality-<hash>.csv
 
 stdlib + numpy only.
@@ -86,7 +87,7 @@ def main() -> int:
     parser.add_argument("--k", type=int, nargs="+", default=[1024, 4096, 16384, 65536])
     parser.add_argument("--epochs", type=int, default=25)
     parser.add_argument("--trainer", default="lloyd", choices=["lloyd", "hamerly", "emeans"])
-    parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--seed", type=int, nargs="+", default=[1])
     parser.add_argument("--v3", action="store_true", help="real palette packs (pack v3) instead of snapped SH 1 packs")
     parser.add_argument("--threads", type=int, default=0, help="palette training threads (0 = all)")
     parser.add_argument("--low-priority", action="store_true", help="run everything at idle priority")
@@ -117,17 +118,17 @@ def main() -> int:
             variants.append(("direct", work / f"{name}.direct.pspk", info))
             info = pack(splatconv, src, work / f"{name}.sh0.pspk", ["--sh", "0"])
             variants.append(("sh0", work / f"{name}.sh0.pspk", info))
-            for k in args.k:
+            for k, seed in [(k, s) for k in args.k for s in args.seed]:
                 tag = "" if args.trainer == "lloyd" else f".{args.trainer}"  # Lloyd keeps gate A's names
                 fmt = ".v3" if args.v3 else ""  # snapped packs keep the cached gate A/B names
-                out = work / f"{name}.k{k}{tag}.e{args.epochs}.s{args.seed}{fmt}.pspk"
+                out = work / f"{name}.k{k}{tag}.e{args.epochs}.s{seed}{fmt}.pspk"
                 info = pack(splatconv, src, out, ["--sh1-palette", str(k), "--palette-epochs", str(args.epochs),
                                                   "--palette-trainer", args.trainer,
-                                                  "--palette-seed", str(args.seed),
+                                                  "--palette-seed", str(seed),
                                                   "--palette-threads", str(args.threads)]
                             + ([] if args.v3 else ["--palette-snap"]))
                 variants.append(((f"k{k}{tag}.e{args.epochs}" if tag else f"k{k}") + fmt, out, info))
-                print(f"{name:>16} k {k:>6}: trained in {info['palette']['wall_ms'] / 1000:7.1f} s, "
+                print(f"{name:>16} k {k:>6} s{seed}: trained in {info['palette']['wall_ms'] / 1000:7.1f} s, "
                       f"mse {info['palette']['mse']:.3g}, dead {info['palette']['dead']}", flush=True)
 
             def shots(path: Path, tag: str):
@@ -161,7 +162,7 @@ def main() -> int:
                        "resolution": f"{args.width}x{args.height}", "poses": len(DEFAULT_POSES),
                        "render_flags": " ".join(RENDER_FLAGS)}
                 rows.append(row)
-                print(f"{name:>16} {variant:>14}: PSNR min {row['psnr_min_db']:>6} mean {row['psnr_mean_db']:>6} dB, "
+                print(f"{name:>16} {variant:>14} s{row['seed']}: PSNR min {row['psnr_min_db']:>6} mean {row['psnr_mean_db']:>6} dB, "
                       f"moved <= {row['moved_px_max_pct']} %", flush=True)
             # Rewrite after every scene so a long run leaves usable partial results.
             with open(args.csv, "w", newline="") as f:
