@@ -9,10 +9,11 @@ their training time, first for "all" imports (no splat budget), where scenes are
 **The result in one line**: 16,384 entries gain **+0.9 to +2.6 dB at the view the app opens with**,
 on all six test scenes and every seed, and as much at the standard quality poses. The gain does not
 grow with scene size, but the training time grows with it: **4.4–4.6× the palette time** of 4,096
-entries on the S24 Ultra, **96 s instead of 21 s for a 4.05 M scene**. Rendering cost, S25 Ultra
-in ABBA order: preprocess +2 to +4 %, frame up to +1.7 % at 4.05 M splats, nothing resolved at 1 M;
-gate C on the S24 Ultra is not measured. **Decision (owner, 2026-11-26): imports train 16,384
-entries up to 1 M splats and 4,096 above** (ADR-0017 amendment, `splatcore::sh1_palette_for_count`).
+entries on the S24 Ultra, **96 s instead of 21 s for a 4.05 M scene**. Rendering cost, ABBA order:
+preprocess +2.3 %, frame +1.6 to +2.1 % at 1 M on the S24 Ultra; +2 to +4 % and up to +1.7 % at
+4.05 M on the S25 Ultra. **Decision (owner, 2026-11-26): imports train 16,384 entries up to 1 M
+splats and 4,096 above** (ADR-0017 amendment, `splatcore::sh1_palette_for_count`). On the S24 Ultra
+a 1 M import with the rule takes 24 s instead of 5.6 s.
 
 ## 1. Protocol
 
@@ -119,8 +120,20 @@ table is 192 KB instead of 48 KB. Stump at the default 1 M budget and at all 4.0
 defaults (16-bit keys, contribution cull 0.1 px), 1872 × 864, 5-minute runs, on the charger
 (`benchmarks/palette-size-gatec-s25u-bdc7953-2026-11-26.csv`). Packs from `splatconv import` (the
 app's import), the APK unchanged (debuggable 0.4.0-bdc7953). Two runs per pack in ABBA order: run 1
-k 4,096 then k 16,384, run 2 k 16,384 then k 4,096, each after a cool-wait (skin ≤ 36 °C). The S24
-Ultra was not available for gate C this session.
+k 4,096 then k 16,384, run 2 k 16,384 then k 4,096, each after a cool-wait (skin ≤ 36 °C).
+
+**S24 Ultra (deciding), 1 M** (`benchmarks/palette-size-gatec-s24u-9522b74-2026-11-26.csv`; APK
+debuggable 0.5.0-9522b74, the rule's build; ABBA as above; on the charger; the phone did not get back
+under 36 °C within the 15-minute cool-wait before the first two runs, 36.6 °C at the start of the
+second; thermal status 2 at minute 4–5 in all four):
+
+| Window | Preprocess k 4,096 | k 16,384 | Δ | GPU frame k 4,096 | k 16,384 | Δ | fps |
+|---|---|---|---|---|---|---|---|
+| 0–30 s | 2.441 / 2.459 | 2.500 / 2.517 | **+2.4 %** | 6.71 / 6.78 | 6.78 / 6.99 | +2.1 % | 146.7 → 143.6 |
+| min 4–5 | 3.466 / 3.465 | 3.546 / 3.544 | **+2.3 %** | 9.18 / 9.19 | 9.26 / 9.40 | +1.6 % | 108.7 → 107.0 |
+
+* The S24U resolves the cost at 1 M: preprocess +2.3 % in both orders (each pair within 0.02 ms),
+  frame +1.6 to +2.1 %, about 1.6 fps of 108 sustained.
 
 S25 Ultra, preprocess and GPU frame in ms (run 1 / run 2), and the change of the two-run mean:
 
@@ -135,9 +148,9 @@ S25 Ultra, preprocess and GPU frame in ms (run 1 / run 2), and the change of the
   +0.2 to +2.3 %, fps 71.9 → 70.8 at minute 4–5.
 * At 1 M the difference is within the order effect: in run 2 the k 16,384 run was the session's
   first and started from 28.2 °C skin (all others at 35.3–36.0 °C, the cool-wait's bar), and it is
-  the fastest of the four at minute 4–5. No cost is resolved at 1 M.
+  the fastest of the four at minute 4–5. No cost is resolved at 1 M on the S25U.
 * For scale, ADR-0017's gate C found the 4,096-entry palette 2–4 % faster than direct SH 1 in
-  preprocess (S24U and S25U). A 16,384-entry table costs about that much back at 4.05 M on the S25U.
+  preprocess (S24U and S25U). A 16,384-entry table costs about that much back.
 
 ## 5. Decision and what is still open
 
@@ -146,6 +159,11 @@ imported splats, 4,096 above.** The gain is the same at every size, the training
 the count: below the threshold the larger palette adds about 15 s to an import on the S24U, above
 it the 4.6× training (96 s for 4.05 M, thermal status 2) is not worth the same +1 dB.
 
-Still to measure on the S24 Ultra: the app's palette stage at 1 M with 16,384 entries (estimated
-~20 s from the trainer ratio, against 4.5 s at 4,096) and gate C at 1 M. A threshold change follows
-if the import is much slower than estimated.
+**The S24 Ultra check (after the decision, APK 0.5.0-9522b74 with the rule):**
+* Two scripted 1 M imports of stump (`benchmarks/palette-size-import-s24u-9522b74-2026-11-26.csv`,
+  on the charger, cool start ≤ 36 °C): the app picked 16,384 entries, palette stage 23.1 s both
+  times (training 16.8 s + final assignment 6.1 s), import 23.9 s in total. S31's 1 M import with
+  4,096 entries: palette 4.7 s, total 5.6 s (`palette-import-cd347ef-2026-11-23.csv`). The estimate
+  was ~20 s, so the threshold stands.
+* Gate C at 1 M: preprocess +2.3 %, frame +1.6 to +2.1 % (§4). This is the price of the +1.1 dB at
+  the home view for scenes at the default budget; scenes above 1 M keep 4,096 entries and today's cost.

@@ -1,0 +1,9 @@
+device,build,scene,variant,run,window,fps,gpu_ms,cull_ms,preprocess_ms,sort_ms,draw_ms,visible,thermal_max,power
+s24u,9522b74,stump-1m,pal16384,1,cold_0_30s,145.0,6.776,0.072,2.500,2.055,2.150,895896,0,charging
+s24u,9522b74,stump-1m,pal16384,2,cold_0_30s,142.1,6.989,0.072,2.517,2.235,2.165,895831,0,charging
+s24u,9522b74,stump-1m,pal4096,1,cold_0_30s,147.4,6.708,0.071,2.441,2.057,2.139,895790,0,charging
+s24u,9522b74,stump-1m,pal4096,2,cold_0_30s,145.9,6.778,0.072,2.459,2.070,2.178,895832,0,charging
+s24u,9522b74,stump-1m,pal16384,1,min_4_5,107.8,9.260,0.100,3.546,2.685,2.929,895948,2,charging
+s24u,9522b74,stump-1m,pal16384,2,min_4_5,106.2,9.403,0.101,3.544,2.817,2.942,895476,2,charging
+s24u,9522b74,stump-1m,pal4096,1,min_4_5,108.8,9.178,0.100,3.466,2.682,2.930,895778,2,charging
+s24u,9522b74,stump-1m,pal4096,2,min_4_5,108.6,9.190,0.100,3.465,2.681,2.944,895865,2,charging

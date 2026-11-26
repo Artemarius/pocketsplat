@@ -109,8 +109,8 @@ in pack v2, and the header had one reserved word.
 * Not adopted: a training cap of 64 points per entry, which cuts training work to 1–4 % but raises
   the loss by 6–8 % (image cost not measured), and per-budget k.
 
-**Amendment (S36, 2026-11-26, accepted by the owner; S24U import check pending): palette size by
-the imported splat count.** Imports train **16,384 entries up to 1,000,000 splats and 4,096 above**
+**Amendment (S36, 2026-11-26, accepted by the owner; checked on the S24U the same day): palette
+size by the imported splat count.** Imports train **16,384 entries up to 1,000,000 splats and 4,096 above**
 (`splatcore::sh1_palette_for_count`, resolved inside `import_scene` after cleaning and the budget
 prune; the app, the Windows viewer and `splatconv import --sh1-palette auto` use it). This replaces
 "k 4,096 at every import budget" in Decision 4; trainer, epochs and format are unchanged.
@@ -124,10 +124,14 @@ prune; the app, the Windows viewer and `splatconv import --sh1-palette auto` use
   4.05 M 20.8 → 96.2 s (4.6×, ending at thermal status 2). Cost grows with the count, gain does not:
   the threshold keeps the extra time at about 15 s for the default 1 M budget and spares large
   "all" imports the 96 s.
-* Rendering, S25 Ultra, ABBA: at 4.05 M preprocess +2 to +4 % (both orders), frame up to +1.7 %;
-  at 1 M no difference resolved. Scenes above 1 M keep 4,096 entries, so their cost is unchanged.
+* Import with the rule, S24 Ultra (APK 0.5.0-9522b74, two scripted 1 M imports of stump): 16,384
+  entries, palette stage 23.1 s, import 23.9 s in total, against 4.7 s and 5.6 s with 4,096 entries
+  in S31 (`palette-size-import-s24u-9522b74-2026-11-26.csv`).
+* Rendering, ABBA order: S24 Ultra at 1 M preprocess +2.3 % in both orders, frame +1.6 to +2.1 %
+  (`palette-size-gatec-s24u-9522b74-2026-11-26.csv`); S25 Ultra at 4.05 M preprocess +2 to +4 %,
+  frame up to +1.7 %. Scenes above 1 M keep 4,096 entries, so their cost is unchanged.
 
 *Consequences.* Scenes of up to 1 M splats imported from now on carry a 192 KB palette instead of
-48 KB (+147 KB per pack). Earlier imports are not redone (no viewer cache bump). Still to measure:
-the app's palette stage at 1 M with 16,384 entries on the S24U (estimated ~20 s against 4.5 s), and
-gate C at 1 M on the S24U; a threshold change follows if the import turns out much slower.
+48 KB (+147 KB per pack), render about 2 % slower than with 4,096 entries (about the saving the
+4,096-entry palette brought over direct SH 1), and take about 18 s longer to import on the S24U.
+Earlier imports are not redone (no viewer cache bump).

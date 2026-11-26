@@ -203,6 +203,7 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
 - `palette-size-trainers-<device>-<hash>-<date>.csv` — the `palette-trainers` columns for e-means-3
   at k 4,096 and 16,384 on the phones (`palette_trainers.py run --adb`, 2 repeats, cool start);
   `label` says whether the phone was on the charger or on battery.
+- `palette-size-import-s24u-<hash>-<date>.csv` — the `palette-import` columns for the app with the size rule (S24U, stump at the 1 M budget, `palette` = entries the app picked).
 - `palette-size-gatec-<device>-<hash>-<date>.csv` — the `palette-gatec` columns (`run` 1: k 4,096 first, `run` 2: k 16,384 first) for stump packs
   from `splatconv import` with 4,096 (`pal4096`) and 16,384 (`pal16384`) entries, at the default
   1 M budget and at all 4.05 M splats; `build` is the installed APK's.
