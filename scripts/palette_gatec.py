@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Phase 8 Gate C tables from bench_android.py runs and scripted imports (S31, 2026-11-23).
 
-  frames  frame-<device>-<hash>-p8-stump-<size>.<variant>...-raw.csv -> one row per run and window
+  frames  frame-<device>-<hash>-{p8|k}-stump-<size>.<variant>...-raw.csv (k-: Phase 10 palette size) -> one row per run and window
           (cold 0-30 s, minute 4-5 = 240-300 s): fps, GPU ms, per-pass ms, visible, thermal max
   imports imports-<device>.txt (the app's "import timing" / "import palette" logcat lines) -> one
           row per import: budget, palette, per-stage ms, total ms, palette train / train+assign ms
@@ -30,7 +30,7 @@ def run_number(name: str, m: re.Match, paths: list[str]) -> str:
     (the S24U 1 M palette was rerun after the direct SH 1 redo), else 1."""
     if m["run"]:
         return m["run"].removeprefix("-run")
-    sibling = f"{m['device']}-{m['build']}-p8-{m['scene']}.{m['variant']}-run1-"
+    sibling = f"{m['device']}-{m['build']}-{m['prefix']}-{m['scene']}.{m['variant']}-run1-"
     return "2" if any(sibling in Path(p).name for p in paths) else "1"
 
 
@@ -40,7 +40,7 @@ def frames(paths: list[str], out: str, power: str) -> None:
     rows = []
     for path in paths:
         name = Path(path).name.removeprefix("frame-").removesuffix("-raw.csv")
-        m = re.match(r"(?P<device>[^-]+)-(?P<build>[0-9a-f]+(?:-dirty)?)-p8-(?P<scene>stump-[^.]+)\."
+        m = re.match(r"(?P<device>[^-]+)-(?P<build>[0-9a-f]+(?:-dirty)?)-(?P<prefix>p8|k)-(?P<scene>stump-[^.]+)\."
                      r"(?P<variant>[a-z0-9]+)(?P<run>-run\d+)?-", name)
         if not m:
             print(f"skipped {path}: name not recognised", file=sys.stderr)

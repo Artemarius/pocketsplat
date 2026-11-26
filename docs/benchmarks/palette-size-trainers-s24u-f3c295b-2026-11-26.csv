@@ -1,0 +1,5 @@
+label,input,count,trainer,k,epochs,seed,cap_per_entry,train_count,threads,batch,alpha0,updates,revived,epochs_run,pairs,mse,dead,used_entropy_bits,train_ms,wall_ms,build,thermal_before,skin_before_c,thermal_after,skin_after_c
+S24U-8t-neon-battery,hornedlizard.sh1,764985,emeans,4096,3,1,0,764985,8,4096,0.0638614,561,2264,3,9400135680,0.0021485945,6,11.1412,2574.2,3449.6,f3c295b,0,30.6,0,32.6
+S24U-8t-neon-battery,hornedlizard.sh1,764985,emeans,4096,3,1,0,764985,8,4096,0.0638614,561,2264,3,9400135680,0.0021485945,6,11.1412,3594.0,4543.4,f3c295b,0,30.6,0,32.6
+S24U-8t-neon-battery,hornedlizard.sh1,764985,emeans,16384,3,1,0,764985,8,4096,0.0337513,561,23397,3,37600542720,0.000998147528,892,12.3956,11140.5,15054.4,f3c295b,0,31.3,0,36.9
+S24U-8t-neon-battery,hornedlizard.sh1,764985,emeans,16384,3,1,0,764985,8,4096,0.0337513,561,23397,3,37600542720,0.000998147528,892,12.3956,12577.1,16743.4,f3c295b,0,31.3,0,36.9
