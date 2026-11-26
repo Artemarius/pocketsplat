@@ -88,25 +88,29 @@ rendered pixels under the error maps (`scripts/make_palette_error_media.py`).
 ## 3. Training time
 
 Palette training plus the final assignment of every splat, e-means 3 epochs, 8 threads, NEON kernel,
-seed 1, two back-to-back runs per call after a cool start (`benchmarks/palette-size-trainers-s24u-f3c295b-2026-11-26.csv`,
+seed 1 (`benchmarks/palette-size-trainers-s24u-f3c295b-2026-11-26.csv`,
 `…-s25u-f3c295b-2026-11-26.csv`, `scripts/palette_trainers.py run --adb`). Losses and dead entries
 match the desktop's (4 threads) to the six printed digits. The work is 4× the point–centroid pairs.
-Ratios are of the first (cool) runs; the second run of a call starts warm.
+The S24U ran on battery all day. Its deciding rows are one call per run, each after a cool start
+(skin ≤ 32 °C; `build` 0118e0f, the same palettebench binary as f3c295b's). The morning rows and
+the S25U's are two back-to-back runs per call: the second starts warm, so ratios use the first.
 
-| Phone | Power | Scene | k 4,096 | k 16,384 | Ratio, first runs |
+| Phone | Power | Scene | k 4,096 | k 16,384 | Ratio |
 |---|---|---|---|---|---|
-| S24 Ultra (deciding) | battery | hornedlizard 0.76 M | 3.4 / 4.5 s | 15.1 / 16.7 s | 4.4× |
-| S24 Ultra | | stump 4.05 M | (19.6 s at import, ADR-0017, charging) | pending | — |
-| S25 Ultra | charging | hornedlizard 0.76 M | 2.1 / 2.2 s | 12.2 / 11.5 s | 5.8× |
-| S25 Ultra | charging | stump 4.05 M | 13.0 / 13.7 s | 59.8 / 70.1 s | 4.6× |
+| S24 Ultra (deciding) | battery | hornedlizard 0.76 M, cool start | 3.8 s | 16.9 s | **4.4×** |
+| S24 Ultra (deciding) | battery | stump 4.05 M, cool start | 20.8 s | **96.2 s** | **4.6×** |
+| S24 Ultra | battery | hornedlizard, morning, 2 runs | 3.4 / 4.5 s | 15.1 / 16.7 s | 4.4× |
+| S25 Ultra | charging | hornedlizard 0.76 M, 2 runs | 2.1 / 2.2 s | 12.2 / 11.5 s | 5.8× |
+| S25 Ultra | charging | stump 4.05 M, 2 runs | 13.0 / 13.7 s | 59.8 / 70.1 s | 4.6× |
 
+* **A 4.05 M "all" import's palette stage goes from about 21 s to about 96 s on the S24U.** The
+  k 16,384 stump run ended at thermal status 2 (skin 32.0 → 42.5 °C); the phone then needed over
+  30 minutes on the desk to fall back below 34 °C. At the default 1 M budget the palette stage would
+  grow from 4.5 s (ADR-0017) to about 20 s, scaled by the measured ratio.
 * Above 4× on every first run. The 16,384-entry table is 590 KB instead of 147 KB and may no
-  longer fit a core's L2, but heat is a second candidate (not separated here): each call's second
-  run is slower, and the second S25U stump run at k 16,384 reached thermal status 1 (skin 40 °C).
-* The S24U hornedlizard rows ran on battery, S31's (3.1 s) on the charger: the pending S24U rows
-  should all share one power state.
-* Predicted from the S24U's pair rate (pending measurement): a 1 M import's palette stage from 4.5 s
-  to about 19 s, a 4.05 M "all" import's from 19.6 s to about 80 s.
+  longer fit a core's L2, but heat is a second candidate (not separated here).
+* A second round of S24U cool-start runs was stopped after one row (the owner needed the phone):
+  hornedlizard k 4,096 3.3 s, from 34 °C.
 
 ## 4. Rendering cost (gate C)
 
