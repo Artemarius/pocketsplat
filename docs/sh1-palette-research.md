@@ -496,7 +496,9 @@ the import toggle.
 16,384 entries against the import's 4,096, e-means-3, six scenes, three paired seeds, measured at the
 app's home view as well as the gate A poses: +0.9 to +2.6 dB at the home view on every scene (+1.1 dB
 on a 1 M import), palette training ×4.4–4.6 on the S24U (stump 4.05 M: 20.8 → 96.2 s), preprocess
-+2 to +4 % at 4.05 M on the S25U (ABBA). Open for the owner's decision. Write-up and figures:
++2 to +4 % at 4.05 M on the S25U and +2.3 % at 1 M on the S24U (ABBA). Decision: 16,384 entries
+up to 1 M imported splats, 4,096 above (ADR-0017 amendment); a 1 M import on the S24U takes 24 s
+instead of 5.6 s. Write-up and figures:
 [palette-size.md](palette-size.md).
 
 ## 7. Negative results
