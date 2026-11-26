@@ -40,8 +40,8 @@ recording, with the HUD's per-pass GPU times, is attached to the
   [latest release](../../releases/latest). Side-loaded, not on the Play Store. Tested on
   Snapdragon 8 Gen 3 and 8 Elite phones. The first launch opens the bundled sample.
   **Open PLY/SPZ file…** imports any 3DGS scene through the system file picker; it is cleaned and
-  packed on the phone. The SH palette adds about 4.5 s per million splats to an import on the S24
-  Ultra, and the import screen can turn it off.
+  packed on the phone. The SH palette adds about 18 s to a 1 M-splat import on the S24 Ultra (4.5 s in
+  v0.5.0, which trains a smaller palette), and the import screen can turn it off.
   One finger orbits, a pinch zooms, two fingers pan, a double tap moves the pivot to the point
   under the finger, and **Home** returns to the start view.
 * **Windows** (10/11, a Vulkan 1.3 driver): unzip `pocketsplat-viewer-0.5.0-windows-x64.zip` from the
@@ -69,7 +69,8 @@ flowchart LR
   (SH 0–3) and SPZ, converts the coordinate system (RDF → RUB with an SH parity table) and truncates
   SH to degree 1. It removes floaters and degenerate splats, sorts in Morton order and writes a GPU
   pack with conservative chunk bounds. The SH 1 colour terms become a 16-bit index into a palette of
-  4,096 vectors trained at import with e-means ([against Lloyd](docs/e-means-vs-lloyd.md)), so an SH 1 scene takes the 28 B per splat of SH 0
+  16,384 vectors for scenes up to 1 M splats and 4,096 above ([why](docs/palette-size.md); v0.5.0:
+  4,096 at every size), trained at import with e-means ([against Lloyd](docs/e-means-vs-lloyd.md)), so an SH 1 scene takes the 28 B per splat of SH 0
   instead of 40 B ([ADR-0017](docs/decisions/ADR-0017-sh1-palette.md),
   [docs/sh1-palette-research.md](docs/sh1-palette-research.md)).
 * **Frame**: everything after the chunk cull is GPU-driven. The preprocess projects each splat

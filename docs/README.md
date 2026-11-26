@@ -20,7 +20,7 @@ a new document.
 | `coverage-mask-research.md` | Per-splat observed-direction mask: prototype from the capture cameras, hole policies, why the hole is inherent; S27: what the splats alone say about the capture (probes, virtual cameras, camera-file formats) | Contributors |
 | `sh1-palette-research.md` | SH 1 palette (Phase 8): a 16-bit index per splat into a trained palette of SH1 vectors; design, trainers, protocol, gates, results and negative results | Contributors |
 | `e-means-vs-lloyd.md` | Showcase of the palette trainers: e-means against Lloyd on loss, work, phone time, dead entries and image quality, with figures; a summary of `sh1-palette-research.md` §6 | Public |
-| `palette-size.md` | Phase 10: SH 1 palette of 16,384 entries against 4,096 at the home view and the gate A poses, training time and render cost on the phones, error-map figures; open for the owner's decision | Contributors |
+| `palette-size.md` | Phase 10: SH 1 palette of 16,384 entries against 4,096 at the home view and the gate A poses, training time and render cost on the phones, error-map figures; decision: 16,384 entries up to 1 M splats, 4,096 above (ADR-0017 amendment) | Contributors |
 | `phase0-webgpu-baseline.md` | Phase 0 measurement protocol (WebGPU baseline on the S24U) | Contributors |
 | `decisions/ADR-NNNN-*.md` | One accepted architectural decision each: context, options, decision, consequences | Contributors |
 | `benchmarks/README.md` | Benchmark file index, CSV column schema, measurement protocol, **negative results log** | Contributors + public evidence |

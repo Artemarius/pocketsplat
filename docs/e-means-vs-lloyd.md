@@ -2,7 +2,8 @@
 
 PocketSplat stores each splat's degree-1 spherical-harmonic colour terms (SH1: 3 coefficients ×
 3 colour channels, 9 floats) as a 16-bit index into a palette of 4,096 SH1 vectors
-([ADR-0017](decisions/ADR-0017-sh1-palette.md)). The palette is trained on the phone while a scene is
+([ADR-0017](decisions/ADR-0017-sh1-palette.md); since Phase 10, 16,384 for imports of up to 1 M splats,
+[palette-size.md](palette-size.md)). The palette is trained on the phone while a scene is
 imported, from 0.3 M to 4 M splats. That makes it a k-means problem with an unusual budget: d = 9,
 n up to millions, k = 4,096, and a user waiting for the import to finish on a phone CPU.
 
@@ -91,7 +92,8 @@ distance evaluation, and the equal-time comparison is direct:
 | stump (4.05 M) | 18.9 s | 18.6 s | 0.89 |
 
 The S25 Ultra trains the same palettes, bit for bit, in 2.2 s and 12.0 s. The app's import adds
-4.5 s at its 1 M default on the S24 Ultra.
+4.5 s at its 1 M default on the S24 Ultra with 4,096 entries, and 23 s with the 16,384 entries it
+trains there since Phase 10 ([palette-size.md](palette-size.md)).
 
 ## Dead entries
 

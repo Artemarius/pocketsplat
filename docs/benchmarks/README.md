@@ -207,6 +207,12 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
 - `palette-size-gatec-<device>-<hash>-<date>.csv` — the `palette-gatec` columns (`run` 1: k 4,096 first, `run` 2: k 16,384 first) for stump packs
   from `splatconv import` with 4,096 (`pal4096`) and 16,384 (`pal16384`) entries, at the default
   1 M budget and at all 4.05 M splats; `build` is the installed APK's.
+- **Phase 10 hashes rewritten before the merge**: the `palette-size-*` files of 2026-11-26 cite build
+  hashes from the working branch, which was rewritten (one image of a non-redistributable scene
+  removed from its history) before it reached `main`. Code and data are identical; the hashes map
+  to `main` as `52e8ed1` → `5a45ff4`, `0118e0f` → `5873f65` (palettebench unchanged since `f3c295b`),
+  `9522b74` → `5b02df3` (the size rule; APK versionName 0.5.0-9522b74). `f4f28ac`, `f3c295b` and
+  `6b50f39` are on `main` unchanged.
 
 ## CSV columns (frame benchmarks)
 `device, build_hash, scene, splats_total, splats_visible, sh_degree, internal_w, internal_h, key_bits,
