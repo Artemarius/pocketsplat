@@ -192,6 +192,19 @@ Every measurement lives here as a CSV plus a short note. Nothing is quoted from 
   `import timing` logcat lines): per import the budget, palette on/off, per-stage and total ms and,
   with a palette, training and training + final assignment ms and the palette MSE. The `palette`
   stage also includes building the pack.
+- `palette-size-<hash>-<date>.csv` — SH 1 palette size, Phase 10 (`scripts/palette_ab.py --trainer
+  emeans --epochs 3 --k 4096 16384 --seed 1 2 3`, `docs/palette-size.md`): the gate A columns for
+  e-means-3 palettes of 4,096 and 16,384 entries on the six scenes, three paired seeds (one seed
+  gives the same initial centroids and shuffles at both sizes). `palette-size-home-<hash>-<date>.csv`:
+  the same packs at the app's home view (`scripts/palette_home_ab.py`): per scene, k and seed the
+  PSNR min / mean over ten poses (home view swung 0, ±12.5°, ±25° about the up axis, at distance × 1
+  and × 0.6; `poses` lists them as swing/distance) and every pose's PSNR in `psnr_per_pose_db`.
+- `palette-size-trainers-<device>-<hash>-<date>.csv` — the `palette-trainers` columns for e-means-3
+  at k 4,096 and 16,384 on the phones (`palette_trainers.py run --adb`, 2 repeats, cool start);
+  `label` says whether the phone was on the charger or on battery.
+- `palette-size-gatec-<device>-<hash>-<date>.csv` — the `palette-gatec` columns for stump packs
+  from `splatconv import` with 4,096 (`pal4096`) and 16,384 (`pal16384`) entries, at the default
+  1 M budget and at all 4.05 M splats; `build` is the installed APK's.
 
 ## CSV columns (frame benchmarks)
 `device, build_hash, scene, splats_total, splats_visible, sh_degree, internal_w, internal_h, key_bits,

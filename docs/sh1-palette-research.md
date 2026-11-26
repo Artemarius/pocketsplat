@@ -491,6 +491,13 @@ adds 4.5 s on the S24U, a third of which is the final assignment of every splat.
 sizes, and the import cost is recorded. Next: ADR-0017 (proposed), with the default-on question for
 the import toggle.
 
+### Phase 10: palette size (2026-11-26)
+
+16,384 entries against the import's 4,096, e-means-3, six scenes, three paired seeds, measured at the
+app's home view as well as the gate A poses: +0.9 to +2.6 dB at the home view on every scene, ×4–5
+palette training time on the phones, preprocess +3–6 % on the S25U. Full write-up, figures and the
+pending S24U rows: [palette-size.md](palette-size.md).
+
 ## 7. Negative results
 
 * **`dumpsys meminfo` as the palette's memory measure** (2026-11-23, S31): on the S25U `GL mtrack`
