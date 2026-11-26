@@ -8,11 +8,11 @@ their training time, first for "all" imports (no splat budget), where scenes are
 
 **The result in one line**: 16,384 entries gain **+0.9 to +2.6 dB at the view the app opens with**,
 on all six test scenes and every seed, and as much at the standard quality poses. The gain does not
-grow with scene size, but the training time grows with it: about **4.4–5.8× the palette time** of
-4,096 entries, on both phones. Rendering cost: preprocess +2.5 to +5.9 %, frame +0.6 to +2.3 % on the
-S25 Ultra (one run per pack).
-S24 Ultra stump timings and gate C are pending (§4). The default stays at 4,096 until the owner
-decides (ADR-0017 amendment).
+grow with scene size, but the training time grows with it: **4.4–4.6× the palette time** of 4,096
+entries on the S24 Ultra, **96 s instead of 21 s for a 4.05 M scene**. Rendering cost, S25 Ultra
+in ABBA order: preprocess +2 to +4 %, frame up to +1.7 % at 4.05 M splats, nothing resolved at 1 M;
+gate C on the S24 Ultra is not measured. The default stays at 4,096 until the owner decides
+(ADR-0017 amendment).
 
 ## 1. Protocol
 
@@ -116,25 +116,35 @@ the S25U's are two back-to-back runs per call: the second starts warm, so ratios
 
 The renderer reads one 12-byte entry per visible splat in the preprocess pass; at 16,384 entries the
 table is 192 KB instead of 48 KB. Stump at the default 1 M budget and at all 4.05 M, the app's
-defaults (16-bit keys, contribution cull 0.1 px), 1872 × 864, 5-minute runs, one run per pack, on
-the charger (`benchmarks/palette-size-gatec-s25u-bdc7953-2026-11-26.csv`). Packs from `splatconv
-import` (the app's import), the APK unchanged (debuggable 0.4.0-bdc7953).
+defaults (16-bit keys, contribution cull 0.1 px), 1872 × 864, 5-minute runs, on the charger
+(`benchmarks/palette-size-gatec-s25u-bdc7953-2026-11-26.csv`). Packs from `splatconv import` (the
+app's import), the APK unchanged (debuggable 0.4.0-bdc7953). Two runs per pack in ABBA order: run 1
+k 4,096 then k 16,384, run 2 k 16,384 then k 4,096, each after a cool-wait (skin ≤ 36 °C). The S24
+Ultra was not available for gate C this session.
 
-| Phone | Splats | Window | Preprocess k 4,096 | k 16,384 | GPU frame k 4,096 | k 16,384 | fps |
+S25 Ultra, preprocess and GPU frame in ms (run 1 / run 2), and the change of the two-run mean:
+
+| Splats | Window | Preprocess k 4,096 | k 16,384 | Δ | GPU frame k 4,096 | k 16,384 | Δ |
 |---|---|---|---|---|---|---|---|
-| S25 Ultra | 1 M | 0–30 s | 1.368 ms | 1.449 (+5.9 %) | 5.86 ms | 5.99 (+2.3 %) | 158.5 → 157.8 |
-| S25 Ultra | 1 M | min 4–5 | 2.187 | 2.278 (+4.2 %) | 8.57 | 8.73 (+1.9 %) | 116.5 → 114.4 |
-| S25 Ultra | 4.05 M | 0–30 s | 2.521 | 2.585 (+2.5 %) | 9.31 | 9.37 (+0.6 %) | 106.9 → 106.5 |
-| S25 Ultra | 4.05 M | min 4–5 | 3.786 | 3.954 (+4.4 %) | 13.91 | 14.23 (+2.3 %) | 71.8 → 70.2 |
-| S24 Ultra (deciding) | | | pending | | | | |
+| 1 M | 0–30 s | 1.368 / 1.403 | 1.449 / 1.383 | +2.2 % | 5.86 / 5.96 | 5.99 / 5.81 | 0.0 % |
+| 1 M | min 4–5 | 2.187 / 2.184 | 2.278 / 2.081 | −0.3 % | 8.57 / 8.56 | 8.73 / 8.07 | −1.9 % |
+| 4.05 M | 0–30 s | 2.521 / 2.513 | 2.585 / 2.554 | **+2.1 %** | 9.31 / 9.29 | 9.37 / 9.31 | +0.4 % |
+| 4.05 M | min 4–5 | 3.786 / 3.775 | 3.954 / 3.891 | **+3.8 %** | 13.91 / 13.87 | 14.23 / 14.01 | +1.7 % |
 
-* Preprocess is 2.5–5.9 % slower in all four windows. One run each, and the 16,384-entry run of
-  each pair came second (skin 0.2–1.2 °C warmer at the end), so part of it may be heat. S31's
-  repeated S24U runs differed by 1.5 %. The S24U runs should alternate the order (ABBA).
+* **At 4.05 M, k 16,384 is slower in both orders**: preprocess +1.6 to +4.4 % per pair, GPU frame
+  +0.2 to +2.3 %, fps 71.9 → 70.8 at minute 4–5.
+* At 1 M the difference is within the order effect: in run 2 the k 16,384 run was the session's
+  first and started from 28.2 °C skin (all others at 35.3–36.0 °C, the cool-wait's bar), and it is
+  the fastest of the four at minute 4–5. No cost is resolved at 1 M.
+* For scale, ADR-0017's gate C found the 4,096-entry palette 2–4 % faster than direct SH 1 in
+  preprocess (S24U and S25U). A 16,384-entry table costs about that much back at 4.05 M on the S25U.
 
 ## 5. Open, for the owner's decision
 
-* S24 Ultra: stump training time and gate C (both packs, both sizes), then this table is complete.
+* Not measured: gate C on the S24 Ultra (the deciding phone; the S25U result above is the only
+  render-cost evidence), and the palette stage inside a full app import at k 16,384 (predicted from
+  the trainer ratio above).
 * The choice: k 16,384 for every import (+1 to +2.6 dB at the home view, +1.1 dB on a 1 M stump
-  import; palette time ×4.4–5.8), for imports up to some splat count (the gain per second of training
-  is largest on small scenes), or 4,096 everywhere. Any change amends ADR-0017's "k 4,096 at every import budget".
+  import; S24U palette time ×4.4–4.6, about 96 s for 4.05 M splats with the phone reaching thermal
+  status 2), for imports up to some splat count (the gain per second of training is largest on
+  small scenes, where the extra time is a few seconds), or 4,096 everywhere. Any change amends ADR-0017's "k 4,096 at every import budget".
