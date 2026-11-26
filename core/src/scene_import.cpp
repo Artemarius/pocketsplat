@@ -177,7 +177,8 @@ Result<ImportReport> import_scene(const fs::path& src, const fs::path& dst, cons
     if (options.sh1_palette != 0 && cloud.sh_degree == 1) {
         if (!step(ImportStage::kPalette)) return cancelled();
         PaletteParams params;
-        params.k = options.sh1_palette;
+        params.k = options.sh1_palette == kSh1PaletteByCount ? sh1_palette_for_count(cloud.count)
+                                                             : options.sh1_palette;
         params.trainer = options.palette_trainer;
         params.epochs = options.palette_epochs;
         params.threads = options.palette_threads;

@@ -209,8 +209,11 @@ private fun importStageLabel(stage: Int, share: Float): String = when (stage) {
     else -> "importing…"
 }
 
-/** SH1 palette size for imports when the palette option is on (Phase 8 gate B: k 4,096). */
-private const val kSh1PaletteEntries = 4096
+/**
+ * SH1 palette size for imports when the palette option is on: by the imported splat count
+ * (ADR-0017 amendment: 16,384 entries up to 1 M splats, 4,096 above; docs/palette-size.md).
+ */
+private const val kSh1PaletteEntries = SplatEngine.SH1_PALETTE_BY_COUNT
 
 private fun sanitizeName(name: String): String = name.replace(Regex("[^A-Za-z0-9._-]"), "_")
 

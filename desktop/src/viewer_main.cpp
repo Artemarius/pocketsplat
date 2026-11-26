@@ -63,8 +63,9 @@ constexpr float kFastMinContribution = 0.1f;
 // Not bumped for the SH1 palette (ADR-0017): a cached direct SH 1 pack still renders the same
 // scene, as the phone keeps its earlier imports, so only new imports get the palette.
 constexpr int kImportCacheVersion = 1;
-// SH1 palette entries trained at import (ADR-0017, the app's kSh1PaletteEntries).
-constexpr std::uint32_t kSh1PaletteEntries = 4096;
+// SH1 palette trained at import: sized by the imported splat count like the app's (ADR-0017
+// amendment, splatcore::sh1_palette_for_count).
+constexpr std::uint32_t kSh1PaletteEntries = splatcore::kSh1PaletteByCount;
 // The import's float expansion is ~240 B per splat at SH 3: refuse captures beyond ~3.8 GB of it.
 constexpr std::uint64_t kRefuseAbove = 16'000'000;
 

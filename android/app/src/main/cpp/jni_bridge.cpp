@@ -271,7 +271,10 @@ JNIEXPORT jstring JNICALL Java_com_pocketsplat_app_SplatEngine_nativeImportScene
         g_import_stage.store(static_cast<int>(stage));
         return !g_import_cancel.load();
     };
-    options.sh1_palette = sh1_palette > 0 ? static_cast<std::uint32_t>(sh1_palette) : 0u;
+    // < 0: palette size by the imported splat count (ADR-0017 amendment, docs/palette-size.md).
+    options.sh1_palette = sh1_palette < 0   ? splatcore::kSh1PaletteByCount
+                          : sh1_palette > 0 ? static_cast<std::uint32_t>(sh1_palette)
+                                            : 0u;
     options.palette_progress = [](double share) {
         g_import_share.store(static_cast<float>(share));
         return !g_import_cancel.load();

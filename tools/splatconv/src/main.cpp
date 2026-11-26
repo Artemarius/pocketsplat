@@ -93,7 +93,8 @@ void print_usage() {
                  "      --budget N        keep the N most important splats (default 1000000;\n"
                  "                        0 = all)\n"
                  "      --sh 0|1          SH target (default 1)\n"
-                 "      --sh1-palette K   train a K-entry SH1 palette (the app uses 4096)\n"
+                 "      --sh1-palette K|auto  train a K-entry SH1 palette; auto = by the imported\n"
+                 "                        splat count, as the app (16384 up to 1 M, 4096 above)\n"
                  "      --refuse-above N  refuse sources above N splats (default: the library's)\n"
                  "      --deep-clean      SOR floater removal (the app's Deep clean option)\n"
                  "\n"
@@ -105,8 +106,8 @@ void print_usage() {
                  "                       SH1 palette (K <= 65536) and write a palette pack: 16-bit\n"
                  "                       entry index per splat, the K entries in the sh1 array\n"
                  "                       (28 B/splat + 12 B/entry); the JSON line gains the palette\n"
-                 "                       statistics.\n"
-                 "      --palette-snap   with --sh1-palette: replace every splat's SH1 by its entry\n"
+                 "                       statistics. auto = by the splat count, as import.\n"
+                 "      --palette-snap  with --sh1-palette: replace every splat's SH1 by its entry\n"
                  "                       and write a direct SH 1 pack instead (the reference a\n"
                  "                       palette pack must render identically to)\n"
                  "      --palette-trainer lloyd|hamerly|emeans  (default lloyd)\n"
@@ -328,6 +329,10 @@ bool parse_options(int argc, char** argv, int start, Options& options) {
                    arg == "--palette-threads") {
             auto v = value(arg.c_str());
             if (!v) return false;
+            if (arg == "--sh1-palette" && *v == "auto") {
+                options.sh1_palette = splatcore::kSh1PaletteByCount;
+                continue;
+            }
             const unsigned long long n = std::stoull(*v);
             if (arg == "--sh1-palette") {
                 if (n == 0 || n > splatcore::kMaxPaletteSize) {
@@ -724,7 +729,9 @@ int cmd_pack(const Options& options) {
             return 1;
         }
         splatcore::PaletteParams params;
-        params.k = options.sh1_palette;
+        params.k = options.sh1_palette == splatcore::kSh1PaletteByCount
+                       ? splatcore::sh1_palette_for_count(cloud.count)
+                       : options.sh1_palette;
         params.epochs = options.palette_epochs;
         params.trainer = options.palette_trainer;
         params.seed = options.palette_seed;

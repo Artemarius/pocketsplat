@@ -337,6 +337,30 @@ TEST(SceneImportTest, Sh1PaletteWritesAPalettePack) {
     EXPECT_EQ(std::find(stages.begin(), stages.end(), ImportStage::kPalette), stages.end());
 }
 
+TEST(SceneImportTest, PaletteSizeByCountFollowsTheAmendedAdr0017Rule) {
+    // docs/palette-size.md: 16,384 entries up to 1 M imported splats, 4,096 above.
+    EXPECT_EQ(sh1_palette_for_count(1), 16384u);
+    EXPECT_EQ(sh1_palette_for_count(1000000), 16384u);
+    EXPECT_EQ(sh1_palette_for_count(1000001), 4096u);
+    EXPECT_EQ(sh1_palette_for_count(11000000), 4096u);
+
+    // The import resolves kSh1PaletteByCount after the budget prune; the trainer then clamps
+    // 16,384 to the 40 surviving splats.
+    const fs::path src = temp_file("bycount.ply");
+    const fs::path dst = temp_file("bycount.pspk");
+    write_bytes(src, ply_bytes(64, 1));
+    ImportOptions options;
+    options.max_splats = 40;
+    options.sh1_palette = kSh1PaletteByCount;
+    options.palette_threads = 2;
+    Result<ImportReport> report = import_scene(src, dst, options);
+    fs::remove(src);
+    fs::remove(dst);
+    ASSERT_TRUE(report.ok()) << report.error();
+    EXPECT_EQ(report.value().count, 40u);
+    EXPECT_EQ(report.value().palette_count, 40u);
+}
+
 TEST(SceneImportTest, RefusesOversizedInput) {
     const fs::path src = temp_file("huge.ply");
     write_bytes(src, ply_bytes(8, 0));

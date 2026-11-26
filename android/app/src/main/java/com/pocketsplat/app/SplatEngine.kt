@@ -13,6 +13,9 @@ object SplatEngine {
         System.loadLibrary("pocketsplat")
     }
 
+    /** [nativeImportScene] sh1Palette: size the palette by the imported splat count (splatcore). */
+    const val SH1_PALETTE_BY_COUNT = -1
+
     external fun nativeCreate(): Long
     external fun nativeDestroy(handle: Long)
     external fun nativeOpenScene(handle: Long, path: String): Boolean
@@ -96,7 +99,8 @@ object SplatEngine {
      * background coroutine only. Returns "" on success, the error message otherwise
      * ("import cancelled" after [nativeImportCancel]). maxSplats <= 0 keeps every splat.
      * sh1Palette > 0 trains an SH1 palette of that many entries for an SH 1 scene (28 B per splat
-     * instead of 40); 0 keeps direct SH1.
+     * instead of 40), [SH1_PALETTE_BY_COUNT] picks the size by the imported splat count
+     * (splatcore::sh1_palette_for_count); 0 keeps direct SH1.
      */
     external fun nativeImportScene(
         src: String, dst: String, shTarget: Int, deepClean: Boolean, maxSplats: Long, sh1Palette: Int,

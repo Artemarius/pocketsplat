@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <functional>
@@ -41,6 +42,21 @@ inline std::uint64_t import_limit_for_memory(std::uint64_t available_bytes) {
     return available_bytes / kImportPeakBytesPerSplat;
 }
 
+// SH1 palette size by the imported splat count (ADR-0017 as amended in Phase 10,
+// docs/palette-size.md): 16,384 entries up to kSh1PaletteLargeAbove splats, 4,096 above. The larger
+// palette gains 0.9-2.6 dB at the home view whatever the scene size, but its training time grows
+// with the count (S24U: about 22 s per million splats against 5 s at 4,096; 96 s and thermal
+// status 2 for 4.05 M), so large imports keep the smaller palette.
+inline constexpr std::size_t kSh1PaletteLargeAbove = 1000000;
+inline constexpr std::uint32_t kSh1PaletteSmallScene = 16384;
+inline constexpr std::uint32_t kSh1PaletteLargeScene = 4096;
+inline std::uint32_t sh1_palette_for_count(std::size_t count) {
+    return count <= kSh1PaletteLargeAbove ? kSh1PaletteSmallScene : kSh1PaletteLargeScene;
+}
+// ImportOptions::sh1_palette value that asks for sh1_palette_for_count of the splats left after
+// cleaning and the budget prune (what the app and the Windows viewer pass).
+inline constexpr std::uint32_t kSh1PaletteByCount = 0xFFFFFFFFu;
+
 struct ImportOptions {
     int sh_target = 1;                 // truncate SH above this degree (0 or 1)
     bool deep_clean = false;           // run SOR floater removal (seconds to minutes at 1M+)
@@ -53,7 +69,8 @@ struct ImportOptions {
     std::function<bool(ImportStage)> progress;
     // SH1 palette (Phase 8, docs/sh1-palette-research.md): when the imported scene is at SH 1,
     // train a palette of this many entries (1..65536) and write a palette pack (28 B per splat
-    // instead of 40). 0 = direct SH1. Trainer defaults: gate B's choice (e-means, 3 epochs).
+    // instead of 40). 0 = direct SH1; kSh1PaletteByCount = sh1_palette_for_count. Trainer
+    // defaults: gate B's choice (e-means, 3 epochs).
     std::uint32_t sh1_palette = 0;
     PaletteTrainer palette_trainer = PaletteTrainer::kEMeans;
     std::uint32_t palette_epochs = 3;
