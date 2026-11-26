@@ -77,10 +77,10 @@ rendered pixels under the error maps (`scripts/make_palette_error_media.py`).
 
 <img alt="hornedlizard at the home view: the direct SH 1 render of the lizard's spiny back, then error maps for k 4,096 (46.85 dB) and k 16,384 (49.07 dB). At 4,096 bright error spots of 6 or more 8-bit levels sit on the lit ridge of the back; at 16,384 most of them are gone. The gain window: 41.1 against 45.1 dB. The loss window, on the dark ground: 54.2 against 51.5 dB, both nearly black on the scale" src="media/palette-size-hornedlizard-home.webp" width="846">
 
-<img alt="stump at the home view: error maps for k 4,096 (46.92 dB) and k 16,384 (47.81 dB). The error at 4,096 sits on the sunlit leaves at the top of the frame; at 16,384 the same spots are dimmer. The gain window on the stump's top: 44.8 against 46.5 dB. The loss window on the ground: 48.8 against 48.7 dB" src="media/palette-size-stump-home.webp" width="846">
+<img alt="beetle at the home view: the rusty blue car among garden-centre plants, then error maps for k 4,096 (46.32 dB) and k 16,384 (47.42 dB). At 4,096 the error sits on the reflections in the car's side windows; at 16,384 it is dimmer there. The gain window in the rear side window: 43.1 against 45.8 dB. The loss window on the paving: 50.2 against 50.3 dB, so 16,384 entries do not lose anywhere at this view" src="media/palette-size-beetle-home.webp" width="846">
 
 * The 4,096-entry error is not spread evenly: it peaks at 4–6+ levels on bright, view-dependent
-  surfaces (the lit ridge of hornedlizard's back, stump's sunlit leaves), where a splat's SH1 vector
+  surfaces (the lit ridge of hornedlizard's back, the reflections in beetle's windows), where a splat's SH1 vector
   is far from its entry. 16,384 entries remove most of these peaks.
 * Side by side, the rendered crops are hard to tell apart at a glance: the gain is in the error
   peaks, not in a visible change over the whole frame. Where 16,384 entries lose, the error is
